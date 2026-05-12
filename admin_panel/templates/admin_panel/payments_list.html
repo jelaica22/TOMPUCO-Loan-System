@@ -1,0 +1,1271 @@
+﻿{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Payments Management - TOMPuCO Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================================
+       PROFESSIONAL PAYMENTS MANAGEMENT STYLES
+       EXPLICIT COLORS FOR BOTH LIGHT AND DARK MODES
+    ============================================================ */
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 20px;
+        margin-bottom: 28px;
+    }
+    @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+
+    .stat-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 18px 16px;
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border-color: #0d6e6e;
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+    .stat-card.total::before { background: linear-gradient(135deg, #0d6e6e, #0a5a5a); }
+    .stat-card.cash::before { background: #10b981; }
+    .stat-card.bank::before { background: #3b82f6; }
+    .stat-card.check::before { background: #f59e0b; }
+    .stat-card.amount::before { background: #8b5cf6; }
+
+    .stat-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #1f2937;
+        line-height: 1.2;
+    }
+
+    [data-theme="dark"] .stat-card {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+    [data-theme="dark"] .stat-value {
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .stat-label {
+        color: #9ca3af;
+    }
+
+    /* Filter Section - FIXED ALIGNMENT */
+    .filter-section {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid #e5e7eb;
+    }
+    .filter-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #6b7280;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .filter-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        margin-bottom: 8px;
+        display: block;
+    }
+    .filter-select, .filter-input {
+        border-radius: 12px;
+        border: 1.5px solid #e5e7eb;
+        background: #f9fafb;
+        color: #1f2937;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        width: 100%;
+    }
+    .filter-select option {
+        color: #1f2937;
+        background: #ffffff;
+    }
+    .filter-select:focus, .filter-input:focus {
+        outline: none;
+        border-color: #0d6e6e;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+    /* Date range group */
+    .date-range-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    .date-range-group .filter-input {
+        flex: 1;
+    }
+    .date-range-group span {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+    /* Filter actions */
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 28px;
+    }
+    @media (max-width: 768px) {
+        .filter-actions {
+            margin-top: 0;
+            justify-content: stretch;
+        }
+        .filter-actions .btn-apply,
+        .filter-actions .btn-reset {
+            flex: 1;
+        }
+        .date-range-group {
+            flex-direction: column;
+            gap: 8px;
+        }
+        .date-range-group span {
+            display: none;
+        }
+    }
+
+    [data-theme="dark"] .filter-section {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+    [data-theme="dark"] .filter-title,
+    [data-theme="dark"] .filter-label {
+        color: #9ca3af;
+    }
+    [data-theme="dark"] .filter-select,
+    [data-theme="dark"] .filter-input {
+        background: #15151f;
+        border-color: #2a2a3a;
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .filter-select option {
+        background: #15151f;
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .date-range-group span {
+        color: #9ca3af;
+    }
+
+    /* Main Table Card */
+    .main-card {
+        background: #ffffff;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+    .card-header-custom {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .card-title {
+        color: white !important;
+        margin: 0 !important;
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .card-stats {
+        display: flex;
+        gap: 15px;
+        color: white !important;
+        font-size: 0.75rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .card-stats span {
+        background: rgba(255, 255, 255, 0.15);
+        padding: 5px 12px;
+        border-radius: 20px;
+    }
+    .btn-record-payment {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        color: white !important;
+        border: none !important;
+        padding: 8px 16px !important;
+        font-weight: 600 !important;
+        border-radius: 10px !important;
+        font-size: 0.8rem !important;
+        transition: all 0.2s !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        text-decoration: none !important;
+    }
+    .btn-record-payment:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+        color: white !important;
+    }
+
+    [data-theme="dark"] .main-card {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+
+    /* Professional Table */
+    .table-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+    .payments-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        min-width: 1100px;
+    }
+    .payments-table th {
+        padding: 16px 16px;
+        font-weight: 700;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #6b7280;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    .payments-table td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f3f4f6;
+        color: #1f2937;
+    }
+    .payments-table tbody tr {
+        transition: background 0.2s ease;
+    }
+    .payments-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    [data-theme="dark"] .payments-table th {
+        background: #15151f;
+        color: #9ca3af;
+        border-bottom-color: #2a2a3a;
+    }
+    [data-theme="dark"] .payments-table td {
+        color: #eef2ff;
+        border-bottom-color: #252536;
+    }
+    [data-theme="dark"] .payments-table tbody tr:hover {
+        background: rgba(13, 110, 110, 0.1);
+    }
+
+    .payment-number {
+        font-family: monospace;
+        background: #f9fafb;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        display: inline-block;
+        color: #1f2937;
+        border: 1px solid #e5e7eb;
+        font-weight: 600;
+    }
+    .loan-number-link {
+        font-family: monospace;
+        background: #f9fafb;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        display: inline-block;
+        color: #0d6e6e;
+        border: 1px solid #e5e7eb;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .loan-number-link:hover {
+        background: #0d6e6e;
+        color: white;
+    }
+
+    [data-theme="dark"] .payment-number,
+    [data-theme="dark"] .loan-number-link {
+        background: #15151f;
+        border-color: #2a2a3a;
+        color: #eef2ff;
+    }
+
+    .borrower-name-payment {
+        font-weight: 700;
+        color: #1f2937;
+        font-size: 0.85rem;
+    }
+    [data-theme="dark"] .borrower-name-payment {
+        color: #eef2ff;
+    }
+
+    .amount-positive {
+        font-weight: 700;
+        color: #10b981;
+    }
+    [data-theme="dark"] .amount-positive {
+        color: #34d399;
+    }
+
+    /* Professional Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+    .badge-cash { background: #d1fae5; color: #065f46; }
+    .badge-bank { background: #dbeafe; color: #1e40af; }
+    .badge-check { background: #fef3c7; color: #92400e; }
+    .badge-completed { background: #d1fae5; color: #065f46; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+
+    [data-theme="dark"] .badge-cash { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    [data-theme="dark"] .badge-bank { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    [data-theme="dark"] .badge-check { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    [data-theme="dark"] .badge-completed { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    [data-theme="dark"] .badge-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .btn-view-payment {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%) !important;
+        color: #ffffff !important;
+    }
+    .btn-view-payment:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    .btn-edit-payment {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: #f59e0b !important;
+        color: #ffffff !important;
+    }
+    .btn-edit-payment:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    .btn-receipt-payment {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: #10b981 !important;
+        color: #ffffff !important;
+    }
+    .btn-receipt-payment:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    .btn-delete-payment {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: #ef4444 !important;
+        color: #ffffff !important;
+    }
+    .btn-delete-payment:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    /* Form Buttons */
+    .btn-apply, .btn-reset {
+        padding: 10px 24px;
+        font-weight: 600;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-apply {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        color: white;
+        border: none;
+    }
+    .btn-apply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.35);
+    }
+    .btn-reset {
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        color: #374151;
+    }
+    .btn-reset:hover {
+        background: #e5e7eb;
+        transform: translateY(-2px);
+    }
+
+    [data-theme="dark"] .btn-reset {
+        background: #374151;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+    [data-theme="dark"] .btn-reset:hover {
+        background: #4b5563;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    .empty-state i {
+        font-size: 3.5rem;
+        color: #9ca3af;
+        margin-bottom: 15px;
+    }
+    .empty-state p {
+        color: #6b7280;
+        margin-bottom: 20px;
+    }
+
+    [data-theme="dark"] .empty-state i {
+        color: #6b7280;
+    }
+    [data-theme="dark"] .empty-state p {
+        color: #9ca3af;
+    }
+
+    /* Modal Styles */
+    .modal-custom .modal-content {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        overflow: hidden;
+    }
+    .modal-custom .modal-header {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 20px 24px;
+        border: none;
+    }
+    .modal-custom .modal-header .modal-title {
+        color: white !important;
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+    }
+    .modal-custom .modal-header .btn-close-white {
+        filter: brightness(0) invert(1);
+    }
+    .modal-custom .modal-body {
+        padding: 24px;
+        background: #ffffff;
+    }
+    .modal-custom .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    .modal-custom .btn-secondary {
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        color: #374151;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .modal-custom .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+    .modal-custom .btn-primary {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        border: none;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .modal-custom .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.35);
+    }
+    .modal-custom .btn-warning {
+        background: #f59e0b;
+        border: none;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .modal-custom .btn-warning:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    }
+
+    [data-theme="dark"] .modal-custom .modal-content {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+    [data-theme="dark"] .modal-custom .modal-body {
+        background: #1e1e2a;
+    }
+    [data-theme="dark"] .modal-custom .modal-footer {
+        background: #15151f;
+        border-top-color: #2a2a3a;
+    }
+    [data-theme="dark"] .modal-custom .btn-secondary {
+        background: #374151;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+    [data-theme="dark"] .modal-custom .btn-secondary:hover {
+        background: #4b5563;
+    }
+
+    /* Detail Grid for Modal */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    @media (max-width: 576px) {
+        .detail-grid { grid-template-columns: 1fr; }
+    }
+    .detail-section {
+        margin-bottom: 0;
+    }
+    .detail-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+    .detail-value {
+        font-size: 0.85rem;
+        padding: 8px 0;
+        border-bottom: 1px dashed #e5e7eb;
+        color: #1f2937;
+    }
+    .detail-value strong {
+        color: #0d6e6e;
+        font-weight: 700;
+    }
+
+    [data-theme="dark"] .detail-label {
+        color: #9ca3af;
+    }
+    [data-theme="dark"] .detail-value {
+        color: #eef2ff;
+        border-bottom-color: #374151;
+    }
+    [data-theme="dark"] .detail-value strong {
+        color: #1a8a8a;
+    }
+
+    /* Form Styles */
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #374151;
+        font-size: 0.8rem;
+    }
+    .form-select, .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        color: #1f2937;
+        transition: all 0.2s;
+    }
+    .form-select:focus, .form-control:focus {
+        outline: none;
+        border-color: #0d6e6e;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    [data-theme="dark"] .form-label {
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .form-select,
+    [data-theme="dark"] .form-control {
+        background: #15151f;
+        border-color: #2a2a3a;
+        color: #eef2ff;
+    }
+
+    .text-muted {
+        color: #6b7280 !important;
+        font-size: 0.7rem;
+    }
+    [data-theme="dark"] .text-muted {
+        color: #9ca3af !important;
+    }
+    .text-right {
+        text-align: right;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .fw-bold {
+        font-weight: 700;
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .stat-card, .main-card, .filter-section {
+        animation: fadeIn 0.4s ease forwards;
+    }
+
+    /* Pagination Styles */
+    .pagination {
+        margin: 0;
+    }
+    .page-link {
+        background: #ffffff;
+        border-color: #e5e7eb;
+        color: #0d6e6e;
+    }
+    .page-link:hover {
+        background: #0d6e6e;
+        border-color: #0d6e6e;
+        color: white;
+    }
+    .page-item.active .page-link {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        border-color: #0d6e6e;
+        color: white;
+    }
+    [data-theme="dark"] .page-link {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+        color: #60a5fa;
+    }
+    [data-theme="dark"] .page-link:hover {
+        background: #0d6e6e;
+        color: white;
+    }
+
+    .alert-info {
+        background: #dbeafe;
+        border: 1px solid #bfdbfe;
+        color: #1e40af;
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 0.8rem;
+    }
+    [data-theme="dark"] .alert-info {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: #3b82f6;
+        color: #60a5fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card total" onclick="filterByMethod('all')">
+        <div class="stat-label">Total Payments</div>
+        <div class="stat-value">{{ total_payments|default:payments|length }}</div>
+    </div>
+    <div class="stat-card cash" onclick="filterByMethod('cash')">
+        <div class="stat-label">Cash</div>
+        <div class="stat-value">{{ cash_count|default:0 }}</div>
+    </div>
+    <div class="stat-card bank" onclick="filterByMethod('bank_transfer')">
+        <div class="stat-label">Bank Transfer</div>
+        <div class="stat-value">{{ bank_count|default:0 }}</div>
+    </div>
+    <div class="stat-card check" onclick="filterByMethod('check')">
+        <div class="stat-label">Check</div>
+        <div class="stat-value">{{ check_count|default:0 }}</div>
+    </div>
+    <class="stat-card amount">
+        <div class="stat-label">Total Amount</div>
+        <div class="stat-value">₱{{ total_amount|floatformat:0|default:0 }}</div>
+    </div>
+</div>
+
+<!-- Advanced Filter Section - FIXED ALIGNMENT -->
+<div class="filter-section">
+    <div class="filter-title"><i class="bi bi-funnel-fill"></i> Advanced Filters</div>
+    <form method="get" id="filterForm">
+        <div class="row g-3 align-items-end">
+            <!-- Search Field -->
+            <div class="col-12 col-md-4">
+                <label class="filter-label"><i class="bi bi-search"></i> Search</label>
+                <input type="text" name="search" class="filter-input" id="searchInput" placeholder="Payment #, Loan #, Member..." value="{{ request.GET.search|default:'' }}">
+            </div>
+            <!-- Payment Method Filter -->
+            <div class="col-12 col-md-4">
+                <label class="filter-label"><i class="bi bi-funnel"></i> Payment Method</label>
+                <select name="method" class="filter-select" id="methodSelect">
+                    <option value="all" {% if not request.GET.method or request.GET.method == 'all' %}selected{% endif %}>All Methods</option>
+                    <option value="cash" {% if request.GET.method == 'cash' %}selected{% endif %}>Cash</option>
+                    <option value="bank_transfer" {% if request.GET.method == 'bank_transfer' %}selected{% endif %}>Bank Transfer</option>
+                    <option value="check" {% if request.GET.method == 'check' %}selected{% endif %}>Check</option>
+                    <option value="paymaya" {% if request.GET.method == 'paymaya' %}selected{% endif %}>PayMaya</option>
+                </select>
+            </div>
+            <!-- Date Range - Better aligned -->
+            <div class="col-12 col-md-4">
+                <label class="filter-label"><i class="bi bi-calendar-range"></i> Date Range</label>
+                <div class="date-range-group">
+                    <input type="date" name="date_from" class="filter-input" placeholder="From" value="{{ request.GET.date_from|default:'' }}">
+                    <span>to</span>
+                    <input type="date" name="date_to" class="filter-input" placeholder="To" value="{{ request.GET.date_to|default:'' }}">
+                </div>
+            </div>
+            <!-- Action Buttons - Right aligned -->
+            <div class="col-12">
+                <div class="filter-actions">
+                    <button type="submit" class="btn-apply"><i class="bi bi-search"></i> Apply Filters</button>
+                    <button type="button" class="btn-reset" id="resetFiltersBtn"><i class="bi bi-arrow-repeat"></i> Reset Filters</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Main Table -->
+<div class="main-card">
+    <div class="card-header-custom">
+        <div class="card-title"><i class="bi bi-cash-stack-fill"></i> Payment Transactions</div>
+        <div class="card-stats">
+            <span><i class="bi bi-calculator"></i> Showing {{ payments|length }} payments</span>
+            <span><i class="bi bi-calendar3"></i> {% now "Y-m-d H:i" %}</span>
+            <button class="btn-record-payment" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+                <i class="bi bi-plus-circle"></i> Record Payment
+            </button>
+        </div>
+    </div>
+    <div class="table-container">
+        <table class="payments-table">
+            <thead>
+                <tr>
+                    <th width="50">ID</th>
+                    <th>Payment #</th>
+                    <th>Loan #</th>
+                    <th>Borrower</th>
+                    <th width="120">Amount</th>
+                    <th width="100">Date</th>
+                    <th width="110">Method</th>
+                    <th width="100">Status</th>
+                    <th width="300">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td><strong class="text-primary">{{ payment.id }}</strong></td>
+                    <td><span class="payment-number">{{ payment.payment_number }}</span></td>
+                    <td><a href="#" class="loan-number-link" onclick="viewLoan({{ payment.loan.id }})">{{ payment.loan.loan_number|default:"-" }}</a></td>
+                    <td>
+                        <div class="borrower-name-payment">{{ payment.member.last_name }}, {{ payment.member.first_name }}</div>
+                        <div class="text-muted small">{{ payment.member.membership_number|default:"" }}</div>
+                    </div>
+                    <td class="text-right fw-bold amount-positive">₱{{ payment.amount|floatformat:2 }}</div>
+                    <td>{{ payment.payment_date|date:"Y-m-d" }}</div>
+                    <td>
+                        {% if payment.payment_method == 'cash' %}
+                            <span class="status-badge badge-cash"><i class="bi bi-cash"></i> Cash</span>
+                        {% elif payment.payment_method == 'bank_transfer' %}
+                            <span class="status-badge badge-bank"><i class="bi bi-building"></i> Bank Transfer</span>
+                        {% elif payment.payment_method == 'check' %}
+                            <span class="status-badge badge-check"><i class="bi bi-file-text"></i> Check</span>
+                        {% elif payment.payment_method == 'paymaya' %}
+                            <span class="status-badge badge-bank"><i class="bi bi-phone"></i> PayMaya</span>
+                        {% else %}
+                            <span class="status-badge">{{ payment.payment_method|title }}</span>
+                        {% endif %}
+                    </div>
+                    <td>
+                        {% if payment.status == 'completed' %}
+                            <span class="status-badge badge-completed"><i class="bi bi-check-circle-fill"></i> Completed</span>
+                        {% else %}
+                            <span class="status-badge badge-pending"><i class="bi bi-clock-fill"></i> Pending</span>
+                        {% endif %}
+                    </div>
+                    <td class="action-buttons">
+                        <button class="btn-view-payment" onclick="viewPayment({{ payment.id }})"><i class="bi bi-eye"></i> View</button>
+                        <button class="btn-edit-payment" onclick="editPayment({{ payment.id }})"><i class="bi bi-pencil"></i> Edit</button>
+                        <button class="btn-receipt-payment" onclick="downloadReceipt({{ payment.id }})"><i class="bi bi-download"></i> Receipt</button>
+                        <button class="btn-delete-payment" onclick="deletePayment({{ payment.id }}, '{{ payment.payment_number }}')"><i class="bi bi-trash"></i> Delete</button>
+                    </div>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9">
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <p>No payments found matching your criteria</p>
+                            <button class="btn-record-payment" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+                                <i class="bi bi-plus-circle"></i> Record Your First Payment
+                            </button>
+                        </div>
+                    </div>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if payments.has_other_pages %}
+    <div class="p-3 border-top">
+        <nav><ul class="pagination justify-content-center mb-0">
+            {% if payments.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ payments.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"><i class="bi bi-chevron-left"></i> Previous</a></li>{% endif %}
+            {% if payments.has_next %}<li class="page-item"><a class="page-link" href="?page={{ payments.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next <i class="bi bi-chevron-right"></i></a></li>{% endif %}
+        </ul></nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Payment Modal -->
+<div class="modal fade modal-custom" id="addPaymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Record Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'admin_panel:payment_create' %}" id="addPaymentForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Loan *</label>
+                        <select name="loan_id" class="form-select" required>
+                            <option value="">Choose a loan...</option>
+                            {% for loan in active_loans %}
+                            <option value="{{ loan.id }}">{{ loan.loan_number }} - {{ loan.borrower.first_name }} {{ loan.borrower.last_name }} (Balance: ₱{{ loan.remaining_balance|floatformat:2 }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount *</label>
+                        <input type="number" name="amount" class="form-control" step="0.01" required placeholder="Enter payment amount">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Date</label>
+                        <input type="date" name="payment_date" class="form-control" value="{% now 'Y-m-d' %}">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <select name="payment_method" class="form-select">
+                                <option value="cash">Cash</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="check">Check</option>
+                                <option value="paymaya">PayMaya</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Reference Number</label>
+                            <input type="text" name="reference_number" class="form-control" placeholder="Optional">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                    <button type="submit" class="btn-primary"><i class="bi bi-save me-1"></i> Record Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Payment Modal -->
+<div class="modal fade modal-custom" id="editPaymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="" id="editPaymentForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="payment_id" id="editPaymentId">
+                    <div class="mb-3">
+                        <label class="form-label">Amount</label>
+                        <input type="number" name="amount" id="editAmount" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Date</label>
+                        <input type="date" name="payment_date" id="editPaymentDate" class="form-control" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <select name="payment_method" id="editPaymentMethod" class="form-select">
+                                <option value="cash">Cash</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="check">Check</option>
+                                <option value="paymaya">PayMaya</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Reference Number</label>
+                            <input type="text" name="reference_number" id="editReferenceNumber" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                    <button type="submit" class="btn-warning"><i class="bi bi-save me-1"></i> Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Payment Modal -->
+<div class="modal fade modal-custom" id="viewPaymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-cash-stack me-2"></i>Payment Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewPaymentContent">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p>Loading payment details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade modal-custom" id="deletePaymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4" id="deletePaymentContent"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-delete-payment" id="confirmDeleteBtn">Yes, Delete Payment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentDeleteId = null;
+let currentDeleteNumber = null;
+
+function filterByMethod(method) {
+    const methodSelect = document.getElementById('methodSelect');
+    if (methodSelect) methodSelect.value = method;
+    document.getElementById('filterForm').submit();
+}
+
+// View Payment
+function viewPayment(paymentId) {
+    const modal = new bootstrap.Modal(document.getElementById('viewPaymentModal'));
+    const modalBody = document.getElementById('viewPaymentContent');
+
+    modalBody.innerHTML = `
+        <div class="loading-state">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Loading payment details...</p>
+        </div>
+    `;
+
+    modal.show();
+
+    fetch(`/superadmin/payments/${paymentId}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.id) {
+                renderPaymentDetails(data);
+            } else {
+                const paymentData = getPaymentDataFromTable(paymentId);
+                renderPaymentDetails(paymentData);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching payment:', error);
+            const paymentData = getPaymentDataFromTable(paymentId);
+            renderPaymentDetails(paymentData);
+        });
+}
+
+function renderPaymentDetails(data) {
+    const modalBody = document.getElementById('viewPaymentContent');
+
+    let methodClass = 'badge-cash';
+    let methodIcon = 'bi-cash';
+    if (data.payment_method === 'bank_transfer') {
+        methodClass = 'badge-bank';
+        methodIcon = 'bi-building';
+    } else if (data.payment_method === 'check') {
+        methodClass = 'badge-check';
+        methodIcon = 'bi-file-text';
+    }
+
+    let statusClass = 'badge-pending';
+    if (data.status === 'completed') statusClass = 'badge-completed';
+
+    modalBody.innerHTML = `
+        <div class="detail-grid">
+            <div class="detail-section">
+                <div class="detail-label"><i class="bi bi-receipt me-1"></i> Payment Information</div>
+                <div class="detail-value"><strong>Payment #:</strong> <span class="payment-number">${escapeHtml(data.payment_number || data.id)}</span></div>
+                <div class="detail-value"><strong>Amount:</strong> <span class="amount-positive">₱${parseFloat(data.amount || 0).toLocaleString()}</span></div>
+                <div class="detail-value"><strong>Payment Date:</strong> ${data.payment_date || '-'}</div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-label"><i class="bi bi-file-text me-1"></i> Loan Information</div>
+                <div class="detail-value"><strong>Loan #:</strong> <span class="loan-number-link">${escapeHtml(data.loan_number || 'N/A')}</span></div>
+                <div class="detail-value"><strong>Borrower:</strong> ${escapeHtml(data.borrower_name || 'Unknown')}</div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-label"><i class="bi bi-info-circle me-1"></i> Transaction Details</div>
+                <div class="detail-value"><strong>Payment Method:</strong> <span class="status-badge ${methodClass}"><i class="bi ${methodIcon}"></i> ${data.payment_method_display || data.payment_method}</span></div>
+                <div class="detail-value"><strong>Reference #:</strong> ${data.reference_number || '-'}</div>
+                <div class="detail-value"><strong>Status:</strong> <span class="status-badge ${statusClass}">${data.status || 'Pending'}</span></div>
+            </div>
+        </div>
+    `;
+}
+
+function getPaymentDataFromTable(paymentId) {
+    const rows = document.querySelectorAll('.payments-table tbody tr');
+    for (let row of rows) {
+        const idCell = row.cells[0];
+        if (idCell && idCell.innerText.trim() === String(paymentId)) {
+            return {
+                id: paymentId,
+                payment_number: row.cells[1]?.innerText.trim() || 'PAY-' + paymentId,
+                loan_number: row.cells[2]?.innerText.trim() || 'N/A',
+                borrower_name: row.cells[3]?.querySelector('.borrower-name-payment')?.innerText || 'Unknown',
+                amount: parseFloat(row.cells[4]?.innerText.replace('₱', '').replace(/,/g, '')) || 0,
+                payment_date: row.cells[5]?.innerText.trim() || new Date().toLocaleDateString(),
+                payment_method: row.cells[6]?.innerText.trim().toLowerCase() || 'cash',
+                payment_method_display: row.cells[6]?.innerText.trim() || 'Cash',
+                status: row.cells[7]?.innerText.trim().toLowerCase() || 'pending',
+                reference_number: null
+            };
+        }
+    }
+    return {
+        id: paymentId,
+        payment_number: 'PAY-' + paymentId,
+        loan_number: 'N/A',
+        borrower_name: 'Unknown',
+        amount: 0,
+        payment_date: new Date().toLocaleDateString(),
+        payment_method: 'cash',
+        payment_method_display: 'Cash',
+        status: 'pending',
+        reference_number: null
+    };
+}
+
+// Edit Payment
+function editPayment(paymentId) {
+    fetch(`/superadmin/payments/${paymentId}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('editPaymentId').value = data.id;
+            document.getElementById('editAmount').value = data.amount;
+            document.getElementById('editPaymentDate').value = data.payment_date;
+            document.getElementById('editPaymentMethod').value = data.payment_method;
+            document.getElementById('editReferenceNumber').value = data.reference_number || '';
+            document.getElementById('editPaymentForm').action = `/superadmin/payments/${paymentId}/edit/`;
+            new bootstrap.Modal(document.getElementById('editPaymentModal')).show();
+        })
+        .catch(error => {
+            const paymentData = getPaymentDataFromTable(paymentId);
+            document.getElementById('editPaymentId').value = paymentData.id;
+            document.getElementById('editAmount').value = paymentData.amount;
+            document.getElementById('editPaymentDate').value = paymentData.payment_date;
+            document.getElementById('editPaymentMethod').value = paymentData.payment_method;
+            document.getElementById('editReferenceNumber').value = '';
+            document.getElementById('editPaymentForm').action = `/superadmin/payments/${paymentId}/edit/`;
+            new bootstrap.Modal(document.getElementById('editPaymentModal')).show();
+        });
+}
+
+// Download Receipt
+function downloadReceipt(paymentId) {
+    window.open(`/superadmin/payments/${paymentId}/receipt/`, '_blank');
+}
+
+// Delete Payment
+function deletePayment(paymentId, paymentNumber) {
+    currentDeleteId = paymentId;
+    currentDeleteNumber = paymentNumber;
+    document.getElementById('deletePaymentContent').innerHTML = `
+        <div class="mb-3">
+            <div class="empty-icon" style="margin:0 auto;width:70px;height:70px;background:rgba(239,68,68,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-trash" style="font-size:2rem;color:#ef4444;"></i>
+            </div>
+        </div>
+        <h5 class="mb-2">Delete Payment?</h5>
+        <p>Are you sure you want to delete payment <strong>${escapeHtml(paymentNumber)}</strong>?</p>
+        <p class="text-danger small">⚠️ This action cannot be undone! This will also update the loan balance.</p>
+    `;
+    new bootstrap.Modal(document.getElementById('deletePaymentModal')).show();
+}
+
+document.getElementById('confirmDeleteBtn')?.addEventListener('click', function() {
+    if(currentDeleteId) {
+        fetch(`/superadmin/payments/${currentDeleteId}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) location.reload();
+            else alert('Error deleting payment: ' + (data.error || 'Unknown error'));
+        })
+        .catch(error => alert('Error deleting payment'));
+    }
+});
+
+// Reset Filters
+document.getElementById('resetFiltersBtn')?.addEventListener('click', function() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('methodSelect').value = 'all';
+    document.querySelectorAll('input[name="date_from"], input[name="date_to"]').forEach(input => input.value = '');
+    document.getElementById('filterForm').submit();
+});
+
+// View Loan function for the loan link
+function viewLoan(loanId) {
+    if (loanId) {
+        window.location.href = `/superadmin/loans/${loanId}/`;
+    }
+}
+
+// Utility Functions
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function getCSRFToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith('csrftoken=')) {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

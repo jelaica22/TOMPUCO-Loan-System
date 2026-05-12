@@ -1,0 +1,498 @@
+﻿{% extends 'manager/base_manager.html' %}
+{% load static %}
+
+{% block title %}Review Application - Decision Required{% endblock %}
+{% block page_title %}Review Loan Application{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Main Container */
+    .review-container {
+        padding-top: 10px;
+    }
+
+    /* Application Card */
+    .detail-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .detail-header {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 18px 24px;
+        color: white;
+    }
+
+    .detail-header h5 {
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .detail-body {
+        padding: 24px;
+    }
+
+    .section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-title i {
+        color: #0d6e6e;
+        font-size: 1rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-row {
+        display: flex;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-label {
+        width: 140px;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .info-value {
+        flex: 1;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    /* Charges Breakdown */
+    .charges-card {
+        background: var(--bg-body);
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .charges-title {
+        font-weight: 700;
+        margin-bottom: 15px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .charge-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px dashed var(--border-light);
+        font-size: 0.85rem;
+    }
+
+    .charge-row.total {
+        border-top: 2px solid var(--border-color);
+        border-bottom: none;
+        margin-top: 10px;
+        padding-top: 10px;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    /* Financial Summary Alert */
+    .alert-summary {
+        background: #d1fae5;
+        border-left: 4px solid #10b981;
+        color: #065f46;
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-top: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    [data-theme="dark"] .alert-summary {
+        background: #064e3b;
+        color: #a7f3d0;
+        border-left-color: #34d399;
+    }
+
+    /* Decision Card */
+    .decision-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        position: sticky;
+        top: 80px;
+    }
+
+    .decision-header {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 18px 24px;
+        color: white;
+    }
+
+    .decision-header h5 {
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .decision-body {
+        padding: 24px;
+    }
+
+    /* Form Elements */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-select, .form-control {
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        width: 100%;
+        transition: all 0.2s;
+        background: var(--input-bg);
+        color: var(--text-primary);
+    }
+
+    .form-select:focus, .form-control:focus {
+        border-color: #0d6e6e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    /* BUTTONS - VISIBLE IN LIGHT MODE */
+    .btn-submit {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    .btn-back {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-back:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    /* Dark mode buttons */
+    [data-theme="dark"] .btn-back {
+        background: transparent;
+        border-color: #0d6e6e;
+        color: #0d6e6e;
+    }
+
+    [data-theme="dark"] .btn-back:hover {
+        background: #0d6e6e;
+        color: white;
+    }
+
+    /* Alert Boxes */
+    .alert-box {
+        background: #dbeafe;
+        border-left: 4px solid #3b82f6;
+        color: #1e40af;
+        padding: 12px 16px;
+        border-radius: 12px;
+        margin-top: 20px;
+        font-size: 0.85rem;
+    }
+
+    [data-theme="dark"] .alert-box {
+        background: #1e3a8a;
+        color: #bfdbfe;
+    }
+
+    .amount-large {
+        font-size: 1.3rem;
+        font-weight: 800;
+    }
+
+    .text-success {
+        color: #10b981;
+    }
+
+    .text-primary {
+        color: #0d6e6e;
+    }
+
+    /* Responsive Grid */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: -12px;
+    }
+
+    .col-md-8, .col-md-4 {
+        padding: 12px;
+    }
+
+    .col-md-8 {
+        flex: 0 0 66.666%;
+        max-width: 66.666%;
+    }
+
+    .col-md-4 {
+        flex: 0 0 33.333%;
+        max-width: 33.333%;
+    }
+
+    @media (max-width: 992px) {
+        .col-md-8, .col-md-4 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        .decision-card {
+            position: static;
+        }
+    }
+
+    /* Badge */
+    .badge-primary {
+        background: #0d6e6e;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-container">
+    <div class="row">
+        <!-- Left Column - Application Details -->
+        <div class="col-md-8">
+            <!-- Application Info Card -->
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h5>
+                        <i class="bi bi-file-text-fill"></i>
+                        Application Details: {{ app.application_id }}
+                        <span class="badge-primary">Pending Your Decision</span>
+                    </h5>
+                </div>
+                <div class="detail-body">
+                    <!-- Member Information -->
+                    <div class="section-title">
+                        <i class="bi bi-person-badge-fill"></i>
+                        Member Information
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <div class="info-label">Full Name:</div>
+                            <div class="info-value">{{ app.member.first_name }} {{ app.member.last_name }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Membership #:</div>
+                            <div class="info-value">{{ app.member.membership_number|default:"N/A" }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Contact Number:</div>
+                            <div class="info-value">{{ app.member.contact_number|default:"Not provided" }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Monthly Income:</div>
+                            <div class="info-value">₱{{ app.member.monthly_income|floatformat:2 }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Committee Decision -->
+                    <div class="section-title mt-4">
+                        <i class="bi bi-people-fill"></i>
+                        Committee Decision
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-row">
+                            <div class="info-label">Requested Amount:</div>
+                            <div class="info-value">₱{{ app.requested_amount|floatformat:2 }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Approved Line:</div>
+                            <div class="info-value"><strong class="text-primary fs-5">₱{{ app.approved_line|floatformat:2 }}</strong></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Interest Rate:</div>
+                            <div class="info-value">{{ app.loan_product.interest_rate|default:20 }}% per annum</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Term:</div>
+                            <div class="info-value">{{ app.loan_product.term_months|default:12 }} months</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Date Approved:</div>
+                            <div class="info-value">{{ app.committee_approved_date|date:"F d, Y"|default:"Not yet" }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Staff Charges -->
+                    <div class="section-title mt-4">
+                        <i class="bi bi-calculator-fill"></i>
+                        Staff Charges & Deductions
+                    </div>
+                    <div class="charges-card">
+                        <div class="charge-row">
+                            <span>📋 Service Charge (3%)</span>
+                            <span>₱{{ app.service_charge|floatformat:2 }}</span>
+                        </div>
+                        <div class="charge-row">
+                            <span>💰 CBU Retention (2%)</span>
+                            <span>₱{{ app.cbu_retention|floatformat:2 }}</span>
+                        </div>
+                        <div class="charge-row">
+                            <span>🛡️ Insurance (1.32%)</span>
+                            <span>₱{{ app.insurance_charge|floatformat:2 }}</span>
+                        </div>
+                        <div class="charge-row">
+                            <span>📄 Service Fee</span>
+                            <span>₱{{ app.service_fee|floatformat:2 }}</span>
+                        </div>
+                        <div class="charge-row">
+                            <span>⚖️ Notarial Fee</span>
+                            <span>₱{{ app.notarial_fee|floatformat:2 }}</span>
+                        </div>
+                        <div class="charge-row total">
+                            <span><strong>Total Deductions</strong></span>
+                            <span><strong>₱{{ app.total_deductions|floatformat:2 }}</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Financial Summary -->
+                    <div class="alert-summary">
+                        <i class="bi bi-calculator-fill" style="font-size: 1.3rem;"></i>
+                        <div>
+                            <strong>Financial Summary:</strong><br>
+                            <span>Approved Line: ₱{{ app.approved_line|floatformat:2 }}</span>
+                            <span> - Total Deductions: ₱{{ app.total_deductions|floatformat:2 }}</span>
+                            <hr class="my-1">
+                            <span class="fw-bold fs-5">= Net Proceeds: ₱{{ app.net_proceeds|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Decision Form -->
+        <div class="col-md-4">
+            <div class="decision-card">
+                <div class="decision-header">
+                    <h5>
+                        <i class="bi bi-check-circle-fill"></i>
+                        Your Decision
+                    </h5>
+                </div>
+                <div class="decision-body">
+                    <form method="post" action="{% url 'manager:final_approval' app.id %}">
+                        {% csrf_token %}
+
+                        <div class="form-group">
+                            <label class="form-label"><i class="bi bi-hand-thumbs-up"></i> Decision *</label>
+                            <select name="decision" class="form-select" required>
+                                <option value="approved">✅ APPROVE - Ready for Disbursement</option>
+                                <option value="revision">📝 RETURN to Committee for Revision</option>
+                                <option value="rejected">❌ REJECT Application</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label"><i class="bi bi-chat-text"></i> Remarks / Notes</label>
+                            <textarea name="remarks" class="form-control" rows="5"
+                                      placeholder="Add any remarks or special instructions for staff..."></textarea>
+                        </div>
+
+                        <div class="alert-box">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>After Approval:</strong><br>
+                            Staff will process the loan disbursement and release the net proceeds to the member.
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            <i class="bi bi-check-circle"></i> Submit Decision
+                        </button>
+
+                        <a href="{% url 'manager:pending_approvals' %}" class="btn-back">
+                            <i class="bi bi-arrow-left"></i> Back to Pending Approvals
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

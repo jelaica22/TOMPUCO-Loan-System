@@ -1,0 +1,864 @@
+﻿{% extends 'committee/base_committee.html' %}
+{% load static %}
+
+{% block title %}Committee Dashboard - TOMPuCO Analytics{% endblock %}
+{% block page_title %}Committee Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== Modern Dashboard Styles ===== */
+    :root {
+        --primary-dark: #0a5a5a;
+        --primary: #0d6e6e;
+        --primary-light: #1a8a8a;
+        --primary-gradient: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        --primary-gradient-light: linear-gradient(135deg, #1a8a8a 0%, #0d6e6e 100%);
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+    }
+
+    /* Welcome Section */
+    .welcome-section {
+        background: var(--primary-gradient);
+        border-radius: 20px;
+        padding: 28px 32px;
+        margin-bottom: 30px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .welcome-section::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -5%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    @media (max-width: 768px) {
+        .welcome-section {
+            padding: 20px;
+            text-align: center;
+        }
+        .date-time {
+            text-align: center !important;
+            margin-top: 10px;
+        }
+    }
+
+    .welcome-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-subtitle {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    .date-time {
+        text-align: right;
+        font-size: 0.85rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    }
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 576px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 22px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-card.pending::before { background: var(--warning); }
+    .stat-card.line-approved::before { background: #8b5cf6; }
+    .stat-card.approved::before { background: var(--success); }
+    .stat-card.rejected::before { background: var(--danger); }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+
+    .stat-icon.pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .stat-icon.line-approved { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+    .stat-icon.approved { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .stat-icon.rejected { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    .stat-trend {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    /* Quick Actions */
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 992px) {
+        .quick-actions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 576px) {
+        .quick-actions-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .quick-action-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .quick-action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--primary);
+    }
+
+    .quick-action-card i {
+        font-size: 2rem;
+        color: var(--primary);
+        margin-bottom: 12px;
+    }
+
+    .quick-action-card h6 {
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: var(--text-primary);
+    }
+
+    .quick-action-card small {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    /* Analytics Charts */
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 992px) {
+        .analytics-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .chart-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    .chart-header {
+        padding: 16px 20px;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .chart-header h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+
+    .chart-body {
+        padding: 20px;
+        height: 300px;
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 992px) {
+        .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 576px) {
+        .kpi-grid { grid-template-columns: 1fr; }
+    }
+
+    .kpi-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 5px;
+    }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 24px;
+    }
+
+    @media (max-width: 992px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .dashboard-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .card-header-custom {
+        padding: 16px 20px;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .card-header-custom h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+
+    /* Table Styles */
+    .table-responsive-custom {
+        overflow-x: auto;
+    }
+
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 500px;
+    }
+
+    .custom-table thead th {
+        padding: 14px 16px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-card);
+    }
+
+    .custom-table tbody td {
+        padding: 14px 16px;
+        font-size: 0.85rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .custom-table tbody tr:hover {
+        background: var(--gray-50);
+        cursor: pointer;
+    }
+
+    .app-id {
+        font-weight: 700;
+        color: var(--primary);
+        font-family: monospace;
+    }
+
+    .btn-review {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s;
+    }
+
+    .btn-review:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(13, 110, 110, 0.3);
+        color: white;
+    }
+
+    .badge-count {
+        background: var(--primary);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        margin-left: 8px;
+    }
+
+    /* Vote Progress */
+    .vote-progress {
+        margin-top: 8px;
+    }
+
+    .vote-bar {
+        height: 4px;
+        background: var(--border-color);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .vote-filled {
+        height: 100%;
+        background: linear-gradient(90deg, var(--success), #059669);
+        border-radius: 2px;
+    }
+
+    /* Activity Item */
+    .activity-item {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .activity-item:hover {
+        transform: translateX(5px);
+    }
+
+    .activity-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(13, 110, 110, 0.1);
+        color: var(--primary);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 0;
+    }
+
+    /* Badge Styles */
+    .badge-success { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-danger { background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-warning { background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+
+    [data-theme="dark"] .badge-success { background: #064e3b; color: #a7f3d0; }
+    [data-theme="dark"] .badge-danger { background: #7f1d1d; color: #fecaca; }
+    [data-theme="dark"] .badge-warning { background: #451a03; color: #fde68a; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="padding-top: 10px;">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="welcome-title">
+                    👋 Welcome back, {{ request.user.get_full_name|default:request.user.username }}!
+                </div>
+                <div class="welcome-subtitle" id="realTimeMessage">
+                    Here's your committee performance overview.
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="date-time">
+                    <i class="bi bi-calendar3"></i> {% now "l, F j, Y" %}<br>
+                    <i class="bi bi-clock"></i> <span id="liveClock">{% now "g:i A" %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card pending" onclick="location.href='{% url 'committee:applications_list' %}'">
+            <div class="stat-header">
+                <div class="stat-icon pending"><i class="bi bi-clock-history"></i></div>
+                <div class="stat-value">{{ pending_count|default:0 }}</div>
+            </div>
+            <div class="stat-label">Pending Applications</div>
+            <div class="stat-trend">Awaiting committee review</div>
+        </div>
+
+        <div class="stat-card line-approved">
+            <div class="stat-header">
+                <div class="stat-icon line-approved"><i class="bi bi-check-lg"></i></div>
+                <div class="stat-value">{{ line_approved_count|default:0 }}</div>
+            </div>
+            <div class="stat-label">Line Approved</div>
+            <div class="stat-trend">Ready for charges</div>
+        </div>
+
+        <div class="stat-card approved">
+            <div class="stat-header">
+                <div class="stat-icon approved"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-value">{{ approved_count|default:0 }}</div>
+            </div>
+            <div class="stat-label">Approved by Committee</div>
+            <div class="stat-trend">Successfully reviewed</div>
+        </div>
+
+        <div class="stat-card rejected">
+            <div class="stat-header">
+                <div class="stat-icon rejected"><i class="bi bi-x-circle"></i></div>
+                <div class="stat-value">{{ rejected_count|default:0 }}</div>
+            </div>
+            <div class="stat-label">Rejected</div>
+            <div class="stat-trend">Not approved</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-grid">
+        <div class="quick-action-card" onclick="location.href='{% url 'committee:applications_list' %}'">
+            <i class="bi bi-file-text"></i>
+            <h6>Review Applications</h6>
+            <small>View pending applications</small>
+        </div>
+        <div class="quick-action-card" onclick="location.href='{% url 'committee:history' %}'">
+            <i class="bi bi-clock-history"></i>
+            <h6>Decision History</h6>
+            <small>Your past decisions</small>
+        </div>
+        <div class="quick-action-card" onclick="location.href='{% url 'committee:reports' %}'">
+            <i class="bi bi-graph-up"></i>
+            <h6>Committee Reports</h6>
+            <small>Performance analytics</small>
+        </div>
+        <div class="quick-action-card" onclick="location.href='{% url 'committee:profile' %}'">
+            <i class="bi bi-person-circle"></i>
+            <h6>My Profile</h6>
+            <small>Update your profile</small>
+        </div>
+    </div>
+
+    <!-- Analytics Charts -->
+    <div class="analytics-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h6><i class="bi bi-graph-up"></i> Application Trend (Last 7 Days)</h6>
+            </div>
+            <div class="chart-body">
+                <canvas id="applicationTrendChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header">
+                <h6><i class="bi bi-pie-chart"></i> Decision Distribution</h6>
+            </div>
+            <div class="chart-body">
+                <canvas id="decisionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Section -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-value">{{ total_voted|default:0 }}</div>
+            <div class="kpi-label">Total Voted</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">{{ applications_this_month|default:0 }}</div>
+            <div class="kpi-label">Applications This Month</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">{{ approval_rate|default:0 }}%</div>
+            <div class="kpi-label">Approval Rate</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">{{ avg_decision_time|default:0 }}</div>
+            <div class="kpi-label">Avg Decision Time (Days)</div>
+        </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+        <!-- Left Column - Pending Applications -->
+        <div class="dashboard-card">
+            <div class="card-header-custom">
+                <h6><i class="bi bi-file-text"></i> Pending Applications for Review <span class="badge-count">{{ pending_applications|length }}</span></h6>
+                <a href="{% url 'committee:applications_list' %}" class="text-decoration-none small">View All <i class="bi bi-chevron-right"></i></a>
+            </div>
+            <div class="table-responsive-custom">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>App ID</th>
+                            <th>Member</th>
+                            <th>Loan Product</th>
+                            <th>Requested Amount</th>
+                            <th>Votes</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in pending_applications %}
+                        <tr>
+                            <td><span class="app-id">{{ app.application_id }}</span></td>
+                            <td>{{ app.member.last_name }}, {{ app.member.first_name }}\n                            <small class="text-muted d-block">{{ app.member.membership_number|default:"" }}</small>
+                            </div>
+                            <td>{{ app.loan_product.name|default:"—" }}</div>
+                            <td>₱{{ app.requested_amount|floatformat:2 }}</div>
+                            <td>
+                                <div class="small">{{ app.votes_count|default:0 }}/{{ committee_members_count|default:3 }} voted</div>
+                                {% if app.has_voted %}
+                                <span class="badge-success mt-1" style="font-size: 0.6rem;">Voted</span>
+                                {% endif %}
+                                <div class="vote-progress">
+                                    <div class="vote-bar">
+                                        <div class="vote-filled" style="width: {% widthratio app.votes_count|default:0 committee_members_count|default:3 100 %}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <td>
+                                <a href="{% url 'committee:review_application' app.id %}" class="btn-review">
+                                    <i class="bi bi-eye"></i> Review
+                                </a>
+                            </div>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>No pending applications</p>
+                                </div>
+                            </div>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div>
+            <!-- Recent Committee Activity -->
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-activity"></i> Recent Committee Activity</h6>
+                    <button class="refresh-btn" onclick="refreshActivity()" title="Refresh" style="background: none; border: none; color: var(--text-muted);">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                </div>
+                <div class="p-3" id="activityList">
+                    {% for vote in recent_votes %}
+                    <div class="activity-item" onclick="window.location.href='{% url 'committee:review_application' vote.application.id %}'">
+                        <div class="activity-icon"><i class="bi bi-check-circle"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold small">Application {{ vote.application.application_id }}</div>
+                            <div class="text-muted small">
+                                {% if vote.vote == 'approved' %}
+                                    <span class="badge-success">Approved</span>
+                                {% else %}
+                                    <span class="badge-danger">Rejected</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.65rem;">{{ vote.voted_at|date:"M d, Y - g:i A" }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>No recent activity</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Committee Members -->
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-people"></i> Committee Members</h6>
+                </div>
+                <div class="p-3">
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span class="text-muted">Total Members</span>
+                        <span class="fw-bold text-primary">{{ committee_members_count|default:3 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span class="text-muted">Active Members</span>
+                        <span class="fw-bold text-success">{{ committee_members_count|default:3 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Required Votes</span>
+                        <span class="fw-bold text-warning">Majority ({{ committee_members_count|default:3|add:1|divisibleby:2|yesno:"2,2" }}+)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let trendChart = null;
+    let decisionChart = null;
+
+    // Live Clock
+    function updateLiveClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const clockElement = document.getElementById('liveClock');
+        if (clockElement) clockElement.textContent = timeString;
+    }
+    setInterval(updateLiveClock, 1000);
+
+    // Random welcome messages
+    const welcomeMessages = [
+        "Here's your committee performance overview.",
+        "Applications awaiting your review.",
+        "Stay on top of your committee duties.",
+        "Review and decide on loan applications.",
+        "Your decisions matter to our members!"
+    ];
+    setInterval(() => {
+        const msgElement = document.getElementById('realTimeMessage');
+        if (msgElement) {
+            const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
+            msgElement.textContent = welcomeMessages[randomIndex];
+        }
+    }, 10000);
+
+    // Load Charts
+    function loadCharts() {
+        // Application Trend Chart
+        const trendCtx = document.getElementById('applicationTrendChart');
+        if (trendCtx) {
+            if (trendChart) trendChart.destroy();
+            trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ trend_labels|safe|default:'["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]' }},
+                    datasets: [{
+                        label: 'Applications Received',
+                        data: {{ trend_data|safe|default:'[0,0,0,0,0,0,0]' }},
+                        borderColor: '#0d6e6e',
+                        backgroundColor: 'rgba(13, 110, 110, 0.05)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#0d6e6e',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 10 } } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } } },
+                        x: { ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        // Decision Distribution Chart
+        const decisionCtx = document.getElementById('decisionChart');
+        if (decisionCtx) {
+            if (decisionChart) decisionChart.destroy();
+            decisionChart = new Chart(decisionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ decision_labels|safe|default:'["Approved", "Rejected", "Pending"]' }},
+                    datasets: [{
+                        data: {{ decision_data|safe|default:'[0,0,0]' }},
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10 } },
+                        tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.raw; } } }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+    }
+
+    function refreshActivity() {
+        location.reload();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCharts();
+    });
+
+    // Force add favicon
+    (function() {
+        var oldLinks = document.querySelectorAll("link[rel*='icon']");
+        oldLinks.forEach(function(link) {
+            link.parentNode.removeChild(link);
+        });
+        var link = document.createElement('link');
+        link.rel = 'icon';
+        link.type = 'image/png';
+        link.href = "{% static 'images/logo.png' %}?v=" + Date.now();
+        document.head.appendChild(link);
+        var link2 = document.createElement('link');
+        link2.rel = 'shortcut icon';
+        link2.type = 'image/png';
+        link2.href = "{% static 'images/logo.png' %}?v=" + Date.now();
+        document.head.appendChild(link2);
+    })();
+</script>
+{% endblock %}

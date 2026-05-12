@@ -1,0 +1,532 @@
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+
+{% block title %}Create Loan Application - Staff{% endblock %}
+{% block page_title %}Create New Loan Application{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .form-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .form-header {
+        background: var(--brand-gradient);
+        padding: 20px 24px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .form-header h5 {
+        color: white;
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-body {
+        padding: 30px;
+    }
+
+    .form-section {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-title i {
+        color: var(--brand-primary);
+        font-size: 1.2rem;
+    }
+
+    .form-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .form-label.required::after {
+        content: '*';
+        color: #ef4444;
+        margin-left: 4px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        background: var(--input-bg);
+        color: var(--text-primary);
+        transition: all 0.2s;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--brand-primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    .form-text {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    .member-info-card {
+        background: var(--bg-body);
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 20px;
+        border: 1px solid var(--border-color);
+    }
+
+    .member-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--brand-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .btn-submit {
+        background: var(--brand-gradient);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+        color: white;
+    }
+
+    .btn-cancel {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 12px 30px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-cancel:hover {
+        border-color: var(--brand-primary);
+        color: var(--brand-primary);
+        transform: translateY(-2px);
+    }
+
+    .alert-info {
+        background: var(--info-bg);
+        color: var(--info-text);
+        border: none;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.85rem;
+    }
+
+    .member-search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .member-search-result {
+        padding: 12px 15px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .member-search-result:hover {
+        background: var(--table-hover);
+    }
+
+    .member-search-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .member-search-membership {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    .loan-product-card {
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        padding: 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 15px;
+    }
+
+    .loan-product-card:hover {
+        border-color: var(--brand-primary);
+        transform: translateY(-2px);
+    }
+
+    .loan-product-card.selected {
+        border-color: var(--brand-primary);
+        background: rgba(13, 110, 110, 0.05);
+    }
+
+    .loan-product-name {
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 5px;
+    }
+
+    .loan-product-rate {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h5>
+                <i class="bi bi-plus-circle"></i>
+                Create New Loan Application
+            </h5>
+        </div>
+
+        <div class="form-body">
+            <form method="post" id="applicationForm" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Member Selection Section -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="bi bi-person-badge"></i>
+                        Member Information
+                    </div>
+
+                    <div class="position-relative">
+                        <label class="form-label required">Select Member</label>
+                        <input type="text"
+                               class="form-control"
+                               id="memberSearch"
+                               placeholder="Search by name or membership number..."
+                               autocomplete="off">
+                        <input type="hidden" name="member_id" id="memberId" required>
+                        <div class="member-search-results" id="memberSearchResults"></div>
+                        <div class="form-text">Start typing to search for a member</div>
+                    </div>
+
+                    <div id="selectedMemberInfo" style="display: none;" class="mt-3">
+                        <div class="member-info-card">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <div class="member-avatar" id="memberAvatar">JD</div>
+                                </div>
+                                <div class="col">
+                                    <div class="member-details">
+                                        <h6 id="memberName" class="mb-1">John Doe</h6>
+                                        <p id="memberDetails" class="mb-0 text-muted small">Member #: MEM-001</p>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle-fill"></i> Selected
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loan Product Section -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="bi bi-grid"></i>
+                        Loan Product Selection
+                    </div>
+
+                    <label class="form-label required">Select Loan Product</label>
+                    <div class="row" id="loanProductsContainer">
+                        {% for product in loan_products %}
+                        <div class="col-md-6">
+                            <div class="loan-product-card" data-product-id="{{ product.id }}" data-product-name="{{ product.name }}" data-interest-rate="{{ product.interest_rate }}">
+                                <div class="loan-product-name">{{ product.name }}</div>
+                                <div class="loan-product-rate">
+                                    <i class="bi bi-percent"></i> Interest Rate: {{ product.interest_rate }}%
+                                </div>
+                                <div class="loan-product-rate text-muted small mt-1">
+                                    Max Amount: ₱{{ product.max_amount|floatformat:2|default:"Unlimited" }}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> No loan products available.
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" name="loan_product_id" id="loanProductId" required>
+                </div>
+
+                <!-- Loan Details Section -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="bi bi-calculator"></i>
+                        Loan Details
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required">Requested Amount (₱)</label>
+                            <input type="number"
+                                   name="requested_amount"
+                                   id="requestedAmount"
+                                   class="form-control"
+                                   step="0.01"
+                                   min="1000"
+                                   required>
+                            <div class="form-text">Minimum amount: ₱1,000.00</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required">Loan Purpose</label>
+                            <select name="purpose" class="form-select" required>
+                                <option value="">Select purpose...</option>
+                                <option value="business">Business Capital</option>
+                                <option value="education">Education</option>
+                                <option value="medical">Medical Emergency</option>
+                                <option value="housing">Housing/Home Improvement</option>
+                                <option value="vehicle">Vehicle Purchase</option>
+                                <option value="agricultural">Agricultural Needs</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Collateral (if any)</label>
+                            <input type="text" name="collateral" class="form-control" placeholder="Describe collateral...">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Payment Mode</label>
+                            <select name="payment_mode" class="form-select">
+                                <option value="cash">Cash</option>
+                                <option value="quedan">Quedan</option>
+                                <option value="pesada">Pesada</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Additional Notes</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="Any additional information about this loan application..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Documents Section -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="bi bi-file-earmark-text"></i>
+                        Supporting Documents (Optional)
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Please upload any supporting documents that may help process this application.
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Government ID</label>
+                            <input type="file" name="govt_id" class="form-control" accept=".pdf,.jpg,.png">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Proof of Income</label>
+                            <input type="file" name="proof_of_income" class="form-control" accept=".pdf,.jpg,.png">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Other Documents</label>
+                            <input type="file" name="other_documents" class="form-control" accept=".pdf,.jpg,.png" multiple>
+                            <div class="form-text">You can select multiple files</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-end gap-3 mt-4 pt-3">
+                    <a href="{% url 'staff:staff_applications' %}" class="btn-cancel">
+                        <i class="bi bi-x-lg"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn-submit" id="submitBtn" disabled>
+                        <i class="bi bi-save"></i> Submit Application
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Member search functionality
+    const memberSearch = document.getElementById('memberSearch');
+    const memberSearchResults = document.getElementById('memberSearchResults');
+    const memberIdField = document.getElementById('memberId');
+    const selectedMemberInfo = document.getElementById('selectedMemberInfo');
+    const submitBtn = document.getElementById('submitBtn');
+    const loanProductIdField = document.getElementById('loanProductId');
+    const requestedAmount = document.getElementById('requestedAmount');
+
+    let searchTimeout;
+
+    // Search members
+    function searchMembers(query) {
+        if (query.length < 2) {
+            memberSearchResults.style.display = 'none';
+            return;
+        }
+
+        fetch(`/staff/api/member-search/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.member) {
+                    memberSearchResults.innerHTML = `
+                        <div class="member-search-result" data-member-id="${data.member.id}"
+                             data-member-name="${data.member.name}"
+                             data-member-membership="${data.member.membership_id}">
+                            <div class="member-search-name">${data.member.name}</div>
+                            <div class="member-search-membership">Member #: ${data.member.membership_id || 'N/A'}</div>
+                        </div>
+                    `;
+                    memberSearchResults.style.display = 'block';
+                } else {
+                    memberSearchResults.innerHTML = '<div class="member-search-result">No members found</div>';
+                    memberSearchResults.style.display = 'block';
+                }
+
+                // Add click handlers
+                document.querySelectorAll('.member-search-result').forEach(result => {
+                    result.addEventListener('click', function() {
+                        const memberId = this.dataset.memberId;
+                        const memberName = this.dataset.memberName;
+                        const memberMembership = this.dataset.memberMembership;
+
+                        if (memberId) {
+                            memberIdField.value = memberId;
+                            memberSearch.value = memberName;
+                            memberSearchResults.style.display = 'none';
+
+                            const avatarInitial = memberName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                            document.getElementById('memberAvatar').textContent = avatarInitial;
+                            document.getElementById('memberName').textContent = memberName;
+                            document.getElementById('memberDetails').innerHTML = `Member #: ${memberMembership || 'N/A'}`;
+                            selectedMemberInfo.style.display = 'block';
+
+                            validateForm();
+                        }
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error searching members:', error);
+                memberSearchResults.style.display = 'none';
+            });
+    }
+
+    memberSearch.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value;
+        searchTimeout = setTimeout(() => searchMembers(query), 300);
+    });
+
+    // Close search results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!memberSearch.contains(e.target) && !memberSearchResults.contains(e.target)) {
+            memberSearchResults.style.display = 'none';
+        }
+    });
+
+    // Loan product selection
+    const loanProducts = document.querySelectorAll('.loan-product-card');
+
+    loanProducts.forEach(product => {
+        product.addEventListener('click', function() {
+            loanProducts.forEach(p => p.classList.remove('selected'));
+            this.classList.add('selected');
+            loanProductIdField.value = this.dataset.productId;
+            validateForm();
+        });
+    });
+
+    // Validate form
+    function validateForm() {
+        const hasMember = memberIdField.value !== '';
+        const hasProduct = loanProductIdField.value !== '';
+        const hasAmount = requestedAmount.value && parseFloat(requestedAmount.value) >= 1000;
+        const hasPurpose = document.querySelector('select[name="purpose"]').value !== '';
+
+        submitBtn.disabled = !(hasMember && hasProduct && hasAmount && hasPurpose);
+    }
+
+    requestedAmount.addEventListener('input', validateForm);
+    document.querySelector('select[name="purpose"]').addEventListener('change', validateForm);
+});
+</script>
+{% endblock %}

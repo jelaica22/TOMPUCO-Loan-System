@@ -1,0 +1,771 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Payment History - TOMPuCO{% endblock %}
+
+{% block page_title %}Payment History{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== Payment History Page - Professional Design ===== */
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 28px;
+        margin-top: 15px;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    }
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 22px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-card.total::before { background: linear-gradient(90deg, #0d6e6e, #0a5a5a); }
+    .stat-card.count::before { background: #10b981; }
+    .stat-card.last::before { background: #3b82f6; }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+
+    .stat-icon.total { background: rgba(13, 110, 110, 0.1); color: #0d6e6e; }
+    .stat-icon.count { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .stat-icon.last { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
+    [data-theme="dark"] .stat-icon.total { background: rgba(13, 110, 110, 0.2); color: #4ade80; }
+    [data-theme="dark"] .stat-icon.count { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    [data-theme="dark"] .stat-icon.last { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-top: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+    }
+
+    .filter-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .filter-input {
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        width: 100%;
+        transition: all 0.2s;
+        background: var(--input-bg);
+        color: var(--text-primary);
+    }
+
+    .filter-input:focus {
+        border-color: #0d6e6e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    [data-theme="dark"] .filter-input:focus {
+        border-color: #4ade80;
+        box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.15);
+    }
+
+    .btn-apply, .btn-reset {
+        padding: 10px 20px;
+        font-weight: 600;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+    }
+
+    .btn-apply {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        color: white;
+        border: none;
+    }
+
+    .btn-apply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    .btn-reset {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .btn-reset:hover {
+        transform: translateY(-2px);
+        background: var(--gray-100);
+    }
+
+    /* Main Card */
+    .main-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .card-title {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+    }
+
+    .card-stats {
+        display: flex;
+        gap: 15px;
+        font-size: 0.85rem;
+        flex-wrap: wrap;
+    }
+
+    .card-stats span {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 10px;
+        border-radius: 20px;
+        color: white;
+    }
+
+    /* Professional Table */
+    .table-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    .payments-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+        min-width: 1000px;
+    }
+
+    .payments-table th {
+        background: var(--gray-50);
+        padding: 16px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        text-align: left;
+        border-bottom: 2px solid var(--border-color);
+        color: var(--text-muted);
+        letter-spacing: 0.5px;
+    }
+
+    [data-theme="dark"] .payments-table th {
+        background: #1e2a3a;
+    }
+
+    .payments-table td {
+        padding: 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .payments-table tbody tr {
+        transition: background 0.2s;
+    }
+
+    .payments-table tbody tr:hover {
+        background: var(--gray-50);
+    }
+
+    [data-theme="dark"] .payments-table tbody tr:hover {
+        background: #1e2a3a;
+    }
+
+    /* Text Alignment */
+    .text-end {
+        text-align: right;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .fw-bold {
+        font-weight: 700;
+    }
+
+    .text-success {
+        color: #10b981;
+    }
+
+    [data-theme="dark"] .text-success {
+        color: #34d399;
+    }
+
+    .text-danger {
+        color: #dc2626;
+    }
+
+    [data-theme="dark"] .text-danger {
+        color: #f87171;
+    }
+
+    .payment-id {
+        font-family: monospace;
+        font-weight: 600;
+        color: #0d6e6e;
+        font-size: 0.85rem;
+    }
+
+    [data-theme="dark"] .payment-id {
+        color: #4ade80;
+    }
+
+    .loan-number {
+        font-weight: 700;
+        color: #0d6e6e;
+        font-family: monospace;
+        font-size: 0.85rem;
+    }
+
+    [data-theme="dark"] .loan-number {
+        color: #4ade80;
+    }
+
+    /* Payment Method Badges */
+    .method-badge {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: fit-content;
+    }
+
+    .method-cash { background: #d1fae5; color: #065f46; }
+    .method-pesada { background: #dbeafe; color: #1e40af; }
+    .method-quedan { background: #fef3c7; color: #92400e; }
+
+    [data-theme="dark"] .method-cash { background: #064e3b; color: #a7f3d0; }
+    [data-theme="dark"] .method-pesada { background: #1e3a5f; color: #bfdbfe; }
+    [data-theme="dark"] .method-quedan { background: #451a03; color: #fde68a; }
+
+    /* Receipt Button */
+    .btn-view-receipt {
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        transition: all 0.3s;
+        cursor: pointer;
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        color: white;
+        border: none;
+    }
+
+    .btn-view-receipt:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+        color: white;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 15px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 15px;
+    }
+
+    .btn-create {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+    }
+
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+        color: white;
+    }
+
+    /* Loading State */
+    .loading-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: none;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        color: white;
+        border: none;
+        padding: 20px 24px;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .receipt-preview {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .receipt-preview i {
+        font-size: 4rem;
+        color: #0d6e6e;
+        margin-bottom: 20px;
+    }
+
+    [data-theme="dark"] .receipt-preview i {
+        color: #4ade80;
+    }
+
+    .alert-info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 16px;
+    }
+
+    [data-theme="dark"] .alert-info {
+        background: #1e3a5f;
+        color: #bfdbfe;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payments-container">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card total">
+            <div class="stat-icon total"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-value" id="totalPayments">₱0</div>
+            <div class="stat-label">Total Payments</div>
+        </div>
+
+        <div class="stat-card count">
+            <div class="stat-icon count"><i class="bi bi-receipt"></i></div>
+            <div class="stat-value" id="paymentCount">0</div>
+            <div class="stat-label">Number of Payments</div>
+        </div>
+
+        <div class="stat-card last">
+            <div class="stat-icon last"><i class="bi bi-calendar-check"></i></div>
+            <div class="stat-value" id="lastPayment">—</div>
+            <div class="stat-label">Last Payment</div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-title">
+            <i class="bi bi-funnel-fill"></i> Filter Payments
+        </div>
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <label class="filter-label"><i class="bi bi-search"></i> Search</label>
+                <input type="text" id="searchInput" class="filter-input" placeholder="Loan # or Receipt #...">
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-credit-card"></i> Payment Method</label>
+                <select id="methodSelect" class="filter-input">
+                    <option value="all">All Methods</option>
+                    <option value="cash">Cash</option>
+                    <option value="pesada">Pesada</option>
+                    <option value="quedan">Quedan</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-calendar"></i> Date Range</label>
+                <div class="d-flex gap-2">
+                    <input type="date" id="dateFrom" class="filter-input" placeholder="From">
+                    <input type="date" id="dateTo" class="filter-input" placeholder="To">
+                </div>
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="filter-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button class="btn-apply w-100" id="applyFiltersBtn"><i class="bi bi-search"></i> Apply</button>
+                    <button class="btn-reset" id="resetFiltersBtn"><i class="bi bi-arrow-repeat"></i> Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table -->
+    <div class="main-card">
+        <div class="card-header-custom">
+            <div class="card-title">
+                <i class="bi bi-receipt-fill"></i>
+                Payment Transaction History
+            </div>
+            <div class="card-stats">
+                <span id="showingCount">Showing 0 payments</span>
+                <span id="totalPaymentsSpan">Total: 0</span>
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="payments-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Receipt #</th>
+                        <th>Loan #</th>
+                        <th class="text-end">Amount</th>
+                        <th>Method</th>
+                        <th class="text-end">Principal</th>
+                        <th class="text-end">Interest</th>
+                        <th class="text-end">Penalty</th>
+                        <th class="text-center">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentsTableBody">
+                    <tr>
+                        <td colspan="9">
+                            <div class="loading-state">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <p class="mt-2 text-muted">Loading your payment history...</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-receipt me-2"></i>Official Receipt</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="receiptContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="downloadReceiptBtn" class="btn btn-primary" download>
+                    <i class="bi bi-download"></i> Download PDF
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allPayments = [];
+    let filters = {
+        search: '',
+        method: 'all',
+        dateFrom: '',
+        dateTo: ''
+    };
+
+    function formatCurrency(amount) {
+        if (!amount && amount !== 0) return '₱0';
+        return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(amount);
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '—';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function getMethodBadge(method) {
+        const methodMap = {
+            'cash': { class: 'method-cash', icon: 'bi-cash', label: 'Cash' },
+            'pesada': { class: 'method-pesada', icon: 'bi-scale', label: 'Pesada' },
+            'quedan': { class: 'method-quedan', icon: 'bi-file-text', label: 'Quedan' }
+        };
+        const config = methodMap[method] || { class: 'method-cash', icon: 'bi-cash', label: method };
+        return `<span class="method-badge ${config.class}"><i class="bi ${config.icon}"></i> ${config.label}</span>`;
+    }
+
+    function loadPayments() {
+        fetch('/api/member-payments/')
+            .then(response => response.json())
+            .then(data => {
+                allPayments = data.payments || [];
+                updateStats();
+                filterAndRenderPayments();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError();
+            });
+    }
+
+    function updateStats() {
+        const total = allPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const count = allPayments.length;
+        const lastPayment = allPayments.length > 0 ? allPayments[0].payment_date : null;
+
+        document.getElementById('totalPayments').innerHTML = formatCurrency(total);
+        document.getElementById('paymentCount').innerHTML = count;
+        document.getElementById('lastPayment').innerHTML = lastPayment ? formatDate(lastPayment) : '—';
+    }
+
+    function filterAndRenderPayments() {
+        let filtered = [...allPayments];
+
+        if (filters.method !== 'all') {
+            filtered = filtered.filter(p => p.payment_method === filters.method);
+        }
+
+        if (filters.search) {
+            const searchLower = filters.search.toLowerCase();
+            filtered = filtered.filter(p =>
+                p.loan_number.toLowerCase().includes(searchLower) ||
+                (p.receipt_number && p.receipt_number.toLowerCase().includes(searchLower))
+            );
+        }
+
+        if (filters.dateFrom) {
+            filtered = filtered.filter(p => p.payment_date >= filters.dateFrom);
+        }
+
+        if (filters.dateTo) {
+            filtered = filtered.filter(p => p.payment_date <= filters.dateTo);
+        }
+
+        filtered.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+        renderTable(filtered);
+
+        document.getElementById('showingCount').innerHTML = `Showing ${filtered.length} payments`;
+        document.getElementById('totalPaymentsSpan').innerHTML = `Total: ${allPayments.length}`;
+    }
+
+    function renderTable(payments) {
+        const tbody = document.getElementById('paymentsTableBody');
+
+        if (payments.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9">
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <h6>No Payment History</h6>
+                            <p>You haven't made any payments yet.</p>
+                            <a href="{% url 'main:my_loans' %}" class="btn-create">
+                                <i class="bi bi-bank"></i> View Your Loans
+                            </a>
+                        </div>
+                    </div>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = payments.map(payment => `
+            <tr>
+                <td class="text-muted small">${formatDate(payment.payment_date)}</div>
+                <td><code class="payment-id">${payment.receipt_number || '—'}</code></div>
+                <td><code class="loan-number">${payment.loan_number}</code></div>
+                <td class="text-end fw-bold text-success">${formatCurrency(payment.amount)}</div>
+                <td>${getMethodBadge(payment.payment_method)}</div>
+                <td class="text-end">${formatCurrency(payment.principal_amount || 0)}</div>
+                <td class="text-end">${formatCurrency(payment.interest_amount || 0)}</div>
+                <td class="text-end ${payment.penalty_amount > 0 ? 'text-danger fw-bold' : ''}">${formatCurrency(payment.penalty_amount || 0)}</div>
+                <td class="text-center">
+                    ${payment.receipt_url ?
+                        `<button class="btn-view-receipt" onclick="viewReceipt('${payment.receipt_url}', '${payment.receipt_number}', ${payment.id}); return false;">
+                            <i class="bi bi-eye"></i> View Receipt
+                        </button>` :
+                        '<span class="text-muted small">—</span>'
+                    }
+                </div>
+            </tr>
+        `).join('');
+    }
+
+    function viewReceipt(receiptUrl, receiptNumber, paymentId) {
+        const modalContent = document.getElementById('receiptContent');
+        modalContent.innerHTML = `
+            <div class="receipt-preview">
+                <i class="bi bi-receipt"></i>
+                <h5 class="mt-3">Receipt #${receiptNumber}</h5>
+                <p class="text-muted">Click download to get your PDF receipt</p>
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Payment Receipt</strong><br>
+                    Receipt is available for download in PDF format.
+                </div>
+            </div>
+        `;
+
+        document.getElementById('downloadReceiptBtn').href = receiptUrl;
+        document.getElementById('downloadReceiptBtn').onclick = function() {
+            console.log('Downloading receipt:', receiptNumber);
+        };
+
+        const modal = new bootstrap.Modal(document.getElementById('receiptModal'));
+        modal.show();
+    }
+
+    function showError() {
+        const tbody = document.getElementById('paymentsTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9">
+                    <div class="empty-state">
+                        <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                        <h6>Error Loading Payments</h6>
+                        <p>There was a problem loading your payment history. Please try again.</p>
+                        <button class="btn btn-primary btn-sm" onclick="loadPayments()">
+                            <i class="bi bi-arrow-repeat"></i> Retry
+                        </button>
+                    </div>
+                </div>
+            </tr>
+        `;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPayments();
+
+        document.getElementById('applyFiltersBtn').addEventListener('click', function() {
+            filters.search = document.getElementById('searchInput').value;
+            filters.method = document.getElementById('methodSelect').value;
+            filters.dateFrom = document.getElementById('dateFrom').value;
+            filters.dateTo = document.getElementById('dateTo').value;
+            filterAndRenderPayments();
+        });
+
+        document.getElementById('resetFiltersBtn').addEventListener('click', function() {
+            filters.search = '';
+            filters.method = 'all';
+            filters.dateFrom = '';
+            filters.dateTo = '';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('methodSelect').value = 'all';
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            filterAndRenderPayments();
+        });
+    });
+</script>
+{% endblock %}

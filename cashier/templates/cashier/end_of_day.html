@@ -1,0 +1,821 @@
+﻿{% extends 'cashier/base_cashier.html' %}
+{% load static %}
+
+{% block title %}End of Day Report - Cashier{% endblock %}
+{% block page_title %}End of Day Report{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== Modern Dashboard Styles ===== */
+    :root {
+        --primary-dark: #0a5a5a;
+        --primary: #0d6e6e;
+        --primary-light: #1a8a8a;
+        --primary-gradient: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        --primary-gradient-light: linear-gradient(135deg, #1a8a8a 0%, #0d6e6e 100%);
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+        --gray-50: #f8fafc;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-600: #6b7280;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+    }
+
+    [data-theme="dark"] {
+        --primary-dark: #0a3d3d;
+        --primary: #0a5a5a;
+        --primary-light: #1a6e6e;
+        --gray-50: #1a2332;
+        --gray-100: #1e2a3a;
+        --gray-200: #2a3548;
+        --gray-600: #9aaebf;
+        --gray-700: #b0c4d4;
+        --gray-800: #c8dae8;
+        --gray-900: #e8edf2;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+        margin-top: 10px;
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    }
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 576px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 22px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-card.cash::before { background: linear-gradient(90deg, var(--success), #34d399); }
+    .stat-card.pesada::before { background: linear-gradient(90deg, var(--info), #60a5fa); }
+    .stat-card.quedan::before { background: linear-gradient(90deg, var(--warning), #fbbf24); }
+    .stat-card.total::before { background: var(--primary-gradient); }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+
+    .stat-icon.cash { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .stat-icon.pesada { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+    .stat-icon.quedan { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .stat-icon.total { background: rgba(13, 110, 110, 0.1); color: var(--primary); }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    .stat-count {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    /* Summary Card */
+    .summary-card {
+        background: var(--primary-gradient);
+        border-radius: 20px;
+        padding: 28px 32px;
+        margin-bottom: 30px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .summary-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .summary-title h4 {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .summary-title p {
+        margin: 5px 0 0;
+        opacity: 0.9;
+    }
+
+    .summary-numbers {
+        text-align: right;
+    }
+
+    .summary-numbers .total-amount {
+        font-size: 2rem;
+        font-weight: 800;
+    }
+
+    .summary-numbers .total-count {
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+    }
+
+    .filter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .filter-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .filter-select, .filter-input {
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        width: 100%;
+        transition: all 0.2s;
+        background: var(--input-bg);
+        color: var(--text-primary);
+    }
+
+    .filter-select:focus, .filter-input:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    /* Filter Actions */
+    .filter-actions-row {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    /* BUTTONS - VISIBLE IN LIGHT MODE */
+    .btn-apply {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 10px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-apply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+        color: white;
+    }
+
+    .btn-reset {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 10px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-reset:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    [data-theme="dark"] .btn-reset {
+        background: transparent;
+        border-color: #2a9d8f;
+        color: #2a9d8f;
+    }
+
+    [data-theme="dark"] .btn-reset:hover {
+        background: #0d6e6e;
+        color: white;
+    }
+
+    /* Main Card */
+    .main-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+
+    .card-header-custom {
+        background: var(--primary-gradient);
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .card-title {
+        color: white;
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-stats {
+        display: flex;
+        gap: 15px;
+        color: white;
+        font-size: 0.85rem;
+        flex-wrap: wrap;
+    }
+
+    .card-stats span {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+
+    /* Table Styles */
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+        min-width: 800px;
+    }
+
+    .report-table thead th {
+        padding: 14px 16px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-card);
+    }
+
+    .report-table tbody td {
+        padding: 14px 16px;
+        font-size: 0.85rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+    }
+
+    .report-table tbody tr:hover {
+        background: var(--table-hover);
+    }
+
+    /* Badge Styles */
+    .badge-cash { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-pesada { background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-quedan { background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+
+    [data-theme="dark"] .badge-cash { background: #064e3b; color: #a7f3d0; }
+    [data-theme="dark"] .badge-pesada { background: #1e3a8a; color: #bfdbfe; }
+    [data-theme="dark"] .badge-quedan { background: #451a03; color: #fde68a; }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+    }
+
+    .empty-state h6 {
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 0;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+        flex-wrap: wrap;
+    }
+
+    .btn-print {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-print:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-dashboard {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-dashboard:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+        color: white;
+    }
+
+    [data-theme="dark"] .btn-print {
+        background: transparent;
+        border-color: #2a9d8f;
+        color: #2a9d8f;
+    }
+
+    [data-theme="dark"] .btn-print:hover {
+        background: #0d6e6e;
+        color: white;
+    }
+
+    /* Report Footer */
+    .report-footer {
+        margin-top: 20px;
+        padding: 16px 20px;
+        background: var(--bg-body);
+        border-radius: 16px;
+        text-align: center;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cashier-report">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card cash">
+            <div class="stat-header">
+                <div class="stat-icon cash"><i class="bi bi-cash"></i></div>
+                <div class="stat-value">₱{{ cash_total|floatformat:2|default:"0" }}</div>
+            </div>
+            <div class="stat-label">Cash Payments</div>
+            <div class="stat-count">{{ cash_count|default:0 }} transactions</div>
+        </div>
+
+        <div class="stat-card pesada">
+            <div class="stat-header">
+                <div class="stat-icon pesada"><i class="bi bi-truck"></i></div>
+                <div class="stat-value">₱{{ pesada_total|floatformat:2|default:"0" }}</div>
+            </div>
+            <div class="stat-label">Pesada Payments</div>
+            <div class="stat-count">{{ pesada_count|default:0 }} transactions</div>
+        </div>
+
+        <div class="stat-card quedan">
+            <div class="stat-header">
+                <div class="stat-icon quedan"><i class="bi bi-file-text"></i></div>
+                <div class="stat-value">₱{{ quedan_total|floatformat:2|default:"0" }}</div>
+            </div>
+            <div class="stat-label">Quedan Payments</div>
+            <div class="stat-count">{{ quedan_count|default:0 }} transactions</div>
+        </div>
+
+        <div class="stat-card total">
+            <div class="stat-header">
+                <div class="stat-icon total"><i class="bi bi-cash-stack"></i></div>
+                <div class="stat-value">₱{{ total_amount|floatformat:2|default:"0" }}</div>
+            </div>
+            <div class="stat-label">Total Collection</div>
+            <div class="stat-count">{{ count|default:0 }} total transactions</div>
+        </div>
+    </div>
+
+    <!-- Summary Card -->
+    <div class="summary-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="summary-title">
+                    <h4><i class="bi bi-calendar-check"></i> Daily Report Summary</h4>
+                    <p>{{ date|date:"l, F j, Y" }}</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="summary-numbers">
+                    <div class="total-amount">₱{{ total_amount|floatformat:2|default:"0" }}</div>
+                    <div class="total-count">{{ count|default:0 }} Total Transactions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-header">
+            <div class="filter-title">
+                <i class="bi bi-funnel-fill"></i> Advanced Filters
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <label class="filter-label"><i class="bi bi-search"></i> Search</label>
+                <input type="text" id="searchInput" class="filter-input" placeholder="Receipt #, Member Name...">
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-credit-card"></i> Payment Method</label>
+                <select id="methodFilter" class="filter-select">
+                    <option value="all">All Methods</option>
+                    <option value="cash">Cash</option>
+                    <option value="pesada">Pesada</option>
+                    <option value="quedan">Quedan</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-sort"></i> Sort By</label>
+                <select id="sortFilter" class="filter-select">
+                    <option value="time">Time (Latest First)</option>
+                    <option value="amount_high">Amount (High to Low)</option>
+                    <option value="amount_low">Amount (Low to High)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filter-actions-row">
+            <div class="filter-buttons">
+                <button class="btn-apply" id="applyFiltersBtn">
+                    <i class="bi bi-search"></i> Apply Filters
+                </button>
+                <button class="btn-reset" id="resetFiltersBtn">
+                    <i class="bi bi-arrow-repeat"></i> Reset Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table -->
+    <div class="main-card">
+        <div class="card-header-custom">
+            <div class="card-title">
+                <i class="bi bi-receipt"></i>
+                Transaction Details
+            </div>
+            <div class="card-stats">
+                <span><i class="bi bi-files"></i> Showing {{ payments|length }} transactions</span>
+                <span><i class="bi bi-cash-stack"></i> Total: {{ count|default:0 }}</span>
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="report-table" id="reportTable">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Receipt #</th>
+                        <th>Member</th>
+                        <th>Loan #</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Reference #</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    {% for payment in payments %}
+                    <tr data-method="{{ payment.payment_method }}" data-time="{{ payment.created_at|date:"U" }}" data-amount="{{ payment.amount }}">
+                        <td><i class="bi bi-clock"></i> {{ payment.created_at|date:"g:i A" }}</td>
+                        <td><code class="fw-bold">{{ payment.payment_number }}</code></td>
+                        <td>
+                            <div class="fw-semibold">{{ payment.member.last_name }}, {{ payment.member.first_name }}</div>
+                            <small class="text-muted">{{ payment.member.membership_number|default:"" }}</small>
+                        </div>
+                        <td><code>{{ payment.loan.loan_number }}</code></div>
+                        <td class="fw-bold text-success">₱{{ payment.amount|floatformat:2 }}</div>
+                        <td>
+                            {% if payment.payment_method == 'cash' %}
+                                <span class="badge-cash"><i class="bi bi-cash"></i> Cash</span>
+                            {% elif payment.payment_method == 'pesada' %}
+                                <span class="badge-pesada"><i class="bi bi-truck"></i> Pesada</span>
+                            {% else %}
+                                <span class="badge-quedan"><i class="bi bi-file-text"></i> Quedan</span>
+                            {% endif %}
+                        </div>
+                        <td>{{ payment.reference_number|default:"—" }}</div>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <h6>No transactions recorded</h6>
+                                <p>No payments have been recorded for today.</p>
+                            </div>
+                        </div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Report Footer -->
+    <div class="report-footer">
+        <div class="row">
+            <div class="col-md-6 text-start">
+                <i class="bi bi-info-circle"></i> This report is auto-generated by TOMPuCO Loan Management System.
+            </div>
+            <div class="col-md-6 text-md-end">
+                <i class="bi bi-person"></i> Generated by: {{ request.user.get_full_name|default:request.user.username }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button class="btn-print" id="printBtn">
+            <i class="bi bi-printer"></i> Print Report
+        </button>
+        <a href="{% url 'cashier:dashboard' %}" class="btn-dashboard">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<script>
+    function filterAndSortTable() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const methodFilter = document.getElementById('methodFilter').value;
+        const sortFilter = document.getElementById('sortFilter').value;
+
+        let rows = Array.from(document.querySelectorAll('#tableBody tr'));
+
+        // Skip empty state row
+        rows = rows.filter(row => !row.querySelector('.empty-state'));
+
+        // Apply filters
+        let filteredRows = rows.filter(row => {
+            let show = true;
+
+            if (searchTerm) {
+                const text = row.innerText.toLowerCase();
+                if (!text.includes(searchTerm)) {
+                    show = false;
+                }
+            }
+
+            if (methodFilter !== 'all' && show) {
+                const method = row.dataset.method;
+                if (method !== methodFilter) {
+                    show = false;
+                }
+            }
+
+            return show;
+        });
+
+        // Apply sorting
+        if (sortFilter === 'time') {
+            filteredRows.sort((a, b) => {
+                const timeA = parseInt(a.dataset.time);
+                const timeB = parseInt(b.dataset.time);
+                return timeB - timeA;
+            });
+        } else if (sortFilter === 'amount_high') {
+            filteredRows.sort((a, b) => {
+                const amountA = parseFloat(a.dataset.amount);
+                const amountB = parseFloat(b.dataset.amount);
+                return amountB - amountA;
+            });
+        } else if (sortFilter === 'amount_low') {
+            filteredRows.sort((a, b) => {
+                const amountA = parseFloat(a.dataset.amount);
+                const amountB = parseFloat(b.dataset.amount);
+                return amountA - amountB;
+            });
+        }
+
+        const tbody = document.getElementById('tableBody');
+        if (filteredRows.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <h6>No matching transactions</h6>
+                            <p>Try adjusting your filters.</p>
+                        </div>
+                    </div>
+                </table>
+            `;
+        } else {
+            tbody.innerHTML = '';
+            filteredRows.forEach(row => tbody.appendChild(row));
+        }
+
+        const statsSpan = document.querySelector('.card-stats span:first-child');
+        if (statsSpan) {
+            statsSpan.innerHTML = `<i class="bi bi-files"></i> Showing ${filteredRows.length} transactions`;
+        }
+    }
+
+    function resetFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('methodFilter').value = 'all';
+        document.getElementById('sortFilter').value = 'time';
+        location.reload();
+    }
+
+    function printReport() {
+        const printContent = document.querySelector('.main-card').cloneNode(true);
+        const statsCards = document.querySelector('.stats-grid').cloneNode(true);
+        const summaryCard = document.querySelector('.summary-card').cloneNode(true);
+        const reportFooter = document.querySelector('.report-footer').cloneNode(true);
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Daily Report - {{ date|date:"Y-m-d" }}</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+                <style>
+                    body { padding: 30px; font-family: 'Inter', sans-serif; }
+                    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #0d6e6e; padding-bottom: 20px; }
+                    .header h2 { color: #0d6e6e; margin: 0; }
+                    .header p { color: #666; margin: 5px 0; }
+                    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+                    .stat-card { background: white; border-radius: 12px; padding: 15px; border: 1px solid #ddd; }
+                    .summary-card { background: linear-gradient(135deg, #0d6e6e, #0a5a5a); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                    th { background: #0d6e6e; color: white; }
+                    .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+                    @media print { body { padding: 0; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>TOLONG MULTI-PURPOSE COOPERATIVE</h2>
+                    <p>Daily Transaction Report</p>
+                    <p>Date: {{ date|date:"F j, Y" }}</p>
+                </div>
+                ${statsCards.outerHTML}
+                ${summaryCard.outerHTML}
+                ${printContent.outerHTML}
+                ${reportFooter.outerHTML}
+                <div class="footer">
+                    <p>This is a system-generated report. For inquiries, please contact TOMPuCO Staff Office.</p>
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() { window.close(); }, 1000);
+                    };
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+
+    document.getElementById('applyFiltersBtn').addEventListener('click', filterAndSortTable);
+    document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
+    document.getElementById('printBtn').addEventListener('click', printReport);
+
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') filterAndSortTable();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,7 @@
+﻿# Add to main/__init__.py or create a cron job
+# For Windows Task Scheduler, run:
+# python manage.py send_reminders
+
+# For testing, run manually:
+print("To test reminders: python manage.py send_reminders")
+print("For production, schedule this command daily")

@@ -1,0 +1,490 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Payment Schedule - TOMPuCO{% endblock %}
+
+{% block page_title %}Payment Schedule{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== Payment Schedule Page - Professional Design ===== */
+
+    /* Page Container */
+    .schedule-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Back Button */
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .back-button:hover {
+        transform: translateX(-3px);
+        background: var(--gray-100);
+        color: var(--primary);
+    }
+
+    [data-theme="dark"] .back-button:hover {
+        background: #1e2a3a;
+    }
+
+    /* Loan Summary Card */
+    .summary-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .summary-header {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 20px 24px;
+        color: white;
+    }
+
+    .summary-header h5 {
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .summary-body {
+        padding: 24px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+
+    @media (max-width: 992px) {
+        .info-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-item {
+        padding: 12px;
+        background: var(--gray-50);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+    }
+
+    [data-theme="dark"] .info-item {
+        background: #1e2a3a;
+    }
+
+    .info-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .info-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-paid {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-overdue {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    [data-theme="dark"] .status-active {
+        background: #064e3b;
+        color: #a7f3d0;
+    }
+
+    [data-theme="dark"] .status-paid {
+        background: #1e3a5f;
+        color: #bfdbfe;
+    }
+
+    [data-theme="dark"] .status-overdue {
+        background: #7f1d1d;
+        color: #fecaca;
+    }
+
+    /* Schedule Table Card */
+    .schedule-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .schedule-header {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .schedule-header h5 {
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+    }
+
+    .schedule-stats {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .schedule-stats span {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        color: white;
+    }
+
+    /* Table Styles */
+    .table-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+        min-width: 800px;
+    }
+
+    .schedule-table th {
+        background: var(--gray-50);
+        padding: 16px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        text-align: left;
+        border-bottom: 2px solid var(--border-color);
+        color: var(--text-muted);
+        letter-spacing: 0.5px;
+    }
+
+    [data-theme="dark"] .schedule-table th {
+        background: #1e2a3a;
+    }
+
+    .schedule-table td {
+        padding: 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .schedule-table tbody tr {
+        transition: background 0.2s;
+    }
+
+    .schedule-table tbody tr:hover {
+        background: var(--gray-50);
+    }
+
+    [data-theme="dark"] .schedule-table tbody tr:hover {
+        background: #1e2a3a;
+    }
+
+    /* Status Badge in Table */
+    .payment-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .status-paid-badge {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-partial-badge {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-pending-badge {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+    [data-theme="dark"] .status-paid-badge {
+        background: #064e3b;
+        color: #a7f3d0;
+    }
+
+    [data-theme="dark"] .status-partial-badge {
+        background: #451a03;
+        color: #fde68a;
+    }
+
+    [data-theme="dark"] .status-pending-badge {
+        background: #374151;
+        color: #d1d5db;
+    }
+
+    /* Text Alignment */
+    .text-end {
+        text-align: right;
+    }
+
+    .text-danger {
+        color: #dc2626;
+    }
+
+    [data-theme="dark"] .text-danger {
+        color: #f87171;
+    }
+
+    .fw-bold {
+        font-weight: 700;
+    }
+
+    .text-primary {
+        color: #0d6e6e;
+    }
+
+    [data-theme="dark"] .text-primary {
+        color: #4ade80;
+    }
+
+    /* Next Payment Alert */
+    .next-payment-alert {
+        background: #dbeafe;
+        border-left: 4px solid #3b82f6;
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    [data-theme="dark"] .next-payment-alert {
+        background: #1e3a5f;
+        border-left-color: #60a5fa;
+    }
+
+    .next-payment-alert i {
+        font-size: 1.5rem;
+        color: #3b82f6;
+    }
+
+    [data-theme="dark"] .next-payment-alert i {
+        color: #60a5fa;
+    }
+
+    .next-payment-alert .content {
+        flex: 1;
+    }
+
+    .next-payment-alert .content strong {
+        font-size: 0.9rem;
+        color: #1e40af;
+    }
+
+    [data-theme="dark"] .next-payment-alert .content strong {
+        color: #bfdbfe;
+    }
+
+    .next-payment-alert .content p {
+        margin: 4px 0 0;
+        font-size: 0.85rem;
+        color: #1e40af;
+    }
+
+    [data-theme="dark"] .next-payment-alert .content p {
+        color: #bfdbfe;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 15px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="schedule-container">
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a href="{% url 'main:my_loans' %}" class="back-button">
+            <i class="bi bi-arrow-left"></i> Back to Loans
+        </a>
+    </div>
+
+    <!-- Loan Summary Card -->
+    <div class="summary-card">
+        <div class="summary-header">
+            <h5><i class="bi bi-bank"></i> Loan #{{ loan.loan_number|default:loan.id }}</h5>
+        </div>
+        <div class="summary-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Principal Amount</span>
+                    <div class="info-value">₱{{ loan.principal_amount|floatformat:2 }}</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Interest Rate</span>
+                    <div class="info-value">{{ loan.interest_rate }}% per annum</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Term</span>
+                    <div class="info-value">{{ loan.term_months }} months ({{ loan.term_days }} days)</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Status</span>
+                    <div class="info-value">
+                        {% if loan.status == 'active' %}
+                            <span class="status-badge status-active"><i class="bi bi-check-circle"></i> Active</span>
+                        {% elif loan.status == 'paid' %}
+                            <span class="status-badge status-paid"><i class="bi bi-check-circle-fill"></i> Paid</span>
+                        {% elif loan.status == 'overdue' %}
+                            <span class="status-badge status-overdue"><i class="bi bi-exclamation-triangle"></i> Overdue</span>
+                        {% else %}
+                            <span class="status-badge status-pending">{{ loan.status|title }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Schedule Card -->
+    <div class="schedule-card">
+        <div class="schedule-header">
+            <h5><i class="bi bi-calendar-check"></i> Payment Schedule</h5>
+            <div class="schedule-stats">
+                <span><i class="bi bi-check-circle"></i> Paid: {{ paid_count|default:0 }}</span>
+                <span><i class="bi bi-clock"></i> Pending: {{ pending_count|default:0 }}</span>
+            </div>
+        </div>
+        <div class="table-container">
+            {% if schedules %}
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Due Date</th>
+                            <th class="text-end">Principal</th>
+                            <th class="text-end">Interest</th>
+                            <th class="text-end">Penalty</th>
+                            <th class="text-end">Total Due</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for schedule in schedules %}
+                        <tr>
+                            <td class="fw-bold">{{ forloop.counter }}</td>
+                            <td>{{ schedule.due_date|date:"M d, Y" }}</td>
+                            <td class="text-end">₱{{ schedule.principal_due|floatformat:2 }}</td>
+                            <td class="text-end">₱{{ schedule.interest_due|floatformat:2 }}</td>
+                            <td class="text-end text-danger">₱{{ schedule.penalty_due|floatformat:2 }}</td>
+                            <td class="text-end fw-bold text-primary">₱{{ schedule.total_due|floatformat:2 }}</td>
+                            <td>
+                                {% if schedule.status == 'paid' %}
+                                    <span class="payment-status status-paid-badge"><i class="bi bi-check-circle-fill"></i> Paid</span>
+                                {% elif schedule.status == 'partial' %}
+                                    <span class="payment-status status-partial-badge"><i class="bi bi-hourglass-split"></i> Partial</span>
+                                {% else %}
+                                    <span class="payment-status status-pending-badge"><i class="bi bi-clock"></i> Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-calendar-x"></i>
+                    <h6>No Payment Schedule Found</h6>
+                    <p>No payment schedule available for this loan.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Next Payment Reminder -->
+    {% if next_payment %}
+    <div class="next-payment-alert">
+        <i class="bi bi-bell-fill"></i>
+        <div class="content">
+            <strong>📅 Next Payment Due</strong>
+            <p>{{ next_payment.due_date|date:"F d, Y" }} • Amount: <strong>₱{{ next_payment.total_due|floatformat:2 }}</strong></p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

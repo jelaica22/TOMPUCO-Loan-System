@@ -1,0 +1,817 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Notifications - TOMPuCO{% endblock %}
+
+{% block page_title %}Notifications{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== Notifications Page - Professional Design ===== */
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 28px;
+        margin-top: 15px;
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    }
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 22px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-card.total::before { background: linear-gradient(90deg, #0d6e6e, #0a5a5a); }
+    .stat-card.unread::before { background: #ef4444; }
+    .stat-card.read::before { background: #10b981; }
+    .stat-card.system::before { background: #3b82f6; }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+
+    .stat-icon.total { background: rgba(13, 110, 110, 0.1); color: #0d6e6e; }
+    .stat-icon.unread { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .stat-icon.read { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .stat-icon.system { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
+    [data-theme="dark"] .stat-icon.total { background: rgba(13, 110, 110, 0.2); color: #4ade80; }
+    [data-theme="dark"] .stat-icon.unread { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+    [data-theme="dark"] .stat-icon.read { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    [data-theme="dark"] .stat-icon.system { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-top: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    /* Mark All Read Button */
+    .mark-all-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
+
+    .btn-mark-read {
+        padding: 10px 24px;
+        font-weight: 600;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        color: white;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-mark-read:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    /* Main Card */
+    .main-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .card-title {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+    }
+
+    .card-stats {
+        display: flex;
+        gap: 15px;
+        font-size: 0.85rem;
+        flex-wrap: wrap;
+    }
+
+    .card-stats span {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 10px;
+        border-radius: 20px;
+        color: white;
+    }
+
+    /* Notifications Container */
+    .notifications-container {
+        max-height: 650px;
+        overflow-y: auto;
+    }
+
+    /* Notification Item */
+    .notification-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.2s;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .notification-item:hover {
+        background: var(--gray-50);
+    }
+
+    [data-theme="dark"] .notification-item:hover {
+        background: #1e2a3a;
+    }
+
+    .notification-item.unread {
+        background: #eff6ff;
+    }
+
+    [data-theme="dark"] .notification-item.unread {
+        background: #1e3a5f;
+    }
+
+    .notification-item.unread::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #0d6e6e;
+    }
+
+    [data-theme="dark"] .notification-item.unread::before {
+        background: #4ade80;
+    }
+
+    /* Notification Icon */
+    .notification-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+    .notification-icon.application { background: rgba(13, 110, 110, 0.1); color: #0d6e6e; }
+    .notification-icon.payment { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .notification-icon.loan { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .notification-icon.system { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .notification-icon.approval { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .notification-icon.alert { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+    [data-theme="dark"] .notification-icon.application { background: rgba(13, 110, 110, 0.2); color: #4ade80; }
+    [data-theme="dark"] .notification-icon.payment { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    [data-theme="dark"] .notification-icon.loan { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    [data-theme="dark"] .notification-icon.system { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    [data-theme="dark"] .notification-icon.approval { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    [data-theme="dark"] .notification-icon.alert { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+    /* Notification Content */
+    .notification-content {
+        flex: 1;
+    }
+
+    .notification-title {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+    }
+
+    .notification-message {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        line-height: 1.5;
+    }
+
+    .notification-time {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    /* Read Status Badge */
+    .read-status {
+        font-size: 0.65rem;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .read-status.read {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .read-status.unread-badge {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    [data-theme="dark"] .read-status.read {
+        background: #064e3b;
+        color: #a7f3d0;
+    }
+
+    [data-theme="dark"] .read-status.unread-badge {
+        background: #7f1d1d;
+        color: #fecaca;
+    }
+
+    /* Action Buttons */
+    .notification-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .btn-icon {
+        background: none;
+        border: none;
+        padding: 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--text-muted);
+    }
+
+    .btn-icon:hover {
+        background: var(--gray-100);
+        color: #0d6e6e;
+    }
+
+    [data-theme="dark"] .btn-icon:hover {
+        background: #2a3548;
+        color: #4ade80;
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: none;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        color: white;
+        border: none;
+        padding: 20px 24px;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .modal .btn-secondary {
+        background: var(--gray-100);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 8px 20px;
+        border-radius: 8px;
+    }
+
+    .modal .btn-primary {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        color: white;
+    }
+
+    .modal .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(13, 110, 110, 0.3);
+    }
+
+    /* Detail Content in Modal */
+    .detail-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 1.8rem;
+    }
+
+    .detail-icon.application { background: rgba(13, 110, 110, 0.1); color: #0d6e6e; }
+    .detail-icon.payment { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .detail-icon.loan { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .detail-icon.system { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+
+    [data-theme="dark"] .detail-icon.application { background: rgba(13, 110, 110, 0.2); color: #4ade80; }
+    [data-theme="dark"] .detail-icon.payment { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    [data-theme="dark"] .detail-icon.loan { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    [data-theme="dark"] .detail-icon.system { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 15px;
+    }
+
+    .empty-state h6 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 15px;
+    }
+
+    /* Loading State */
+    .loading-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notifications-container-page">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card total" data-filter="all">
+            <div class="stat-icon total"><i class="bi bi-bell"></i></div>
+            <div class="stat-value" id="totalCount">0</div>
+            <div class="stat-label">Total Notifications</div>
+        </div>
+        <div class="stat-card unread" data-filter="unread">
+            <div class="stat-icon unread"><i class="bi bi-envelope"></i></div>
+            <div class="stat-value" id="unreadCount">0</div>
+            <div class="stat-label">Unread</div>
+        </div>
+        <div class="stat-card read" data-filter="read">
+            <div class="stat-icon read"><i class="bi bi-envelope-check"></i></div>
+            <div class="stat-value" id="readCount">0</div>
+            <div class="stat-label">Read</div>
+        </div>
+        <div class="stat-card system" data-filter="system">
+            <div class="stat-icon system"><i class="bi bi-gear"></i></div>
+            <div class="stat-value" id="systemCount">0</div>
+            <div class="stat-label">System</div>
+        </div>
+    </div>
+
+    <!-- Mark All Read Button -->
+    <div class="mark-all-container">
+        <button class="btn-mark-read" id="markAllReadBtn">
+            <i class="bi bi-check2-all"></i> Mark All as Read
+        </button>
+    </div>
+
+    <!-- Main Card -->
+    <div class="main-card">
+        <div class="card-header-custom">
+            <div class="card-title">
+                <i class="bi bi-bell-fill"></i>
+                Notification Center
+            </div>
+            <div class="card-stats">
+                <span id="showingCount">Showing 0 notifications</span>
+                <span id="totalNotifsSpan">Total: 0</span>
+            </div>
+        </div>
+        <div class="notifications-container" id="notificationsContainer">
+            <div class="loading-state">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-muted">Loading notifications...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Detail Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-bell me-2"></i>Notification Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="notificationDetailContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="notificationLinkBtn" class="btn btn-primary">Go to Page</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allNotifications = [];
+    let currentFilter = 'all';
+
+    // Notification type icons mapping
+    const notificationTypeConfig = {
+        'application': { icon: 'bi-file-text', color: 'application', label: 'Application' },
+        'payment': { icon: 'bi-cash-stack', color: 'payment', label: 'Payment' },
+        'loan': { icon: 'bi-bank', color: 'loan', label: 'Loan' },
+        'system': { icon: 'bi-gear', color: 'system', label: 'System' },
+        'alert': { icon: 'bi-exclamation-triangle', color: 'alert', label: 'Alert' },
+        'approval': { icon: 'bi-check-circle', color: 'approval', label: 'Approval' },
+        'committee': { icon: 'bi-people', color: 'application', label: 'Committee' }
+    };
+
+    function formatDate(dateString) {
+        if (!dateString) return '—';
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} min ago`;
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function getNotificationIcon(type) {
+        const config = notificationTypeConfig[type] || { icon: 'bi-bell', color: 'system', label: 'Notification' };
+        return `<div class="notification-icon ${config.color}"><i class="bi ${config.icon}"></i></div>`;
+    }
+
+    function getDetailIcon(type) {
+        const config = notificationTypeConfig[type] || { icon: 'bi-bell', color: 'system', label: 'Notification' };
+        return `<div class="detail-icon ${config.color}"><i class="bi ${config.icon}"></i></div>`;
+    }
+
+    function loadNotifications() {
+        fetch('/api/notifications/')
+            .then(response => response.json())
+            .then(data => {
+                allNotifications = data.notifications || [];
+                updateStats();
+                renderNotifications();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError();
+            });
+    }
+
+    function updateStats() {
+        const total = allNotifications.length;
+        const unread = allNotifications.filter(n => !n.is_read).length;
+        const read = total - unread;
+        const system = allNotifications.filter(n => n.type === 'system').length;
+
+        document.getElementById('totalCount').innerHTML = total;
+        document.getElementById('unreadCount').innerHTML = unread;
+        document.getElementById('readCount').innerHTML = read;
+        document.getElementById('systemCount').innerHTML = system;
+    }
+
+    function renderNotifications() {
+        let filtered = [...allNotifications];
+
+        if (currentFilter === 'unread') {
+            filtered = filtered.filter(n => !n.is_read);
+        } else if (currentFilter === 'read') {
+            filtered = filtered.filter(n => n.is_read);
+        } else if (currentFilter === 'system') {
+            filtered = filtered.filter(n => n.type === 'system');
+        }
+
+        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        const container = document.getElementById('notificationsContainer');
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h6>No Notifications Found</h6>
+                    <p>${currentFilter !== 'all' ? 'No notifications match your filter.' : 'You don\'t have any notifications yet.'}</p>
+                    ${currentFilter !== 'all' ? '<button class="btn btn-outline-primary btn-sm" onclick="currentFilter=\'all\'; renderNotifications();">Clear Filter</button>' : ''}
+                </div>
+            `;
+            document.getElementById('showingCount').innerHTML = `Showing 0 notifications`;
+            document.getElementById('totalNotifsSpan').innerHTML = `Total: ${allNotifications.length}`;
+            return;
+        }
+
+        container.innerHTML = filtered.map(notif => `
+            <div class="notification-item ${!notif.is_read ? 'unread' : ''}"
+                 data-id="${notif.id}"
+                 data-link="${notif.link || '#'}"
+                 data-title="${escapeHtml(notif.title)}"
+                 data-message="${escapeHtml(notif.message)}"
+                 data-time="${formatDate(notif.created_at)}"
+                 data-type="${notif.type}">
+                ${getNotificationIcon(notif.type)}
+                <div class="notification-content">
+                    <div class="notification-title">${escapeHtml(notif.title)}</div>
+                    <div class="notification-message">${escapeHtml(notif.message)}</div>
+                    <div class="notification-time">
+                        <i class="bi bi-clock"></i> ${formatDate(notif.created_at)}
+                        ${!notif.is_read ? '<span class="read-status unread-badge">Unread</span>' : '<span class="read-status read">Read</span>'}
+                    </div>
+                </div>
+                <div class="notification-actions">
+                    ${!notif.is_read ? `
+                        <button class="btn-icon" onclick="markAsRead(${notif.id}, event)" title="Mark as read">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                    ` : ''}
+                    <button class="btn-icon" onclick="deleteNotification(${notif.id}, event)" title="Delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('showingCount').innerHTML = `Showing ${filtered.length} notifications`;
+        document.getElementById('totalNotifsSpan').innerHTML = `Total: ${allNotifications.length}`;
+
+        // Add click handlers for notification items
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Don't trigger if clicking on action buttons
+                if (e.target.closest('.btn-icon')) return;
+
+                const id = parseInt(this.dataset.id);
+                const link = this.dataset.link;
+                const title = this.dataset.title;
+                const message = this.dataset.message;
+                const time = this.dataset.time;
+                const type = this.dataset.type;
+
+                showNotificationDetails(id, title, message, time, type, link);
+
+                // Mark as read if unread
+                if (this.classList.contains('unread')) {
+                    markAsRead(id, null, true);
+                }
+            });
+        });
+    }
+
+    function showNotificationDetails(id, title, message, time, type, link) {
+        const modalContent = document.getElementById('notificationDetailContent');
+        const config = notificationTypeConfig[type] || { icon: 'bi-bell', color: 'system', label: 'Notification' };
+
+        modalContent.innerHTML = `
+            <div class="text-center mb-4">
+                ${getDetailIcon(type)}
+                <h5 class="mt-3">${escapeHtml(title)}</h5>
+                <p class="text-muted small">${time}</p>
+            </div>
+            <hr>
+            <div class="mt-3">
+                <p class="mb-0">${escapeHtml(message).replace(/\n/g, '<br>')}</p>
+            </div>
+        `;
+
+        const linkBtn = document.getElementById('notificationLinkBtn');
+        if (link && link !== '#' && link !== '') {
+            linkBtn.href = link;
+            linkBtn.style.opacity = '1';
+            linkBtn.style.pointerEvents = 'auto';
+            linkBtn.classList.remove('disabled');
+        } else {
+            linkBtn.href = '#';
+            linkBtn.style.opacity = '0.5';
+            linkBtn.style.pointerEvents = 'none';
+            linkBtn.classList.add('disabled');
+        }
+
+        new bootstrap.Modal(document.getElementById('notificationModal')).show();
+    }
+
+    function markAsRead(notificationId, event, fromModal = false) {
+        if (event) event.stopPropagation();
+        if (event) event.preventDefault();
+
+        fetch(`/api/notifications/${notificationId}/read/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const notif = allNotifications.find(n => n.id === notificationId);
+                if (notif) {
+                    notif.is_read = true;
+
+                    // Also update in the DOM if the notification is currently visible
+                    const notificationElement = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
+                    if (notificationElement) {
+                        notificationElement.classList.remove('unread');
+                        notificationElement.classList.add('read');
+                        const unreadBadge = notificationElement.querySelector('.read-status.unread-badge');
+                        if (unreadBadge) {
+                            unreadBadge.className = 'read-status read';
+                            unreadBadge.innerHTML = 'Read';
+                        }
+                    }
+                }
+                renderNotifications();
+            }
+        })
+        .catch(error => console.error('Error marking as read:', error));
+    }
+
+    function markAllAsRead() {
+        const unreadNotifications = allNotifications.filter(n => !n.is_read);
+        if (unreadNotifications.length === 0) {
+            alert('No unread notifications to mark.');
+            return;
+        }
+
+        if (!confirm(`Mark ${unreadNotifications.length} notification(s) as read?`)) return;
+
+        fetch('/api/notifications/read-all/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                allNotifications.forEach(n => n.is_read = true);
+                renderNotifications();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function deleteNotification(notificationId, event) {
+        event.stopPropagation();
+        if (confirm('Delete this notification?')) {
+            fetch(`/api/notifications/${notificationId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    allNotifications = allNotifications.filter(n => n.id !== notificationId);
+                    renderNotifications();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+
+    function showError() {
+        const container = document.getElementById('notificationsContainer');
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                <h6>Error Loading Notifications</h6>
+                <p>There was a problem loading your notifications. Please try again.</p>
+                <button class="btn btn-primary btn-sm" onclick="loadNotifications()">
+                    <i class="bi bi-arrow-repeat"></i> Retry
+                </button>
+            </div>
+        `;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function getCSRFToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadNotifications();
+
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('click', function() {
+                if (this.classList.contains('total')) currentFilter = 'all';
+                else if (this.classList.contains('unread')) currentFilter = 'unread';
+                else if (this.classList.contains('read')) currentFilter = 'read';
+                else if (this.classList.contains('system')) currentFilter = 'system';
+                renderNotifications();
+            });
+        });
+
+        document.getElementById('markAllReadBtn').addEventListener('click', function() {
+            markAllAsRead();
+        });
+    });
+</script>
+{% endblock %}

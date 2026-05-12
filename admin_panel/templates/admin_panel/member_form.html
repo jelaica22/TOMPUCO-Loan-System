@@ -1,0 +1,312 @@
+﻿{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} Member{% endblock %}
+{% block page_title %}{{ action }} Member{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .form-section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1e3c72;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #1e3c72;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #1e3c72;
+        box-shadow: 0 0 0 3px rgba(30,60,114,0.1);
+    }
+    
+    .profile-upload {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .profile-preview {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 15px;
+        border: 3px solid #1e3c72;
+    }
+    
+    .required-field::after {
+        content: '*';
+        color: #dc2626;
+        margin-left: 4px;
+    }
+    
+    .help-text {
+        font-size: 0.7rem;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        border: none;
+        padding: 12px 30px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" id="memberForm">
+    {% csrf_token %}
+    
+    <!-- Profile Picture Section -->
+    <div class="form-section">
+        <div class="profile-upload">
+            {% if member.profile_picture %}
+                <img src="{{ member.profile_picture.url }}" class="profile-preview" id="profilePreview">
+            {% else %}
+                <img src="https://via.placeholder.com/120x120?text=No+Image" class="profile-preview" id="profilePreview">
+            {% endif %}
+            <div class="mt-2">
+                <label class="btn btn-primary btn-sm">
+                    <i class="bi bi-camera"></i> Upload Photo
+                    <input type="file" name="profile_picture" accept="image/*" onchange="previewImage(this)" style="display:none;">
+                </label>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="document.querySelector('input[name=profile_picture]').click()">Choose File</button>
+                <input type="file" name="profile_picture" id="id_profile_picture" accept="image/*" onchange="previewImage(this)" style="display:none;">
+            </div>
+            <div class="help-text">Upload profile picture (JPG, PNG - Max 5MB)</div>
+        </div>
+    </div>
+    
+    <!-- Personal Information -->
+    <div class="form-section">
+        <div class="form-section-title">
+            <i class="bi bi-person-circle"></i> PERSONAL INFORMATION
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label required-field">LAST NAME</label>
+                <input type="text" name="last_name" class="form-control" value="{{ member.last_name|default:'' }}" required>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label required-field">FIRST NAME</label>
+                <input type="text" name="first_name" class="form-control" value="{{ member.first_name|default:'' }}" required>
+            </div>
+            <div class="col-md-2 mb-3">
+                <label class="form-label">M.I.</label>
+                <input type="text" name="middle_initial" class="form-control" maxlength="1" value="{{ member.middle_initial|default:'' }}">
+            </div>
+            <div class="col-md-2 mb-3">
+                <label class="form-label">NICKNAME</label>
+                <input type="text" name="nickname" class="form-control" value="{{ member.nickname|default:'' }}">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">NATIONALITY</label>
+                <input type="text" name="nationality" class="form-control" value="{{ member.nationality|default:'Filipino' }}">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">DATE APPLIED</label>
+                <input type="date" name="date_applied" class="form-control" value="{{ member.date_applied|date:'Y-m-d'|default:'' }}">
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label required-field">BIRTHDATE</label>
+                <input type="date" name="birthdate" class="form-control" value="{{ member.birthdate|date:'Y-m-d'|default:'' }}" onchange="calculateAge()" required>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label required-field">GENDER</label>
+                <select name="gender" class="form-select" required>
+                    <option value="">Select</option>
+                    <option value="Male" {% if member.gender == 'Male' %}selected{% endif %}>Male</option>
+                    <option value="Female" {% if member.gender == 'Female' %}selected{% endif %}>Female</option>
+                </select>
+            </div>
+            <div class="col-md-2 mb-3">
+                <label class="form-label">AGE</label>
+                <input type="text" name="age" id="age" class="form-control" readonly value="{{ member.age|default:'' }}">
+            </div>
+            <div class="col-md-5 mb-3">
+                <label class="form-label required-field">CONTACT #</label>
+                <input type="tel" name="contact_number" class="form-control" value="{{ member.contact_number|default:'' }}" required>
+            </div>
+            <div class="col-12 mb-3">
+                <label class="form-label required-field">RESIDENCE ADDRESS</label>
+                <textarea name="residence_address" class="form-control" rows="2" required>{{ member.residence_address|default:'' }}</textarea>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Family Information -->
+    <div class="form-section">
+        <div class="form-section-title">
+            <i class="bi bi-people"></i> FAMILY INFORMATION
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">SPOUSE</label>
+                <input type="text" name="spouse_name" class="form-control" value="{{ member.spouse_name|default:'' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">NO. OF DEPENDENTS</label>
+                <input type="number" name="num_dependents" class="form-control" value="{{ member.num_dependents|default:'0' }}" min="0">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Farm Information -->
+    <div class="form-section">
+        <div class="form-section-title">
+            <i class="bi bi-tree"></i> FARM INFORMATION
+        </div>
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <label class="form-label">FARM LOCATION</label>
+                <input type="text" name="farm_location" class="form-control" value="{{ member.farm_location|default:'' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">OWNED (hectares)</label>
+                <div class="input-group">
+                    <input type="number" name="farm_owned_hectares" class="form-control" step="0.01" value="{{ member.farm_owned_hectares|default:'0' }}">
+                    <span class="input-group-text">has.</span>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">LEASED (hectares)</label>
+                <div class="input-group">
+                    <input type="number" name="farm_leased_hectares" class="form-control" step="0.01" value="{{ member.farm_leased_hectares|default:'0' }}">
+                    <span class="input-group-text">has.</span>
+                </div>
+            </div>
+            <div class="col-md-12 mb-3">
+                <label class="form-label">ADJACENT FARM</label>
+                <input type="text" name="adjacent_farm" class="form-control" value="{{ member.adjacent_farm|default:'' }}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">AREA PLANTED</label>
+                <input type="text" name="area_planted" class="form-control" value="{{ member.area_planted|default:'' }}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">NEW PLANT</label>
+                <input type="text" name="new_plant" class="form-control" value="{{ member.new_plant|default:'' }}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">RATOON CROPS</label>
+                <input type="text" name="ratoon_crops" class="form-control" value="{{ member.ratoon_crops|default:'' }}">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Employment & Other Loans -->
+    <div class="form-section">
+        <div class="form-section-title">
+            <i class="bi bi-bank"></i> EMPLOYMENT & OTHER LOANS
+        </div>
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <label class="form-label">LOAN FROM OTHER COOPS/BANKS/LENDING INSTITUTIONS</label>
+                <textarea name="other_loans" class="form-control" rows="3">{{ member.other_loans|default:'None' }}</textarea>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">EMPLOYER/BUSINESS NAME</label>
+                <input type="text" name="employer_name" class="form-control" value="{{ member.employer_name|default:'' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">POSITION</label>
+                <input type="text" name="position" class="form-control" value="{{ member.position|default:'' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">MONTHLY INCOME (₱)</label>
+                <input type="number" name="monthly_income" class="form-control" step="0.01" value="{{ member.monthly_income|default:'0' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">YEARS WITH EMPLOYER</label>
+                <input type="number" name="years_with_employer" class="form-control" step="0.5" value="{{ member.years_with_employer|default:'0' }}">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Status -->
+    <div class="form-section">
+        <div class="form-section-title">
+            <i class="bi bi-toggle-on"></i> ACCOUNT STATUS
+        </div>
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <div class="form-check">
+                    <input type="checkbox" name="is_active" class="form-check-input" id="isActive" {% if member.is_active %}checked{% endif %}>
+                    <label class="form-check-label" for="isActive">Active Member</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'admin_panel:members_list' %}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-save btn-primary">Save Member</button>
+    </div>
+</form>
+
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profilePreview').src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function calculateAge() {
+    const birthdate = document.querySelector('input[name="birthdate"]').value;
+    if (birthdate) {
+        const today = new Date();
+        const birth = new Date(birthdate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const m = today.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        document.getElementById('age').value = age;
+    }
+}
+
+// Trigger file input
+function triggerFileInput() {
+    document.getElementById('id_profile_picture').click();
+}
+
+// Initialize age calculation on page load
+document.addEventListener('DOMContentLoaded', function() {
+    calculateAge();
+});
+</script>
+{% endblock %}

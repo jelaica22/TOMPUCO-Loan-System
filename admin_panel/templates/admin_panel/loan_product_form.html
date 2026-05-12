@@ -1,0 +1,54 @@
+﻿{% extends 'admin_panel/base.html' %}
+
+{% block title %}{{ action }} Loan Product{% endblock %}
+{% block page_title %}{{ action }} Loan Product{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Product Code *</label>
+                    <input type="text" name="name" class="form-control" value="{{ product.name|default:'' }}" required>
+                    <small class="text-muted">e.g., NCL, APCP, SALARY</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Display Name *</label>
+                    <input type="text" name="display_name" class="form-control" value="{{ product.display_name|default:'' }}" required>
+                    <small class="text-muted">Full name shown to users</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Interest Rate (%) *</label>
+                    <input type="number" name="interest_rate" class="form-control" step="0.01" value="{{ product.interest_rate|default:'' }}" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Term (months) *</label>
+                    <input type="number" name="term_months" class="form-control" value="{{ product.term_months|default:'12' }}" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="form-check mt-4">
+                        <input type="checkbox" name="is_active" class="form-check-input" {% if product.is_active %}checked{% endif %}>
+                        <label class="form-check-label">Active</label>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Minimum Amount (₱) *</label>
+                    <input type="number" name="min_amount" class="form-control" step="0.01" value="{{ product.min_amount|default:'0' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Maximum Amount (₱) *</label>
+                    <input type="number" name="max_amount" class="form-control" step="0.01" value="{{ product.max_amount|default:'0' }}" required>
+                </div>
+                <div class="col-12 mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="3">{{ product.description|default:'' }}</textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{% url 'admin_panel:loan_products_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

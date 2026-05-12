@@ -1,0 +1,187 @@
+﻿{% extends 'staff/base_staff.html' %}
+
+{% block page_title %}Create Custom Payment Schedule{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Member's Income Profile</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Member Name</label>
+                        <input type="text" name="member_name" class="form-control" value="{{ application.member_name }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Primary Income Source</label>
+                        <select name="income_source" class="form-select" required>
+                            <option value="SUGARCANE">Sugarcane Farming</option>
+                            <option value="RICE">Rice Farming</option>
+                            <option value="CORN">Corn Farming</option>
+                            <option value="LIVESTOCK">Livestock</option>
+                            <option value="SALARY">Salary/Employment</option>
+                            <option value="BUSINESS">Business</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Harvest/Income Months (e.g., November, December)</label>
+                        <input type="text" name="harvest_months" class="form-control" placeholder="November, December">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Average Monthly Income</label>
+                        <input type="number" name="monthly_income" class="form-control" step="0.01">
+                    </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Payment Schedule Selection</h5>
+            </div>
+            <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Preferred Payment Schedule</label>
+                        <select name="payment_schedule" id="paymentSchedule" class="form-select" onchange="toggleCustomSchedule()">
+                            <option value="MONTHLY">Monthly - Same day each month</option>
+                            <option value="BI_MONTHLY">Every 15 days (for salary loans)</option>
+                            <option value="QUARTERLY">Quarterly (March, June, September, December)</option>
+                            <option value="HARVEST">Harvest-based (custom dates)</option>
+                            <option value="LUMP_SUM">Lump sum at end of term</option>
+                        </select>
+                    </div>
+                    
+                    <div id="harvestSchedule" style="display: none;">
+                        <div class="alert alert-info">
+                            <strong>Harvest-based Payment Schedule</strong><br>
+                            No payments during growing season. All payments made at harvest.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Growing Season (months with no payment)</label>
+                            <input type="number" name="growing_months" class="form-control" value="10">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Harvest Payment Months</label>
+                            <input type="text" name="harvest_payment_months" class="form-control" placeholder="Month 11, Month 12">
+                        </div>
+                    </div>
+                    
+                    <div id="customSchedule" style="display: none;">
+                        <div class="alert alert-warning">
+                            <strong>Custom Payment Schedule</strong><br>
+                            Enter custom payment dates and amounts
+                        </div>
+                        <div id="paymentRows">
+                            <div class="row mb-2">
+                                <div class="col-5"><input type="date" name="due_date_1" class="form-control form-control-sm"></div>
+                                <div class="col-5"><input type="number" name="amount_1" class="form-control form-control-sm" step="0.01" placeholder="Amount"></div>
+                                <div class="col-2"><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">X</button></div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addPaymentRow()">+ Add Payment Date</button>
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Loan Calculation Summary</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="alert alert-info text-center">
+                    <small>Principal</small>
+                    <h4>₱{{ application.approved_line|default:application.requested_amount|floatformat:2 }}</h4>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="alert alert-info text-center">
+                    <small>Interest Rate</small>
+                    <h4>{{ application.loan_product.interest_rate|default:20 }}%</h4>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="alert alert-info text-center">
+                    <small>Term</small>
+                    <h4>12 months</h4>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="alert alert-success text-center">
+                    <small>Monthly Payment (if standard)</small>
+                    <h4 id="monthlyPayment">₱0</h4>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="alert alert-secondary">
+                    <strong>Total Interest (12 months):</strong> <span id="totalInterest">₱0</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="alert alert-secondary">
+                    <strong>Total Payable:</strong> <span id="totalPayable">₱0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mb-4">
+    <button type="submit" class="btn btn-success btn-lg">Generate Custom Payment Schedule</button>
+    </form>
+    <a href="{% url 'staff:staff_applications' %}" class="btn btn-secondary btn-lg">Cancel</a>
+</div>
+
+<script>
+    function toggleCustomSchedule() {
+        var schedule = document.getElementById('paymentSchedule').value;
+        document.getElementById('harvestSchedule').style.display = schedule === 'HARVEST' ? 'block' : 'none';
+        document.getElementById('customSchedule').style.display = schedule === 'CUSTOM' ? 'block' : 'none';
+    }
+    
+    function addPaymentRow() {
+        var container = document.getElementById('paymentRows');
+        var rowCount = container.children.length + 1;
+        var newRow = document.createElement('div');
+        newRow.className = 'row mb-2';
+        newRow.innerHTML = '<div class="col-5"><input type="date" name="due_date_' + rowCount + '" class="form-control form-control-sm"></div>' +
+                          '<div class="col-5"><input type="number" name="amount_' + rowCount + '" class="form-control form-control-sm" step="0.01" placeholder="Amount"></div>' +
+                          '<div class="col-2"><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">X</button></div>';
+        container.appendChild(newRow);
+    }
+    
+    function removeRow(btn) {
+        btn.closest('.row').remove();
+    }
+    
+    // Calculate EMI
+    function calculateEMI() {
+        var principal = {{ application.approved_line|default:application.requested_amount|default:0 }};
+        var rate = {{ application.loan_product.interest_rate|default:20 }} / 100 / 12;
+        var months = 12;
+        
+        if (rate > 0 && principal > 0) {
+            var emi = principal * rate * Math.pow(1 + rate, months) / (Math.pow(1 + rate, months) - 1);
+            var totalPayable = emi * months;
+            var totalInterest = totalPayable - principal;
+            
+            document.getElementById('monthlyPayment').innerHTML = '₱' + emi.toFixed(2);
+            document.getElementById('totalInterest').innerHTML = '₱' + totalInterest.toFixed(2);
+            document.getElementById('totalPayable').innerHTML = '₱' + totalPayable.toFixed(2);
+        }
+    }
+    
+    calculateEMI();
+</script>
+{% endblock %}

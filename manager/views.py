@@ -1,0 +1,1006 @@
+﻿from decimal import Decimal
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.http import JsonResponse
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.hashers import check_password
+from django.db.models import Q, Count, Sum, Avg
+from django.core.paginator import Paginator
+from datetime import datetime, timedelta
+import json
+import random
+import string
+from io import BytesIO
+import base64
+
+try:
+    import pyotp
+except ImportError:
+    pyotp = None
+    print("Warning: pyotp not installed. Run: pip install pyotp")
+
+try:
+    import qrcode
+except ImportError:
+    qrcode = None
+    print("Warning: qrcode not installed. Run: pip install qrcode")
+
+from main.models import (
+    Member, Loan, LoanApplication, LoanProduct,
+    Payment, PaymentSchedule, Notification, AuditLog
+)
+
+# Import ManagerProfile model - handle potential import error
+try:
+    from .models import ManagerProfile
+except ImportError:
+    ManagerProfile = None
+
+
+# ==================== DECORATORS ====================
+
+def manager_required(view_func):
+    """Decorator to check if user is manager"""
+
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('main:login')
+        if not request.user.is_staff:
+            messages.error(request, 'Access denied. Manager privileges required.')
+            return redirect('main:dashboard')
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+# ==================== PROFILE FUNCTIONS ====================
+
+@login_required
+@manager_required
+def profile(request):
+    """Manager profile page"""
+    if ManagerProfile:
+        manager_profile, created = ManagerProfile.objects.get_or_create(user=request.user)
+    else:
+        manager_profile = None
+
+    applications_approved = LoanApplication.objects.filter(status='manager_approved').count()
+    pending_approvals = LoanApplication.objects.filter(status='pending_manager_approval').count()
+    days_active = (datetime.now().date() - request.user.date_joined.date()).days if request.user.date_joined else 0
+
+    context = {
+        'manager_profile': manager_profile,
+        'applications_approved': applications_approved,
+        'pending_approvals': pending_approvals,
+        'days_active': days_active,
+    }
+    return render(request, 'manager/profile.html', context)
+
+
+@login_required
+@manager_required
+def update_profile(request):
+    """Update manager profile"""
+    if request.method == 'POST':
+        user = request.user
+        user.first_name = request.POST.get('first_name', '')
+        user.last_name = request.POST.get('last_name', '')
+        user.email = request.POST.get('email', '')
+        user.username = request.POST.get('username', '')
+        user.save()
+
+        if ManagerProfile:
+            manager_profile, _ = ManagerProfile.objects.get_or_create(user=user)
+            manager_profile.contact_number = request.POST.get('contact_number', '')
+            manager_profile.save()
+
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('manager:profile')
+    return redirect('manager:profile')
+
+
+@login_required
+@manager_required
+def upload_avatar(request):
+    """Upload profile picture"""
+    if request.method == 'POST' and request.FILES.get('avatar'):
+        if ManagerProfile:
+            manager_profile, created = ManagerProfile.objects.get_or_create(user=request.user)
+            if manager_profile.profile_picture:
+                try:
+                    manager_profile.profile_picture.delete(save=False)
+                except:
+                    pass
+            manager_profile.profile_picture = request.FILES['avatar']
+            manager_profile.save()
+            messages.success(request, 'Profile picture updated successfully!')
+        else:
+            messages.error(request, 'Profile model not available')
+        return redirect('manager:profile')
+    messages.error(request, 'No image selected')
+    return redirect('manager:profile')
+
+
+@login_required
+@manager_required
+def change_password(request):
+    """Change password"""
+    if request.method == 'POST':
+        current = request.POST.get('current_password')
+        new = request.POST.get('new_password')
+        confirm = request.POST.get('confirm_password')
+
+        if not check_password(current, request.user.password):
+            messages.error(request, 'Current password is incorrect.')
+        elif new != confirm:
+            messages.error(request, 'Passwords do not match.')
+        elif len(new) < 8:
+            messages.error(request, 'Password must be at least 8 characters.')
+        else:
+            request.user.set_password(new)
+            request.user.save()
+            update_session_auth_hash(request, request.user)
+            messages.success(request, 'Password changed successfully!')
+        return redirect('manager:profile')
+    return redirect('manager:profile')
+
+
+# ==================== NOTIFICATIONS FUNCTIONS ====================
+
+@login_required
+@manager_required
+def notifications_list(request):
+    """View all notifications"""
+    notifications = Notification.objects.filter(
+        recipient=request.user
+    ).order_by('-created_at')
+
+    # Apply filters
+    filter_type = request.GET.get('type', 'all')
+    status = request.GET.get('status', 'all')
+    search = request.GET.get('search', '')
+
+    if filter_type != 'all':
+        notifications = notifications.filter(notification_type=filter_type)
+
+    if status == 'unread':
+        notifications = notifications.filter(is_read=False)
+    elif status == 'read':
+        notifications = notifications.filter(is_read=True)
+
+    if search:
+        notifications = notifications.filter(
+            Q(title__icontains=search) |
+            Q(message__icontains=search)
+        )
+
+    # Pagination
+    paginator = Paginator(notifications, 20)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Calculate counts for stats
+    total_notifications = Notification.objects.filter(recipient=request.user).count()
+    unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+    read_count = total_notifications - unread_count
+    system_count = Notification.objects.filter(recipient=request.user, notification_type='system_alert').count()
+
+    # Pass current filter values to template
+    context = {
+        'notifications': page_obj,
+        'total_notifications': total_notifications,
+        'unread_count': unread_count,
+        'read_count': read_count,
+        'system_count': system_count,
+        'current_type': filter_type,
+        'current_status': status,
+        'current_search': search,
+    }
+    return render(request, 'manager/notifications_list.html', context)
+
+
+@login_required
+def notifications_api(request):
+    """API endpoint for notification badges and list"""
+    unread_count = Notification.objects.filter(
+        recipient=request.user,
+        is_read=False
+    ).count()
+
+    total_count = Notification.objects.filter(recipient=request.user).count()
+    read_count = total_count - unread_count
+
+    # Get recent notifications for dropdown
+    recent_notifications = Notification.objects.filter(
+        recipient=request.user
+    ).order_by('-created_at')[:10]
+
+    notifications_data = []
+    for notif in recent_notifications:
+        notifications_data.append({
+            'id': notif.id,
+            'title': notif.title,
+            'message': notif.message[:80] + ('...' if len(notif.message) > 80 else ''),
+            'is_read': notif.is_read,
+            'created_at': notif.created_at.isoformat(),
+            'notification_type': getattr(notif, 'notification_type', 'info'),
+            'link': getattr(notif, 'link', '#')
+        })
+
+    return JsonResponse({
+        'success': True,
+        'unread_count': unread_count,
+        'read_count': read_count,
+        'total_count': total_count,
+        'notifications': notifications_data,
+    })
+
+
+@login_required
+def mark_notification_read(request, notif_id):
+    """Mark a single notification as read"""
+    if request.method == 'POST':
+        try:
+            notification = Notification.objects.get(id=notif_id, recipient=request.user)
+            notification.is_read = True
+            notification.save()
+            return JsonResponse({'success': True, 'message': 'Marked as read'})
+        except Notification.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Notification not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@login_required
+def mark_all_notifications_read(request):
+    """Mark all notifications as read"""
+    if request.method == 'POST':
+        try:
+            count = Notification.objects.filter(
+                recipient=request.user,
+                is_read=False
+            ).update(is_read=True)
+            return JsonResponse({'success': True, 'message': f'{count} notification(s) marked as read'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+# ==================== DASHBOARD ====================
+
+@login_required
+@manager_required
+def dashboard(request):
+    """Manager dashboard with analytics"""
+    from datetime import timedelta
+    from django.db.models import Sum, Count, Q
+
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    loan_type = request.GET.get('loan_type', '')
+    risk_level = request.GET.get('risk_level', '')
+
+    applications = LoanApplication.objects.all()
+    loans = Loan.objects.all()
+    payments = Payment.objects.all()
+
+    if date_from:
+        applications = applications.filter(created_at__date__gte=date_from)
+        loans = loans.filter(created_at__date__gte=date_from)
+    if date_to:
+        applications = applications.filter(created_at__date__lte=date_to)
+        loans = loans.filter(created_at__date__lte=date_to)
+    if loan_type:
+        applications = applications.filter(loan_product__name=loan_type)
+        loans = loans.filter(loan_product__name=loan_type)
+
+    total_applications = applications.count()
+    pending_manager_count = applications.filter(status='pending_manager_approval').count()
+    committee_count = applications.filter(status='with_committee').count()
+    line_approved_count = applications.filter(status='line_approved').count()
+    active_loans = loans.filter(status='active').count()
+    rejected_count = applications.filter(status='rejected').count()
+    pending_applications = applications.filter(status='pending_manager_approval')[:10]
+
+    # Chart data - Last 7 days approvals
+    today = datetime.now().date()
+    approval_labels = []
+    approval_data = []
+    for i in range(6, -1, -1):
+        date = today - timedelta(days=i)
+        approval_labels.append(date.strftime('%a'))
+        count = LoanApplication.objects.filter(
+            status='manager_approved',
+            created_at__date=date
+        ).count()
+        approval_data.append(count)
+
+    # Loan distribution
+    distribution_labels = []
+    distribution_data = []
+    products = LoanProduct.objects.filter(is_active=True)
+    for product in products:
+        distribution_labels.append(product.name)
+        distribution_data.append(loans.filter(loan_product=product).count())
+
+    # Status distribution
+    status_labels = ['Pending Staff', 'With Committee', 'Line Approved', 'Manager Approved', 'Rejected']
+    status_data = [
+        applications.filter(status='pending_staff_review').count(),
+        applications.filter(status='with_committee').count(),
+        applications.filter(status='line_approved').count(),
+        applications.filter(status='manager_approved').count(),
+        applications.filter(status='rejected').count()
+    ]
+
+    # Aging data
+    aging_labels = ['0-30 days', '31-60 days', '61-90 days', '90+ days']
+    aging_data = []
+    today = datetime.now().date()
+    for days in [(0, 30), (31, 60), (61, 90), (91, 999)]:
+        amount = loans.filter(
+            status='active',
+            due_date__isnull=False
+        ).exclude(
+            due_date__gt=today - timedelta(days=days[0])
+        ).aggregate(total=Sum('remaining_balance'))['total'] or 0
+        aging_data.append(float(amount))
+
+    approved_apps = applications.filter(status='manager_approved').count()
+    approval_rate = (approved_apps / total_applications * 100) if total_applications > 0 else 0
+    avg_loan_size = loans.aggregate(avg=Avg('principal_amount'))['avg'] or 0
+
+    # Risk assessment
+    overdue_loans = loans.filter(status='active', due_date__lt=today)
+    high_risk_count = overdue_loans.filter(due_date__lt=today - timedelta(days=60)).count()
+    medium_risk_count = overdue_loans.filter(
+        due_date__range=[today - timedelta(days=60), today - timedelta(days=31)]).count()
+    low_risk_count = overdue_loans.filter(
+        due_date__range=[today - timedelta(days=30), today - timedelta(days=1)]).count()
+
+    total_overdue = high_risk_count + medium_risk_count + low_risk_count
+    high_risk_percentage = (high_risk_count / total_overdue * 100) if total_overdue > 0 else 0
+    medium_risk_percentage = (medium_risk_count / total_overdue * 100) if total_overdue > 0 else 0
+    low_risk_percentage = (low_risk_count / total_overdue * 100) if total_overdue > 0 else 0
+
+    default_count = loans.filter(status='default').count()
+    default_rate = (default_count / loans.count() * 100) if loans.count() > 0 else 0
+    total_portfolio = loans.aggregate(total=Sum('principal_amount'))['total'] or 0
+    at_risk_amount = \
+    loans.filter(status='active', due_date__lt=today - timedelta(days=30)).aggregate(total=Sum('remaining_balance'))[
+        'total'] or 0
+    portfolio_at_risk = (at_risk_amount / total_portfolio * 100) if total_portfolio > 0 else 0
+
+    context = {
+        'total_applications': total_applications,
+        'pending_manager_count': pending_manager_count,
+        'committee_count': committee_count,
+        'line_approved_count': line_approved_count,
+        'active_loans': active_loans,
+        'rejected_count': rejected_count,
+        'pending_applications': pending_applications,
+        'approval_labels': approval_labels,
+        'approval_data': approval_data,
+        'distribution_labels': distribution_labels,
+        'distribution_data': distribution_data,
+        'status_labels': status_labels,
+        'status_data': status_data,
+        'aging_labels': aging_labels,
+        'aging_data': aging_data,
+        'approval_rate': round(approval_rate, 1),
+        'avg_loan_size': avg_loan_size,
+        'default_rate': round(default_rate, 1),
+        'portfolio_at_risk': round(portfolio_at_risk, 1),
+        'high_risk_count': high_risk_count,
+        'medium_risk_count': medium_risk_count,
+        'low_risk_count': low_risk_count,
+        'high_risk_percentage': round(high_risk_percentage, 1),
+        'medium_risk_percentage': round(medium_risk_percentage, 1),
+        'low_risk_percentage': round(low_risk_percentage, 1),
+    }
+    return render(request, 'manager/dashboard.html', context)
+
+
+# ==================== STAFF MONITORING ====================
+
+@login_required
+@manager_required
+def staff_applications(request):
+    """View all loan applications for monitoring"""
+    applications = LoanApplication.objects.all().order_by('-created_at')
+
+    search = request.GET.get('search', '').strip()
+    status = request.GET.get('status', 'all')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    if search:
+        applications = applications.filter(
+            Q(application_id__icontains=search) |
+            Q(member__first_name__icontains=search) |
+            Q(member__last_name__icontains=search) |
+            Q(member__membership_number__icontains=search)
+        )
+
+    if status and status != 'all':
+        applications = applications.filter(status=status)
+
+    if date_from:
+        applications = applications.filter(created_at__date__gte=date_from)
+    if date_to:
+        applications = applications.filter(created_at__date__lte=date_to)
+
+    total_applications = LoanApplication.objects.count()
+    pending_count = LoanApplication.objects.filter(status='pending_staff_review').count()
+    committee_count = LoanApplication.objects.filter(status='with_committee').count()
+    line_approved_count = LoanApplication.objects.filter(status='line_approved').count()
+    manager_approved_count = LoanApplication.objects.filter(status='manager_approved').count()
+
+    context = {
+        'applications': applications,
+        'total_applications': total_applications,
+        'pending_count': pending_count,
+        'committee_count': committee_count,
+        'line_approved_count': line_approved_count,
+        'manager_approved_count': manager_approved_count,
+    }
+    return render(request, 'manager/staff_applications.html', context)
+
+
+@login_required
+@manager_required
+def application_detail(request, app_id):
+    """View application details"""
+    application = get_object_or_404(LoanApplication, id=app_id)
+    context = {'application': application}
+    return render(request, 'manager/application_detail.html', context)
+
+
+@login_required
+@manager_required
+def review_application(request, app_id):
+    """Review application for manager approval"""
+    application = get_object_or_404(LoanApplication, id=app_id)
+
+    if application.approved_line:
+        service_charge = application.approved_line * Decimal('0.03')
+        cbu_retention = application.approved_line * Decimal('0.02')
+        insurance = application.approved_line * Decimal('0.0132')
+        service_fee = Decimal('35.00')
+        notarial_fee = Decimal('200.00')
+        total_deductions = service_charge + cbu_retention + insurance + service_fee + notarial_fee
+        net_proceeds = application.approved_line + total_deductions
+
+        if not application.service_charge:
+            application.service_charge = service_charge
+            application.cbu_retention = cbu_retention
+            application.insurance_charge = insurance
+            application.service_fee = service_fee
+            application.notarial_fee = notarial_fee
+            application.total_deductions = total_deductions
+            application.net_proceeds = net_proceeds
+            application.save()
+
+    if request.method == 'POST':
+        decision = request.POST.get('decision')
+        remarks = request.POST.get('remarks', '')
+
+        if decision == 'approved':
+            application.status = 'manager_approved'
+            application.manager_remarks = remarks
+            application.manager_approved_at = datetime.now()
+            messages.success(request, f'Application {application.application_id} has been approved.')
+        elif decision == 'revision':
+            application.status = 'needs_revision'
+            application.manager_remarks = remarks
+            messages.info(request, f'Application {application.application_id} returned for revision.')
+        elif decision == 'rejected':
+            application.status = 'rejected'
+            application.manager_remarks = remarks
+            messages.warning(request, f'Application {application.application_id} has been rejected.')
+
+        application.save()
+        return redirect('manager:pending_approvals')
+
+    context = {'app': application}
+    return render(request, 'manager/review_application.html', context)
+
+
+@login_required
+@manager_required
+def approve_application(request, app_id):
+    """Quick approve application"""
+    application = get_object_or_404(LoanApplication, id=app_id)
+
+    if request.method == 'POST':
+        approved_line = request.POST.get('approved_line', application.requested_amount)
+        application.status = 'manager_approved'
+        application.approved_line = Decimal(approved_line)
+        application.manager_approved_at = datetime.now()
+        application.save()
+        messages.success(request, f'Application {application.application_id} has been approved.')
+        return redirect('manager:staff_applications')
+
+    context = {'application': application}
+    return render(request, 'manager/approve_application.html', context)
+
+
+@login_required
+@manager_required
+def staff_loans(request):
+    """View all loans for monitoring"""
+    loans = Loan.objects.all().order_by('-created_at')
+
+    search = request.GET.get('search', '').strip()
+    status_filter = request.GET.get('status', 'all')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    if search:
+        loans = loans.filter(
+            Q(loan_number__icontains=search) |
+            Q(borrower__first_name__icontains=search) |
+            Q(borrower__last_name__icontains=search) |
+            Q(borrower__membership_number__icontains=search)
+        )
+
+    if status_filter and status_filter != 'all':
+        loans = loans.filter(status=status_filter)
+
+    if date_from:
+        loans = loans.filter(due_date__gte=date_from)
+    if date_to:
+        loans = loans.filter(due_date__lte=date_to)
+
+    total_loans = Loan.objects.count()
+    active_loans = Loan.objects.filter(status='active').count()
+    completed_loans = Loan.objects.filter(status='completed').count()
+    overdue_loans = Loan.objects.filter(status='overdue').count()
+
+    for loan in loans:
+        total_payments = Payment.objects.filter(loan=loan, status='completed').aggregate(total=Sum('amount'))[
+                             'total'] or 0
+        loan.paid_amount = total_payments
+
+    context = {
+        'loans': loans,
+        'total_loans': total_loans,
+        'active_loans': active_loans,
+        'completed_loans': completed_loans,
+        'overdue_loans': overdue_loans,
+    }
+    return render(request, 'manager/staff_loans.html', context)
+
+
+@login_required
+@manager_required
+def loan_detail(request, loan_id):
+    """View loan details"""
+    loan = get_object_or_404(Loan, id=loan_id)
+    payment_schedules = PaymentSchedule.objects.filter(loan=loan).order_by('due_date')
+    total_paid = Payment.objects.filter(loan=loan, status='completed').aggregate(total=Sum('amount'))['total'] or 0
+    progress_percentage = (total_paid / loan.principal_amount * 100) if loan.principal_amount > 0 else 0
+
+    context = {
+        'loan': loan,
+        'payment_schedules': payment_schedules,
+        'total_paid': total_paid,
+        'progress_percentage': round(progress_percentage, 1),
+    }
+    return render(request, 'manager/loan_detail.html', context)
+
+
+@login_required
+@manager_required
+def loan_payments(request, loan_id):
+    """View loan payment history"""
+    loan = get_object_or_404(Loan, id=loan_id)
+    payments = Payment.objects.filter(loan=loan).order_by('-payment_date')
+    total_paid = payments.aggregate(total=Sum('amount'))['total'] or 0
+
+    context = {
+        'loan': loan,
+        'payments': payments,
+        'total_paid': total_paid,
+    }
+    return render(request, 'manager/loan_payments.html', context)
+
+
+@login_required
+@manager_required
+def staff_payments(request):
+    """View all payments for monitoring"""
+    payments = Payment.objects.all().order_by('-payment_date')
+
+    search = request.GET.get('search', '').strip()
+    method = request.GET.get('method', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    if search:
+        payments = payments.filter(
+            Q(payment_number__icontains=search) |
+            Q(member__first_name__icontains=search) |
+            Q(member__last_name__icontains=search) |
+            Q(member__membership_number__icontains=search) |
+            Q(loan__loan_number__icontains=search)
+        )
+
+    if method:
+        payments = payments.filter(payment_method=method)
+
+    if date_from:
+        payments = payments.filter(payment_date__gte=date_from)
+    if date_to:
+        payments = payments.filter(payment_date__lte=date_to)
+
+    total_amount = payments.aggregate(total=Sum('amount'))['total'] or 0
+    cash_count = payments.filter(payment_method='cash').count()
+    quedan_count = payments.filter(payment_method='quedan').count()
+    pesada_count = payments.filter(payment_method='pesada').count()
+    non_cash_count = quedan_count + pesada_count
+
+    context = {
+        'payments': payments,
+        'total_amount': total_amount,
+        'cash_count': cash_count,
+        'non_cash_count': non_cash_count,
+        'quedan_count': quedan_count,
+        'pesada_count': pesada_count,
+    }
+    return render(request, 'manager/staff_payments.html', context)
+
+
+@login_required
+@manager_required
+def payment_detail(request, payment_id):
+    """View payment details"""
+    payment = get_object_or_404(Payment, id=payment_id)
+    context = {'payment': payment}
+    return render(request, 'manager/payment_detail.html', context)
+
+
+@login_required
+@manager_required
+def payment_receipt(request, payment_id):
+    """View payment receipt"""
+    payment = get_object_or_404(Payment, id=payment_id)
+    context = {'payment': payment}
+    return render(request, 'manager/payment_receipt.html', context)
+
+
+# ==================== MANAGER ACTIONS ====================
+
+@login_required
+@manager_required
+def pending_approvals(request):
+    """View pending approvals"""
+    applications = LoanApplication.objects.filter(
+        status='pending_manager_approval'
+    ).order_by('-created_at')
+    context = {'applications': applications}
+    return render(request, 'manager/pending_approvals.html', context)
+
+
+@login_required
+@manager_required
+def approved_applications(request):
+    """View approved applications ready for disbursement"""
+    applications = LoanApplication.objects.filter(status='manager_approved').order_by('-updated_at')
+
+    search = request.GET.get('search', '').strip()
+    product_id = request.GET.get('product', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    if search:
+        applications = applications.filter(
+            Q(application_id__icontains=search) |
+            Q(member__first_name__icontains=search) |
+            Q(member__last_name__icontains=search) |
+            Q(member__membership_number__icontains=search)
+        )
+
+    if product_id and product_id != 'all':
+        applications = applications.filter(loan_product_id=product_id)
+
+    if date_from:
+        applications = applications.filter(updated_at__date__gte=date_from)
+    if date_to:
+        applications = applications.filter(updated_at__date__lte=date_to)
+
+    for app in applications:
+        if app.approved_line and not app.service_charge:
+            service_charge = app.approved_line * Decimal('0.03')
+            cbu_retention = app.approved_line * Decimal('0.02')
+            insurance = app.approved_line * Decimal('0.0132')
+            service_fee = Decimal('35')
+            notarial_fee = Decimal('200')
+            total_deductions = service_charge + cbu_retention + insurance + service_fee + notarial_fee
+            net_proceeds = app.approved_line + total_deductions
+
+            app.service_charge = service_charge
+            app.cbu_retention = cbu_retention
+            app.insurance_charge = insurance
+            app.service_fee = service_fee
+            app.notarial_fee = notarial_fee
+            app.total_deductions = total_deductions
+            app.net_proceeds = net_proceeds
+            app.save()
+
+    total_approved = sum(float(app.approved_line) for app in applications if app.approved_line) or 0
+    total_net = sum(float(app.net_proceeds) for app in applications if app.net_proceeds) or 0
+    avg_loan = total_approved / len(applications) if applications else 0
+    loan_products = LoanProduct.objects.filter(is_active=True)
+
+    for app in applications:
+        if hasattr(app, 'committee_approved_date') and app.committee_approved_date:
+            app.approval_date = app.committee_approved_date
+        else:
+            app.approval_date = app.updated_at or app.created_at
+
+    context = {
+        'applications': applications,
+        'total_approved': total_approved,
+        'total_net': total_net,
+        'avg_loan': avg_loan,
+        'loan_products': loan_products,
+    }
+    return render(request, 'manager/approved_applications.html', context)
+
+
+@login_required
+@manager_required
+def delete_approved_application(request, app_id):
+    """Delete an approved application (if not yet disbursed)"""
+    if request.method == 'POST':
+        try:
+            application = get_object_or_404(LoanApplication, id=app_id)
+            if application.status == 'manager_approved':
+                app_id_display = application.application_id
+                application.delete()
+                return JsonResponse({'success': True, 'message': f'Application {app_id_display} deleted'})
+            else:
+                return JsonResponse({'success': False, 'error': 'Only approved applications can be deleted'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+# ==================== REPORTS ====================
+
+@login_required
+@manager_required
+def reports(request):
+    """Reports and analytics"""
+    total_loans = Loan.objects.count()
+    active_loans = Loan.objects.filter(status='active').count()
+    overdue_loans = Loan.objects.filter(status='overdue').count()
+    total_loan_amount = Loan.objects.aggregate(total=Sum('principal_amount'))['total'] or 0
+    total_payments = Payment.objects.aggregate(total=Sum('amount'))['total'] or 0
+    collection_rate = (total_payments / total_loan_amount * 100) if total_loan_amount > 0 else 0
+
+    context = {
+        'total_loans': total_loans,
+        'active_loans': active_loans,
+        'overdue_loans': overdue_loans,
+        'collection_rate': round(collection_rate, 1),
+    }
+    return render(request, 'manager/reports.html', context)
+
+
+@login_required
+@manager_required
+def audit_logs(request):
+    """View audit logs"""
+    logs = AuditLog.objects.all().order_by('-created_at')
+
+    search = request.GET.get('search', '').strip()
+    action = request.GET.get('action', 'all')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    if search:
+        logs = logs.filter(
+            Q(user__username__icontains=search) |
+            Q(entity_type__icontains=search) |
+            Q(action__icontains=search) |
+            Q(ip_address__icontains=search)
+        )
+
+    if action and action != 'all':
+        logs = logs.filter(action=action)
+
+    if date_from:
+        logs = logs.filter(created_at__date__gte=date_from)
+    if date_to:
+        logs = logs.filter(created_at__date__lte=date_to)
+
+    total_logs = AuditLog.objects.count()
+    login_count = AuditLog.objects.filter(action__in=['login', 'logout']).count()
+    update_count = AuditLog.objects.filter(action='update').count()
+    delete_count = AuditLog.objects.filter(action='delete').count()
+
+    context = {
+        'logs': logs,
+        'total_logs': total_logs,
+        'login_count': login_count,
+        'update_count': update_count,
+        'delete_count': delete_count,
+    }
+    return render(request, 'manager/audit_logs.html', context)
+
+
+@login_required
+@manager_required
+def audit_log_detail(request, log_id):
+    """API endpoint for audit log details"""
+    log = get_object_or_404(AuditLog, id=log_id)
+    return JsonResponse({
+        'id': log.id,
+        'user': log.user.username if log.user else 'System',
+        'action': log.action,
+        'entity_type': log.entity_type,
+        'entity_id': log.entity_id,
+        'ip_address': log.ip_address,
+        'user_agent': log.user_agent,
+        'created_at': log.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        'old_values': log.old_values,
+        'new_values': log.new_values,
+    })
+
+
+@login_required
+@manager_required
+def application_api_detail(request, app_id):
+    """API endpoint for application details"""
+    application = get_object_or_404(LoanApplication, id=app_id)
+    return JsonResponse({
+        'id': application.id,
+        'application_id': application.application_id,
+        'member_name': f"{application.member.last_name}, {application.member.first_name}",
+        'membership_number': application.member.membership_number,
+        'loan_product': application.loan_product.name if application.loan_product else "APCP",
+        'requested_amount': str(application.requested_amount),
+        'approved_line': str(application.approved_line) if application.approved_line else str(
+            application.requested_amount),
+        'purpose': application.purpose,
+        'collateral': application.collateral_offered,
+        'date_applied': application.created_at.strftime("%Y-%m-%d %H:%M"),
+    })
+
+
+# ==================== TWO-FACTOR AUTHENTICATION ====================
+
+@login_required
+@manager_required
+def setup_2fa(request):
+    """Setup two-factor authentication"""
+    if pyotp is None:
+        messages.error(request, '2FA setup is not available. Please install pyotp.')
+        return redirect('manager:profile')
+
+    if not ManagerProfile:
+        messages.error(request, 'Profile model not available')
+        return redirect('manager:profile')
+
+    step = int(request.GET.get('step', 1))
+    manager_profile, _ = ManagerProfile.objects.get_or_create(user=request.user)
+
+    if step == 1:
+        return render(request, 'manager/setup_2fa.html', {'step': 1})
+
+    elif step == 2:
+        if not manager_profile.otp_secret:
+            manager_profile.otp_secret = pyotp.random_base32()
+            manager_profile.save()
+
+        totp = pyotp.TOTP(manager_profile.otp_secret)
+        provisioning_uri = totp.provisioning_uri(
+            name=request.user.email or request.user.username,
+            issuer_name="TOMPuCO Manager Portal"
+        )
+
+        qr_code_html = ''
+        if qrcode:
+            qr = qrcode.QRCode(box_size=10, border=4)
+            qr.add_data(provisioning_uri)
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+            qr_code_html = f'<img src="data:image/png;base64,{qr_code_base64}" style="width: 200px; height: 200px;">'
+
+        return render(request, 'manager/setup_2fa.html', {
+            'step': 2,
+            'qr_code_html': qr_code_html,
+            'secret_key': manager_profile.otp_secret
+        })
+
+    elif step == 3:
+        if request.method == 'POST':
+            otp_code = request.POST.get('otp_code', '').strip()
+            totp = pyotp.TOTP(manager_profile.otp_secret)
+
+            if totp.verify(otp_code):
+                manager_profile.otp_enabled = True
+                backup_codes = []
+                for i in range(10):
+                    code = ''.join(random.choices(string.digits, k=8))
+                    backup_codes.append(code)
+                manager_profile.otp_backup_codes = backup_codes
+                manager_profile.save()
+
+                return render(request, 'manager/setup_2fa.html', {
+                    'step': 4,
+                    'backup_codes': backup_codes
+                })
+            else:
+                return render(request, 'manager/setup_2fa.html', {
+                    'step': 3,
+                    'error': 'Invalid verification code. Please try again.'
+                })
+
+        return render(request, 'manager/setup_2fa.html', {'step': 3})
+
+    return redirect('manager:profile')
+
+
+@login_required
+def verify_2fa(request):
+    """Verify 2FA during login"""
+    if pyotp is None:
+        return redirect(request.GET.get('next', 'manager:dashboard'))
+
+    if request.method == 'POST':
+        otp_code = request.POST.get('otp_code', '').strip()
+
+        if ManagerProfile:
+            try:
+                manager_profile = ManagerProfile.objects.get(user=request.user)
+                if manager_profile.otp_enabled and manager_profile.otp_secret:
+                    totp = pyotp.TOTP(manager_profile.otp_secret)
+                    if totp.verify(otp_code):
+                        request.session['2fa_verified'] = True
+                        return redirect(request.GET.get('next', 'manager:dashboard'))
+                    else:
+                        return render(request, 'manager/verify_2fa.html', {'error': 'Invalid code'})
+            except ManagerProfile.DoesNotExist:
+                pass
+
+    return render(request, 'manager/verify_2fa.html')
+
+
+@login_required
+@manager_required
+def disable_2fa(request):
+    """Disable two-factor authentication"""
+    if request.method == 'POST':
+        if ManagerProfile:
+            manager_profile, _ = ManagerProfile.objects.get_or_create(user=request.user)
+            manager_profile.otp_enabled = False
+            manager_profile.otp_secret = None
+            manager_profile.otp_backup_codes = None
+            manager_profile.save()
+            messages.success(request, 'Two-factor authentication has been disabled.')
+        return redirect('manager:profile')
+    return redirect('manager:profile')
+
+
+@login_required
+@manager_required
+def generate_backup_codes(request):
+    """Generate new backup codes"""
+    if request.method == 'POST':
+        if ManagerProfile:
+            manager_profile, _ = ManagerProfile.objects.get_or_create(user=request.user)
+            backup_codes = []
+            for i in range(10):
+                code = ''.join(random.choices(string.digits, k=8))
+                backup_codes.append(code)
+            manager_profile.otp_backup_codes = backup_codes
+            manager_profile.save()
+            messages.success(request, 'New backup codes generated.')
+        return redirect('manager:profile')
+    return redirect('manager:profile')

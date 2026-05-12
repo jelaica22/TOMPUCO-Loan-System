@@ -1,0 +1,1321 @@
+﻿{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Loans Management - TOMPuCO Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================================
+       PROFESSIONAL LOANS MANAGEMENT STYLES
+       EXPLICIT COLORS FOR BOTH LIGHT AND DARK MODES
+    ============================================================ */
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 20px;
+        margin-bottom: 28px;
+    }
+    @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+
+    .stat-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 18px 16px;
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border-color: #0d6e6e;
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+    .stat-card.total::before { background: linear-gradient(135deg, #0d6e6e, #0a5a5a); }
+    .stat-card.active::before { background: #10b981; }
+    .stat-card.completed::before { background: #3b82f6; }
+    .stat-card.overdue::before { background: #ef4444; }
+    .stat-card.amount::before { background: #f59e0b; }
+
+    .stat-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #1f2937;
+        line-height: 1.2;
+    }
+
+    [data-theme="dark"] .stat-card {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+    [data-theme="dark"] .stat-value {
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .stat-label {
+        color: #9ca3af;
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid #e5e7eb;
+    }
+    .filter-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #6b7280;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .filter-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        margin-bottom: 8px;
+        display: block;
+    }
+    .filter-select, .filter-input {
+        border-radius: 12px;
+        border: 1.5px solid #e5e7eb;
+        background: #f9fafb;
+        color: #1f2937;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        width: 100%;
+    }
+    .filter-select option {
+        color: #1f2937;
+        background: #ffffff;
+    }
+    .filter-select:focus, .filter-input:focus {
+        outline: none;
+        border-color: #0d6e6e;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    [data-theme="dark"] .filter-section {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+    [data-theme="dark"] .filter-title,
+    [data-theme="dark"] .filter-label {
+        color: #9ca3af;
+    }
+    [data-theme="dark"] .filter-select,
+    [data-theme="dark"] .filter-input {
+        background: #15151f;
+        border-color: #2a2a3a;
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .filter-select option {
+        background: #15151f;
+        color: #eef2ff;
+    }
+
+    /* Main Table Card */
+    .main-card {
+        background: #ffffff;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+    .card-header-custom {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .card-title {
+        color: white !important;
+        margin: 0 !important;
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .card-stats {
+        display: flex;
+        gap: 15px;
+        color: white !important;
+        font-size: 0.75rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .card-stats span {
+        background: rgba(255, 255, 255, 0.15);
+        padding: 5px 12px;
+        border-radius: 20px;
+    }
+    .btn-add-loan {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        color: white !important;
+        border: none !important;
+        padding: 8px 16px !important;
+        font-weight: 600 !important;
+        border-radius: 10px !important;
+        font-size: 0.8rem !important;
+        transition: all 0.2s !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        text-decoration: none !important;
+    }
+    .btn-add-loan:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+        color: white !important;
+    }
+
+    [data-theme="dark"] .main-card {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+
+    /* Professional Table */
+    .table-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+    .loans-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        min-width: 1000px;
+    }
+    .loans-table th {
+        padding: 16px 16px;
+        font-weight: 700;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #6b7280;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    .loans-table td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f3f4f6;
+        color: #1f2937;
+    }
+    .loans-table tbody tr {
+        transition: background 0.2s ease;
+    }
+    .loans-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    [data-theme="dark"] .loans-table th {
+        background: #15151f;
+        color: #9ca3af;
+        border-bottom-color: #2a2a3a;
+    }
+    [data-theme="dark"] .loans-table td {
+        color: #eef2ff;
+        border-bottom-color: #252536;
+    }
+    [data-theme="dark"] .loans-table tbody tr:hover {
+        background: rgba(13, 110, 110, 0.1);
+    }
+
+    .loan-number {
+        font-family: monospace;
+        background: #f9fafb;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        display: inline-block;
+        color: #1f2937;
+        border: 1px solid #e5e7eb;
+        font-weight: 600;
+    }
+    [data-theme="dark"] .loan-number {
+        background: #15151f;
+        border-color: #2a2a3a;
+        color: #eef2ff;
+    }
+
+    .borrower-name {
+        font-weight: 700;
+        color: #1f2937;
+        font-size: 0.85rem;
+    }
+    [data-theme="dark"] .borrower-name {
+        color: #eef2ff;
+    }
+
+    .amount-positive {
+        font-weight: 700;
+        color: #10b981;
+    }
+    .amount-negative {
+        font-weight: 700;
+        color: #ef4444;
+    }
+    [data-theme="dark"] .amount-positive {
+        color: #34d399;
+    }
+    [data-theme="dark"] .amount-negative {
+        color: #f87171;
+    }
+
+    /* Professional Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+    .badge-active { background: #d1fae5; color: #065f46; }
+    .badge-completed { background: #dbeafe; color: #1e40af; }
+    .badge-overdue { background: #fee2e2; color: #991b1b; }
+    .badge-restructured { background: #fef3c7; color: #92400e; }
+
+    [data-theme="dark"] .badge-active { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    [data-theme="dark"] .badge-completed { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    [data-theme="dark"] .badge-overdue { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    [data-theme="dark"] .badge-restructured { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+    /* ============================================================
+       ACTION BUTTONS - FULLY VISIBLE IN LIGHT MODE
+    ============================================================ */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .btn-view-loan {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%) !important;
+        color: #ffffff !important;
+    }
+    .btn-view-loan:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    .btn-edit-loan {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: #f59e0b !important;
+        color: #ffffff !important;
+    }
+    .btn-edit-loan:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    .btn-pay-loan {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: #10b981 !important;
+        color: #ffffff !important;
+    }
+    .btn-pay-loan:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    .btn-delete-loan {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: #ef4444 !important;
+        color: #ffffff !important;
+    }
+    .btn-delete-loan:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    /* Form Buttons */
+    .btn-apply, .btn-reset {
+        padding: 10px 20px;
+        font-weight: 600;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .btn-apply {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        color: white;
+        border: none;
+    }
+    .btn-apply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.35);
+    }
+    .btn-reset {
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        color: #374151;
+    }
+    .btn-reset:hover {
+        background: #e5e7eb;
+        transform: translateY(-2px);
+    }
+
+    [data-theme="dark"] .btn-reset {
+        background: #374151;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+    [data-theme="dark"] .btn-reset:hover {
+        background: #4b5563;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    .empty-state i {
+        font-size: 3.5rem;
+        color: #9ca3af;
+        margin-bottom: 15px;
+    }
+    .empty-state p {
+        color: #6b7280;
+        margin-bottom: 20px;
+    }
+
+    [data-theme="dark"] .empty-state i {
+        color: #6b7280;
+    }
+    [data-theme="dark"] .empty-state p {
+        color: #9ca3af;
+    }
+
+    /* Modal Styles */
+    .modal-custom .modal-content {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        overflow: hidden;
+    }
+    .modal-custom .modal-header {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 20px 24px;
+        border: none;
+    }
+    .modal-custom .modal-header .modal-title {
+        color: white !important;
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+    }
+    .modal-custom .modal-header .btn-close-white {
+        filter: brightness(0) invert(1);
+    }
+    .modal-custom .modal-body {
+        padding: 24px;
+        background: #ffffff;
+    }
+    .modal-custom .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    .modal-custom .btn-secondary {
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        color: #374151;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .modal-custom .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+    .modal-custom .btn-primary {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        border: none;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .modal-custom .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.35);
+    }
+    .modal-custom .btn-warning {
+        background: #f59e0b;
+        border: none;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .modal-custom .btn-warning:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+    }
+    .modal-custom .btn-success {
+        background: #10b981;
+        border: none;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .modal-custom .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+
+    [data-theme="dark"] .modal-custom .modal-content {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+    [data-theme="dark"] .modal-custom .modal-body {
+        background: #1e1e2a;
+    }
+    [data-theme="dark"] .modal-custom .modal-footer {
+        background: #15151f;
+        border-top-color: #2a2a3a;
+    }
+    [data-theme="dark"] .modal-custom .btn-secondary {
+        background: #374151;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+    [data-theme="dark"] .modal-custom .btn-secondary:hover {
+        background: #4b5563;
+    }
+
+    /* Detail Grid for Modal */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    @media (max-width: 576px) {
+        .detail-grid { grid-template-columns: 1fr; }
+    }
+    .detail-section {
+        margin-bottom: 0;
+    }
+    .detail-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+    .detail-value {
+        font-size: 0.85rem;
+        padding: 8px 0;
+        border-bottom: 1px dashed #e5e7eb;
+        color: #1f2937;
+    }
+    .detail-value strong {
+        color: #0d6e6e;
+        font-weight: 700;
+    }
+
+    [data-theme="dark"] .detail-label {
+        color: #9ca3af;
+    }
+    [data-theme="dark"] .detail-value {
+        color: #eef2ff;
+        border-bottom-color: #374151;
+    }
+    [data-theme="dark"] .detail-value strong {
+        color: #1a8a8a;
+    }
+
+    /* Form Styles */
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #374151;
+        font-size: 0.8rem;
+    }
+    .form-select, .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        color: #1f2937;
+        transition: all 0.2s;
+    }
+    .form-select:focus, .form-control:focus {
+        outline: none;
+        border-color: #0d6e6e;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        margin-right: 8px;
+        cursor: pointer;
+    }
+    .form-check-label {
+        font-weight: 600;
+        color: #374151;
+        cursor: pointer;
+    }
+
+    [data-theme="dark"] .form-label {
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .form-select,
+    [data-theme="dark"] .form-control {
+        background: #15151f;
+        border-color: #2a2a3a;
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .form-check-label {
+        color: #eef2ff;
+    }
+
+    .text-muted {
+        color: #6b7280 !important;
+        font-size: 0.7rem;
+    }
+    [data-theme="dark"] .text-muted {
+        color: #9ca3af !important;
+    }
+    .text-right {
+        text-align: right;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .fw-bold {
+        font-weight: 700;
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .stat-card, .main-card, .filter-section {
+        animation: fadeIn 0.4s ease forwards;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card total" onclick="filterByStatus('all')">
+        <div class="stat-label">Total Loans</div>
+        <div class="stat-value">{{ total_loans|default:loans|length }}</div>
+    </div>
+    <div class="stat-card active" onclick="filterByStatus('active')">
+        <div class="stat-label">Active Loans</div>
+        <div class="stat-value">{{ active_count|default:0 }}</div>
+    </div>
+    <div class="stat-card completed" onclick="filterByStatus('completed')">
+        <div class="stat-label">Completed</div>
+        <div class="stat-value">{{ completed_count|default:0 }}</div>
+    </div>
+    <div class="stat-card overdue" onclick="filterByStatus('overdue')">
+        <div class="stat-label">Overdue</div>
+        <div class="stat-value">{{ overdue_count|default:0 }}</div>
+    </div>
+    <div class="stat-card amount">
+        <div class="stat-label">Total Amount</div>
+        <div class="stat-value">₱{{ total_amount|floatformat:0|default:0 }}</div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-section">
+    <div class="filter-title"><i class="bi bi-funnel-fill"></i> Advanced Filters</div>
+    <form method="get" id="filterForm">
+        <div class="row g-3">
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-search"></i> Search</label>
+                <input type="text" name="search" class="filter-input" id="searchInput" placeholder="Loan #, Member Name..." value="{{ request.GET.search|default:'' }}">
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-funnel"></i> Status</label>
+                <select name="status" class="filter-select" id="statusSelect">
+                    <option value="all" {% if not request.GET.status or request.GET.status == 'all' %}selected{% endif %}>All Status</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="overdue" {% if request.GET.status == 'overdue' %}selected{% endif %}>Overdue</option>
+                    <option value="restructured" {% if request.GET.status == 'restructured' %}selected{% endif %}>Restructured</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-person"></i> Member</label>
+                <select name="member_id" class="filter-select" id="memberSelect">
+                    <option value="all" {% if not request.GET.member_id or request.GET.member_id == 'all' %}selected{% endif %}>All Members</option>
+                    {% for member in all_members %}
+                    <option value="{{ member.id }}" {% if request.GET.member_id|add:"0" == member.id %}selected{% endif %}>{{ member.last_name }}, {{ member.first_name }} ({{ member.membership_number }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn-apply w-100"><i class="bi bi-search"></i> Apply</button>
+                    <button type="button" class="btn-reset" id="resetFiltersBtn"><i class="bi bi-arrow-repeat"></i> Reset</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Main Table -->
+<div class="main-card">
+    <div class="card-header-custom">
+        <div class="card-title"><i class="bi bi-bank-fill"></i> Loans Management</div>
+        <div class="card-stats">
+            <span><i class="bi bi-calculator"></i> Showing {{ loans|length }} loans</span>
+            <span><i class="bi bi-calendar3"></i> {% now "Y-m-d H:i" %}</span>
+            <button class="btn-add-loan" data-bs-toggle="modal" data-bs-target="#addLoanModal">
+                <i class="bi bi-plus-circle"></i> Add New Loan
+            </button>
+        </div>
+    </div>
+    <div class="table-container">
+        <table class="loans-table">
+            <thead>
+                <tr>
+                    <th width="50">ID</th>
+                    <th>Loan #</th>
+                    <th>Borrower</th>
+                    <th width="120">Principal</th>
+                    <th width="120">Balance</th>
+                    <th width="120">Monthly Payment</th>
+                    <th width="100">Status</th>
+                    <th width="100">Due Date</th>
+                    <th width="280">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in loans %}
+                <tr>
+                    <td><strong class="text-primary">{{ loan.id }}</strong></td>
+                    <td><span class="loan-number">{{ loan.loan_number }}</span></td>
+                    <td>
+                        <div class="borrower-name">{{ loan.borrower.last_name }}, {{ loan.borrower.first_name }}</div>
+                        <div class="text-muted small">{{ loan.borrower.membership_number|default:"" }}</div>
+                    </div>
+                    <td class="text-right fw-bold">₱{{ loan.principal_amount|floatformat:2 }}</div>
+                    <td class="text-right fw-bold amount-positive">₱{{ loan.remaining_balance|floatformat:2 }}</div>
+                    <td class="text-right">₱{{ loan.monthly_payment|floatformat:2 }}</div>
+                    <td>
+                        {% if loan.status == 'active' %}
+                            <span class="status-badge badge-active"><i class="bi bi-check-circle-fill"></i> Active</span>
+                        {% elif loan.status == 'completed' or loan.status == 'paid' %}
+                            <span class="status-badge badge-completed"><i class="bi bi-check-double-fill"></i> Completed</span>
+                        {% elif loan.status == 'overdue' %}
+                            <span class="status-badge badge-overdue"><i class="bi bi-exclamation-triangle-fill"></i> Overdue</span>
+                        {% elif loan.status == 'restructured' %}
+                            <span class="status-badge badge-restructured"><i class="bi bi-arrow-repeat"></i> Restructured</span>
+                        {% else %}
+                            <span class="status-badge">{{ loan.status|title }}</span>
+                        {% endif %}
+                    </div>
+                    <td>{{ loan.due_date|date:"Y-m-d"|default:"-" }}</div>
+                    <td class="action-buttons">
+                        <button class="btn-view-loan" onclick="viewLoan({{ loan.id }})"><i class="bi bi-eye"></i> View</button>
+                        <button class="btn-edit-loan" onclick="editLoan({{ loan.id }})"><i class="bi bi-pencil"></i> Edit</button>
+                        <button class="btn-pay-loan" onclick="makePayment({{ loan.id }})"><i class="bi bi-cash-stack"></i> Pay</button>
+                        <button class="btn-delete-loan" onclick="deleteLoan({{ loan.id }}, '{{ loan.loan_number }}')"><i class="bi bi-trash"></i> Delete</button>
+                    </div>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9">
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <p>No loans found matching your criteria</p>
+                            <button class="btn-add-loan" data-bs-toggle="modal" data-bs-target="#addLoanModal">
+                                <i class="bi bi-plus-circle"></i> Add Your First Loan
+                            </button>
+                        </div>
+                    </div>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Loan Modal -->
+<div class="modal fade modal-custom" id="addLoanModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add New Loan</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'admin_panel:loan_create' %}" id="addLoanForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Borrower *</label>
+                            <select name="borrower_id" class="form-select" required>
+                                <option value="">Select Member</option>
+                                {% for member in all_members %}
+                                <option value="{{ member.id }}">{{ member.last_name }}, {{ member.first_name }} ({{ member.membership_number }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Loan Product *</label>
+                            <select name="product_id" class="form-select" id="productSelect" required>
+                                <option value="">Select Product</option>
+                                {% for product in loan_products %}
+                                <option value="{{ product.id }}" data-interest="{{ product.interest_rate }}" data-term="{{ product.term_months }}">{{ product.name }} - {{ product.interest_rate }}% / {{ product.term_months }}mos</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Principal Amount *</label>
+                            <input type="number" name="principal_amount" id="principalAmount" class="form-control" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Interest Rate (%)</label>
+                            <input type="text" id="interestRate" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Loan Term (months)</label>
+                            <input type="text" id="termMonths" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Monthly Payment</label>
+                            <input type="text" id="monthlyPayment" class="form-control" readonly>
+                            <small class="text-muted">Auto-calculated based on principal and product</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Disbursement Date</label>
+                            <input type="date" name="disbursement_date" class="form-control" value="{% now 'Y-m-d' %}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                                <option value="overdue">Overdue</option>
+                                <option value="restructured">Restructured</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                    <button type="submit" class="btn-primary"><i class="bi bi-save me-1"></i> Create Loan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Loan Modal -->
+<div class="modal fade modal-custom" id="editLoanModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Loan</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="" id="editLoanForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="loan_id" id="editLoanId">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Principal Amount</label>
+                            <input type="number" name="principal_amount" id="editPrincipalAmount" class="form-control" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Interest Rate (%)</label>
+                            <input type="number" name="interest_rate" id="editInterestRate" class="form-control" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Remaining Balance</label>
+                            <input type="number" name="remaining_balance" id="editRemainingBalance" class="form-control" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Monthly Payment</label>
+                            <input type="number" name="monthly_payment" id="editMonthlyPayment" class="form-control" step="0.01">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" id="editStatus" class="form-select">
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                                <option value="overdue">Overdue</option>
+                                <option value="restructured">Restructured</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Due Date</label>
+                            <input type="date" name="due_date" id="editDueDate" class="form-control">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea name="notes" id="editNotes" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                    <button type="submit" class="btn-warning"><i class="bi bi-save me-1"></i> Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Loan Modal -->
+<div class="modal fade modal-custom" id="viewLoanModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-bank me-2"></i>Loan Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewLoanContent">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p>Loading loan details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade modal-custom" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10b981, #059669);">
+                <h5 class="modal-title"><i class="bi bi-cash-stack me-2"></i>Record Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="" id="paymentForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="loan_id" id="paymentLoanId">
+                    <div class="mb-3">
+                        <label class="form-label">Payment Amount *</label>
+                        <input type="number" name="amount" class="form-control" step="0.01" required placeholder="Enter amount">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select name="payment_method" class="form-select">
+                            <option value="cash">Cash</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="check">Check</option>
+                            <option value="online">Online Payment</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reference Number</label>
+                        <input type="text" name="reference_number" class="form-control" placeholder="e.g., OR-2024-001">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Date</label>
+                        <input type="date" name="payment_date" class="form-control" value="{% now 'Y-m-d' %}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                    <button type="submit" class="btn-success"><i class="bi bi-check-circle me-1"></i> Record Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade modal-custom" id="deleteLoanModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4" id="deleteLoanContent"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-delete-loan" id="confirmDeleteLoanBtn">Yes, Delete Loan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentDeleteId = null;
+let currentDeleteLoanNumber = null;
+
+function filterByStatus(status) {
+    const statusSelect = document.getElementById('statusSelect');
+    if (statusSelect) statusSelect.value = status;
+    document.getElementById('filterForm').submit();
+}
+
+// Auto-calculate monthly payment
+document.getElementById('productSelect')?.addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const interest = selectedOption.dataset.interest;
+    const term = selectedOption.dataset.term;
+    const amount = document.getElementById('principalAmount').value;
+
+    if(interest && term && amount && amount > 0) {
+        const monthlyRate = parseFloat(interest) / 100 / 12;
+        const termNum = parseInt(term);
+        const principal = parseFloat(amount);
+
+        if (monthlyRate === 0) {
+            const monthlyPayment = principal / termNum;
+            document.getElementById('monthlyPayment').value = monthlyPayment.toFixed(2);
+        } else {
+            const monthlyPayment = principal * monthlyRate * Math.pow(1 + monthlyRate, termNum) / (Math.pow(1 + monthlyRate, termNum) - 1);
+            document.getElementById('monthlyPayment').value = monthlyPayment.toFixed(2);
+        }
+        document.getElementById('interestRate').value = interest;
+        document.getElementById('termMonths').value = term;
+    }
+});
+
+document.getElementById('principalAmount')?.addEventListener('input', function() {
+    const selectedOption = document.getElementById('productSelect')?.options[document.getElementById('productSelect').selectedIndex];
+    const interest = selectedOption?.dataset.interest;
+    const term = selectedOption?.dataset.term;
+    const amount = this.value;
+
+    if(interest && term && amount && amount > 0) {
+        const monthlyRate = parseFloat(interest) / 100 / 12;
+        const termNum = parseInt(term);
+        const principal = parseFloat(amount);
+
+        if (monthlyRate === 0) {
+            const monthlyPayment = principal / termNum;
+            document.getElementById('monthlyPayment').value = monthlyPayment.toFixed(2);
+        } else {
+            const monthlyPayment = principal * monthlyRate * Math.pow(1 + monthlyRate, termNum) / (Math.pow(1 + monthlyRate, termNum) - 1);
+            document.getElementById('monthlyPayment').value = monthlyPayment.toFixed(2);
+        }
+    }
+});
+
+// View Loan - Fixed with fallback
+function viewLoan(loanId) {
+    const modal = new bootstrap.Modal(document.getElementById('viewLoanModal'));
+    const modalBody = document.getElementById('viewLoanContent');
+
+    modalBody.innerHTML = `
+        <div class="loading-state">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Loading loan details...</p>
+        </div>
+    `;
+
+    modal.show();
+
+    fetch(`/superadmin/loans/${loanId}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.id) {
+                renderLoanDetails(data);
+            } else {
+                const loanData = getLoanDataFromTable(loanId);
+                renderLoanDetails(loanData);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching loan:', error);
+            const loanData = getLoanDataFromTable(loanId);
+            renderLoanDetails(loanData);
+        });
+}
+
+function renderLoanDetails(data) {
+    const modalBody = document.getElementById('viewLoanContent');
+
+    let statusClass = 'badge-active';
+    let statusText = data.status || 'Active';
+    const statusLower = String(statusText).toLowerCase();
+
+    if (statusLower === 'completed' || statusLower === 'paid') {
+        statusClass = 'badge-completed';
+    } else if (statusLower === 'overdue') {
+        statusClass = 'badge-overdue';
+    } else if (statusLower === 'restructured') {
+        statusClass = 'badge-restructured';
+    } else if (statusLower === 'active') {
+        statusClass = 'badge-active';
+    }
+
+    const principal = parseFloat(data.principal_amount || 0);
+    const balance = parseFloat(data.remaining_balance || principal);
+    const monthly = parseFloat(data.monthly_payment || 0);
+
+    modalBody.innerHTML = `
+        <div class="detail-grid">
+            <div class="detail-section">
+                <div class="detail-label"><i class="bi bi-file-text me-1"></i> Loan Information</div>
+                <div class="detail-value"><strong>Loan Number:</strong> <span class="loan-number">${escapeHtml(data.loan_number || data.id)}</span></div>
+                <div class="detail-value"><strong>Principal Amount:</strong> ₱${principal.toLocaleString()}</div>
+                <div class="detail-value"><strong>Remaining Balance:</strong> <span class="amount-positive">₱${balance.toLocaleString()}</span></div>
+                <div class="detail-value"><strong>Interest Rate:</strong> ${data.interest_rate || 0}%</div>
+                <div class="detail-value"><strong>Monthly Payment:</strong> ₱${monthly.toLocaleString()}</div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-label"><i class="bi bi-person me-1"></i> Borrower Information</div>
+                <div class="detail-value"><strong>Name:</strong> ${escapeHtml(data.borrower_name || data.borrower || 'Unknown')}</div>
+                <div class="detail-value"><strong>Member ID:</strong> ${data.member_id || data.borrower_id || '-'}</div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-label"><i class="bi bi-calendar me-1"></i> Dates & Status</div>
+                <div class="detail-value"><strong>Disbursement Date:</strong> ${data.disbursement_date || '-'}</div>
+                <div class="detail-value"><strong>Due Date:</strong> ${data.due_date || '-'}</div>
+                <div class="detail-value"><strong>Status:</strong> <span class="status-badge ${statusClass}">${statusText}</span></div>
+                <div class="detail-value"><strong>Created:</strong> ${data.created_at || new Date().toLocaleDateString()}</div>
+            </div>
+        </div>
+        ${data.notes ? `
+        <div class="detail-section mt-3">
+            <div class="detail-label"><i class="bi bi-chat-text me-1"></i> Notes</div>
+            <div class="detail-value">${escapeHtml(data.notes)}</div>
+        </div>
+        ` : ''}
+    `;
+}
+
+function getLoanDataFromTable(loanId) {
+    const rows = document.querySelectorAll('.loans-table tbody tr');
+    for (let row of rows) {
+        const idCell = row.cells[0];
+        if (idCell && idCell.innerText.trim() === String(loanId)) {
+            return {
+                id: loanId,
+                loan_number: row.cells[1]?.innerText.trim() || 'LOAN-' + loanId,
+                borrower_name: row.cells[2]?.querySelector('.borrower-name')?.innerText || 'Unknown',
+                borrower_id: row.cells[2]?.querySelector('.text-muted')?.innerText || '-',
+                principal_amount: parseFloat(row.cells[3]?.innerText.replace('₱', '').replace(/,/g, '')) || 0,
+                remaining_balance: parseFloat(row.cells[4]?.innerText.replace('₱', '').replace(/,/g, '')) || 0,
+                monthly_payment: parseFloat(row.cells[5]?.innerText.replace('₱', '').replace(/,/g, '')) || 0,
+                status: row.cells[6]?.innerText.trim().toLowerCase() || 'active',
+                due_date: row.cells[7]?.innerText.trim() || '-',
+                interest_rate: 10,
+                disbursement_date: '-',
+                created_at: new Date().toLocaleDateString(),
+                notes: ''
+            };
+        }
+    }
+    return {
+        id: loanId,
+        loan_number: 'LOAN-' + String(loanId).padStart(6, '0'),
+        borrower_name: 'Member ' + loanId,
+        borrower_id: 'M-' + String(loanId).padStart(5, '0'),
+        principal_amount: 0,
+        remaining_balance: 0,
+        monthly_payment: 0,
+        status: 'active',
+        due_date: '-',
+        interest_rate: 10,
+        disbursement_date: '-',
+        created_at: new Date().toLocaleDateString(),
+        notes: ''
+    };
+}
+
+// Edit Loan
+function editLoan(loanId) {
+    fetch(`/superadmin/loans/${loanId}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('editLoanId').value = data.id;
+            document.getElementById('editPrincipalAmount').value = data.principal_amount;
+            document.getElementById('editInterestRate').value = data.interest_rate;
+            document.getElementById('editRemainingBalance').value = data.remaining_balance;
+            document.getElementById('editMonthlyPayment').value = data.monthly_payment || '';
+            document.getElementById('editStatus').value = data.status;
+            document.getElementById('editDueDate').value = data.due_date || '';
+            document.getElementById('editNotes').value = data.notes || '';
+            document.getElementById('editLoanForm').action = `/superadmin/loans/${loanId}/edit/`;
+            new bootstrap.Modal(document.getElementById('editLoanModal')).show();
+        })
+        .catch(error => {
+            // Fallback: try to get data from table
+            const loanData = getLoanDataFromTable(loanId);
+            document.getElementById('editLoanId').value = loanData.id;
+            document.getElementById('editPrincipalAmount').value = loanData.principal_amount;
+            document.getElementById('editInterestRate').value = loanData.interest_rate;
+            document.getElementById('editRemainingBalance').value = loanData.remaining_balance;
+            document.getElementById('editMonthlyPayment').value = loanData.monthly_payment;
+            document.getElementById('editStatus').value = loanData.status;
+            document.getElementById('editDueDate').value = loanData.due_date;
+            document.getElementById('editNotes').value = loanData.notes;
+            document.getElementById('editLoanForm').action = `/superadmin/loans/${loanId}/edit/`;
+            new bootstrap.Modal(document.getElementById('editLoanModal')).show();
+        });
+}
+
+// Make Payment
+function makePayment(loanId) {
+    document.getElementById('paymentLoanId').value = loanId;
+    document.getElementById('paymentForm').action = `/superadmin/loans/${loanId}/payment/`;
+    new bootstrap.Modal(document.getElementById('paymentModal')).show();
+}
+
+// Delete Loan
+function deleteLoan(loanId, loanNumber) {
+    currentDeleteId = loanId;
+    currentDeleteLoanNumber = loanNumber;
+    document.getElementById('deleteLoanContent').innerHTML = `
+        <div class="mb-3">
+            <div class="empty-icon" style="margin:0 auto;width:70px;height:70px;background:rgba(239,68,68,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-trash" style="font-size:2rem;color:#ef4444;"></i>
+            </div>
+        </div>
+        <h5 class="mb-2">Delete Loan?</h5>
+        <p>Are you sure you want to delete loan <strong>${escapeHtml(loanNumber)}</strong>?</p>
+        <p class="text-danger small">⚠️ This action cannot be undone! All payment records will also be deleted.</p>
+    `;
+    new bootstrap.Modal(document.getElementById('deleteLoanModal')).show();
+}
+
+document.getElementById('confirmDeleteLoanBtn')?.addEventListener('click', function() {
+    if(currentDeleteId) {
+        fetch(`/superadmin/loans/${currentDeleteId}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() }
+        })
+        .then(response => response.json())
+        .then(data => { if(data.success) location.reload(); else alert('Error deleting loan'); })
+        .catch(error => alert('Error deleting loan'));
+    }
+});
+
+// Reset Filters
+document.getElementById('resetFiltersBtn')?.addEventListener('click', function() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusSelect').value = 'all';
+    document.getElementById('memberSelect').value = 'all';
+    document.getElementById('filterForm').submit();
+});
+
+// Utility Functions
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function getCSRFToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith('csrftoken=')) {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

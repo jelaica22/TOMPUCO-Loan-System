@@ -1,0 +1,526 @@
+{% extends 'manager/base_manager.html' %}
+{% load static %}
+
+{% block title %}Application Details - Manager{% endblock %}
+{% block page_title %}Loan Application Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .detail-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .detail-header {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 20px 28px;
+        color: white;
+    }
+
+    .detail-header h4 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .detail-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 5px 14px;
+        border-radius: 30px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .detail-body {
+        padding: 28px;
+    }
+
+    /* Section Titles */
+    .section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-secondary);
+        margin: 24px 0 16px 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title:first-of-type {
+        margin-top: 0;
+    }
+
+    .section-title i {
+        color: #0d6e6e;
+        font-size: 1rem;
+    }
+
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px 32px;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        flex: 0 0 140px;
+    }
+
+    .info-value {
+        flex: 1;
+        color: var(--text-primary);
+        font-weight: 500;
+        font-size: 0.9rem;
+        text-align: right;
+    }
+
+    @media (max-width: 576px) {
+        .info-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+        .info-label {
+            flex: auto;
+        }
+        .info-value {
+            text-align: left;
+        }
+    }
+
+    /* Charges Card */
+    .charges-card {
+        background: var(--bg-body);
+        border-radius: 16px;
+        padding: 24px;
+        margin: 16px 0 24px 0;
+    }
+
+    .charges-title {
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.95rem;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .charges-title i {
+        color: #f59e0b;
+        font-size: 1.2rem;
+    }
+
+    .charges-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px 24px;
+    }
+
+    @media (max-width: 576px) {
+        .charges-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .charge-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--border-light);
+    }
+
+    .charge-label {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .charge-amount {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+    }
+
+    .charge-total {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 2px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1rem;
+    }
+
+    .charge-total .charge-label {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+
+    .charge-total .charge-amount {
+        font-weight: 800;
+        font-size: 1.2rem;
+        color: #10b981;
+    }
+
+    /* Financial Summary Alert */
+    .alert-summary {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        border-left: 4px solid #10b981;
+        color: #065f46;
+        padding: 20px 24px;
+        border-radius: 16px;
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    [data-theme="dark"] .alert-summary {
+        background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+        color: #a7f3d0;
+        border-left-color: #34d399;
+    }
+
+    .summary-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .summary-info i {
+        font-size: 2rem;
+    }
+
+    .net-proceeds {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #065f46;
+    }
+
+    [data-theme="dark"] .net-proceeds {
+        color: #a7f3d0;
+    }
+
+    /* Status Badge */
+    .status-badge {
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-manager_approved { background: #d1fae5; color: #065f46; }
+
+    [data-theme="dark"] .status-manager_approved { background: #064e3b; color: #a7f3d0; }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 16px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-back {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-back:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    /* Dark mode button */
+    [data-theme="dark"] .btn-back {
+        background: transparent;
+        border-color: #0d6e6e;
+        color: #0d6e6e;
+    }
+
+    [data-theme="dark"] .btn-back:hover {
+        background: #0d6e6e;
+        color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .detail-body {
+            padding: 20px;
+        }
+        .action-buttons {
+            justify-content: center;
+        }
+        .alert-summary {
+            flex-direction: column;
+            text-align: center;
+        }
+        .summary-info {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="detail-card">
+        <div class="detail-header">
+            <h4>
+                <i class="bi bi-file-text-fill"></i>
+                Application Details
+                <span class="detail-badge">{{ application.application_id }}</span>
+            </h4>
+        </div>
+        <div class="detail-body">
+
+            <!-- Member Information Section -->
+            <div class="section-title">
+                <i class="bi bi-person-badge-fill"></i>
+                Member Information
+            </div>
+            <div class="info-grid">
+                <div class="info-row">
+                    <span class="info-label">Full Name:</span>
+                    <span class="info-value"><strong>{{ application.member.last_name }}, {{ application.member.first_name }}</strong></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Membership Number:</span>
+                    <span class="info-value">{{ application.member.membership_number|default:"N/A" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Contact Number:</span>
+                    <span class="info-value">{{ application.member.contact_number|default:"Not provided" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email Address:</span>
+                    <span class="info-value">{{ application.member.user.email|default:"Not provided" }}</span>
+                </div>
+            </div>
+
+            <!-- Loan Application Section -->
+            <div class="section-title">
+                <i class="bi bi-bank"></i>
+                Loan Application
+            </div>
+            <div class="info-grid">
+                <div class="info-row">
+                    <span class="info-label">Loan Product:</span>
+                    <span class="info-value">{{ application.loan_product.name|default:"APCP" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Interest Rate:</span>
+                    <span class="info-value">{{ application.loan_product.interest_rate|default:20 }}% per annum</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Term:</span>
+                    <span class="info-value">{{ application.loan_product.term_months|default:12 }} months</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Requested Amount:</span>
+                    <span class="info-value">₱{{ application.requested_amount|floatformat:2 }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Approved Line:</span>
+                    <span class="info-value"><strong class="text-success">₱{{ application.approved_line|floatformat:2 }}</strong></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date Applied:</span>
+                    <span class="info-value">{{ application.created_at|date:"F d, Y" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date Approved:</span>
+                    <span class="info-value">{{ application.committee_approved_date|date:"F d, Y"|default:"Not yet" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value">
+                        <span class="status-badge status-{{ application.status|default:'pending' }}">
+                            <i class="bi bi-check-circle"></i>
+                            {{ application.get_status_display|default:application.status|title }}
+                        </span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Purpose & Collateral Section -->
+            <div class="section-title">
+                <i class="bi bi-chat-text-fill"></i>
+                Purpose & Details
+            </div>
+            <div class="info-grid">
+                <div class="info-row">
+                    <span class="info-label">Loan Purpose:</span>
+                    <span class="info-value">{{ application.purpose|default:"Not specified" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Collateral:</span>
+                    <span class="info-value">{{ application.collateral_offered|default:"None" }}</span>
+                </div>
+            </div>
+
+            <!-- Charges & Net Proceeds Calculation -->
+            {% if application.approved_line %}
+            <div class="section-title">
+                <i class="bi bi-calculator-fill"></i>
+                Net Proceeds Calculation
+            </div>
+            <div class="charges-card">
+                <div class="charges-title">
+                    <i class="bi bi-receipt"></i>
+                    Charges Breakdown
+                </div>
+                <div class="charges-grid">
+                    <div class="charge-item">
+                        <span class="charge-label">📋 Service Charge (3%)</span>
+                        <span class="charge-amount">₱{{ application.service_charge|floatformat:2|default:"0.00" }}</span>
+                    </div>
+                    <div class="charge-item">
+                        <span class="charge-label">💰 CBU Retention (2%)</span>
+                        <span class="charge-amount">₱{{ application.cbu_retention|floatformat:2|default:"0.00" }}</span>
+                    </div>
+                    <div class="charge-item">
+                        <span class="charge-label">🛡️ Insurance (1.32%)</span>
+                        <span class="charge-amount">₱{{ application.insurance_charge|floatformat:2|default:"0.00" }}</span>
+                    </div>
+                    <div class="charge-item">
+                        <span class="charge-label">📄 Service Fee</span>
+                        <span class="charge-amount">₱{{ application.service_fee|floatformat:2|default:"35.00" }}</span>
+                    </div>
+                    <div class="charge-item">
+                        <span class="charge-label">⚖️ Notarial Fee</span>
+                        <span class="charge-amount">₱{{ application.notarial_fee|floatformat:2|default:"200.00" }}</span>
+                    </div>
+                </div>
+
+                <div class="charge-total">
+                    <span class="charge-label">Total Deductions</span>
+                    <span class="charge-amount">₱{{ application.total_deductions|floatformat:2|default:"0.00" }}</span>
+                </div>
+            </div>
+
+            <!-- Financial Summary Alert -->
+            <div class="alert-summary">
+                <div class="summary-info">
+                    <i class="bi bi-calculator-fill"></i>
+                    <div class="summary-text">
+                        <strong>Financial Summary</strong><br>
+                        Approved Line: ₱{{ application.approved_line|floatformat:2 }}<br>
+                        Total Deductions: ₱{{ application.total_deductions|floatformat:2|default:"0.00" }}
+                    </div>
+                </div>
+                <div class="net-proceeds">
+                    = ₱{{ application.net_proceeds|floatformat:2 }}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Remarks Sections -->
+            {% if application.staff_remarks %}
+            <div class="section-title">
+                <i class="bi bi-chat-text-fill"></i>
+                Staff Remarks
+            </div>
+            <div class="info-grid">
+                <div class="info-row">
+                    <span class="info-label">Remarks:</span>
+                    <span class="info-value">{{ application.staff_remarks }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if application.committee_remarks %}
+            <div class="section-title">
+                <i class="bi bi-people-fill"></i>
+                Committee Remarks
+            </div>
+            <div class="info-grid">
+                <div class="info-row">
+                    <span class="info-label">Remarks:</span>
+                    <span class="info-value">{{ application.committee_remarks }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if application.manager_remarks %}
+            <div class="section-title">
+                <i class="bi bi-person-badge-fill"></i>
+                Manager Remarks
+            </div>
+            <div class="info-grid">
+                <div class="info-row">
+                    <span class="info-label">Remarks:</span>
+                    <span class="info-value">{{ application.manager_remarks }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="{% url 'manager:staff_applications' %}" class="btn-back">
+                    <i class="bi bi-arrow-left"></i> Back to Applications
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

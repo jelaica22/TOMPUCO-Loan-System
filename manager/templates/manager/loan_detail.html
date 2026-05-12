@@ -1,0 +1,225 @@
+{% extends 'manager/base_manager.html' %}
+{% load static %}
+
+{% block title %}Loan Details - Manager{% endblock %}
+{% block page_title %}Loan Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+    
+    .detail-header {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 20px 24px;
+        color: white;
+    }
+    
+    .detail-body {
+        padding: 24px;
+    }
+    
+    .info-row {
+        display: flex;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .info-label {
+        width: 180px;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+    
+    .info-value {
+        flex: 1;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .status-active { background: #d1fae5; color: #065f46; }
+    .status-completed { background: #dbeafe; color: #1e40af; }
+    .status-overdue { background: #fee2e2; color: #991b1b; }
+    
+    .progress-custom {
+        height: 10px;
+        background: var(--border-color);
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    
+    .progress-bar-custom {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981, #059669);
+        border-radius: 5px;
+        transition: width 0.3s;
+    }
+    
+    .btn-back {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    
+    .btn-back:hover {
+        background: #0d6e6e;
+        color: white;
+    }
+    
+    .table-schedule {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .table-schedule th {
+        background: var(--bg-body);
+        padding: 12px;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--border-color);
+    }
+    
+    .table-schedule td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .payment-completed {
+        color: #10b981;
+    }
+    
+    .payment-pending {
+        color: #f59e0b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-card">
+    <div class="detail-header">
+        <h5 class="mb-0"><i class="bi bi-bank"></i> Loan #{{ loan.loan_number }}</h5>
+    </div>
+    <div class="detail-body">
+        <div class="info-row">
+            <div class="info-label">Borrower:</div>
+            <div class="info-value">{{ loan.borrower.last_name }}, {{ loan.borrower.first_name }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Membership Number:</div>
+            <div class="info-value">{{ loan.borrower.membership_number }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Loan Product:</div>
+            <div class="info-value">{{ loan.loan_product.name|default:"APCP" }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Principal Amount:</div>
+            <div class="info-value">₱{{ loan.principal_amount|floatformat:2 }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Remaining Balance:</div>
+            <div class="info-value">₱{{ loan.remaining_balance|floatformat:2 }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Interest Rate:</div>
+            <div class="info-value">{{ loan.interest_rate }}% per annum</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Term:</div>
+            <div class="info-value">{{ loan.term_months }} months</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Status:</div>
+            <div class="info-value">
+                <span class="status-badge status-{{ loan.status }}">
+                    {{ loan.status|title }}
+                </span>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Disbursement Date:</div>
+            <div class="info-value">{{ loan.disbursement_date|date:"F d, Y"|default:"Not yet" }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Due Date:</div>
+            <div class="info-value">{{ loan.due_date|date:"F d, Y"|default:"-" }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Payment Progress:</div>
+            <div class="info-value">
+                <div class="progress-custom">
+                    <div class="progress-bar-custom" style="width: {{ progress_percentage }}%"></div>
+                </div>
+                <small>{{ progress_percentage }}% paid (₱{{ total_paid|floatformat:2 }} of ₱{{ loan.principal_amount|floatformat:2 }})</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="detail-card">
+    <div class="detail-header">
+        <h5 class="mb-0"><i class="bi bi-calendar"></i> Payment Schedule</h5>
+    </div>
+    <div class="detail-body">
+        <div class="table-responsive">
+            <table class="table-schedule">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Due Date</th>
+                        <th class="text-end">Principal</th>
+                        <th class="text-end">Interest</th>
+                        <th class="text-end">Total Due</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in payment_schedules %}
+                    <tr>
+                        <td>{{ schedule.schedule_number }}</div>
+                        <td>{{ schedule.due_date|date:"Y-m-d" }}</div>
+                        <td class="text-end">₱{{ schedule.principal_due|floatformat:2 }}</div>
+                        <td class="text-end">₱{{ schedule.interest_due|floatformat:2 }}</div>
+                        <td class="text-end">₱{{ schedule.total_due|floatformat:2 }}</div>
+                        <td>
+                            {% if schedule.status == 'paid' %}
+                                <span class="payment-completed"><i class="bi bi-check-circle"></i> Paid</span>
+                            {% else %}
+                                <span class="payment-pending"><i class="bi bi-clock"></i> Pending</span>
+                            {% endif %}
+                        </div>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No payment schedule available</div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="text-end">
+    <a href="{% url 'manager:staff_loans' %}" class="btn-back">
+        <i class="bi bi-arrow-left"></i> Back to Loans
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,591 @@
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+
+{% block title %}Two-Factor Authentication Verification - Staff{% endblock %}
+{% block page_title %}Verify 2FA Code{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== 2FA Verification Page Styles ===== */
+    :root {
+        --primary-dark: #1e3c72;
+        --primary-light: #2a5298;
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-600: #6b7280;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+    }
+
+    /* ===== Main Container ===== */
+    .verify-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 200px);
+        padding: 40px 20px;
+    }
+
+    /* ===== Verification Card - Centered & Elegant ===== */
+    .verify-card {
+        background: var(--bg-card);
+        border-radius: 28px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        max-width: 480px;
+        width: 100%;
+        margin: 0 auto;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .verify-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    /* ===== Card Header ===== */
+    .verify-header {
+        background: var(--brand-gradient);
+        padding: 28px 24px;
+        text-align: center;
+        color: white;
+    }
+
+    .verify-header-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        width: 80px;
+        height: 80px;
+        line-height: 80px;
+        border-radius: 50%;
+    }
+
+    .verify-header-icon i {
+        font-size: 2.5rem;
+        vertical-align: middle;
+    }
+
+    .verify-header h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 8px 0;
+    }
+
+    .verify-header p {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    /* ===== Card Body ===== */
+    .verify-body {
+        padding: 32px 28px;
+    }
+
+    /* ===== Phone Icon Section ===== */
+    .phone-icon-wrapper {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .phone-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, rgba(30, 60, 114, 0.1), rgba(42, 82, 152, 0.05));
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+
+    .phone-icon i {
+        font-size: 2.8rem;
+        color: var(--brand-primary);
+    }
+
+    .verify-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .verify-subtitle {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 28px;
+    }
+
+    /* ===== Code Input - Organized & Responsive ===== */
+    .code-input-group {
+        margin-bottom: 28px;
+    }
+
+    .code-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+        display: block;
+        letter-spacing: 0.8px;
+        text-align: center;
+    }
+
+    .code-input {
+        font-size: 2rem;
+        letter-spacing: 12px;
+        text-align: center;
+        font-family: 'Courier New', 'Monaco', monospace;
+        font-weight: 700;
+        background: var(--input-bg);
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        padding: 18px 12px;
+        width: 100%;
+        color: var(--text-primary);
+        transition: all 0.3s;
+    }
+
+    .code-input:focus {
+        border-color: var(--brand-primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.15);
+        letter-spacing: 12px;
+    }
+
+    .code-input::placeholder {
+        font-size: 1.2rem;
+        letter-spacing: 8px;
+        color: var(--text-muted);
+        opacity: 0.5;
+        font-weight: 400;
+    }
+
+    /* Input hint text */
+    .input-hint {
+        text-align: center;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    /* ===== Verify Button - Clearly Visible ===== */
+    .verify-btn {
+        background: var(--brand-gradient);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 1rem;
+        width: 100%;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .verify-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(13, 110, 110, 0.4);
+    }
+
+    .verify-btn:active {
+        transform: translateY(0);
+    }
+
+    /* ===== Divider ===== */
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 28px 0 24px;
+    }
+
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .divider span {
+        padding: 0 16px;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    /* ===== Help Section ===== */
+    .help-section {
+        background: var(--info-bg);
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin-top: 8px;
+    }
+
+    .help-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--info-text);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .help-text {
+        font-size: 0.8rem;
+        color: var(--info-text);
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .help-text i {
+        margin-right: 6px;
+    }
+
+    /* ===== Alternative Options ===== */
+    .alt-options {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .alt-link {
+        color: var(--brand-primary);
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .alt-link:hover {
+        color: var(--brand-primary-light);
+        text-decoration: underline;
+    }
+
+    /* ===== Alert Messages ===== */
+    .alert-message {
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.85rem;
+    }
+
+    .alert-error {
+        background: var(--danger-bg);
+        border: 1px solid var(--danger-text);
+        color: var(--danger-text);
+    }
+
+    .alert-error i {
+        font-size: 1.2rem;
+    }
+
+    .alert-warning {
+        background: var(--warning-bg);
+        border: 1px solid var(--warning-text);
+        color: var(--warning-text);
+    }
+
+    /* ===== Responsive Adjustments ===== */
+    @media (max-width: 576px) {
+        .verify-card {
+            max-width: 100%;
+            border-radius: 20px;
+        }
+
+        .verify-header {
+            padding: 20px 16px;
+        }
+
+        .verify-header-icon {
+            width: 60px;
+            height: 60px;
+            line-height: 60px;
+        }
+
+        .verify-header-icon i {
+            font-size: 1.8rem;
+        }
+
+        .verify-header h3 {
+            font-size: 1.2rem;
+        }
+
+        .verify-body {
+            padding: 24px 20px;
+        }
+
+        .code-input {
+            font-size: 1.5rem;
+            letter-spacing: 8px;
+            padding: 14px 10px;
+        }
+
+        .code-input::placeholder {
+            font-size: 1rem;
+            letter-spacing: 6px;
+        }
+
+        .code-input:focus {
+            letter-spacing: 8px;
+        }
+
+        .phone-icon {
+            width: 60px;
+            height: 60px;
+        }
+
+        .phone-icon i {
+            font-size: 2rem;
+        }
+
+        .verify-title {
+            font-size: 1.1rem;
+        }
+    }
+
+    /* ===== Animations ===== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .verify-card {
+        animation: fadeInUp 0.4s ease-out;
+    }
+
+    /* ===== Dark Mode Specific Overrides ===== */
+    [data-theme="dark"] .phone-icon {
+        background: rgba(13, 110, 110, 0.2);
+    }
+
+    /* ===== Focus Ring ===== */
+    .code-input:focus-visible {
+        outline: none;
+    }
+
+    /* ===== Spinner while submitting ===== */
+    .verify-btn.loading {
+        opacity: 0.8;
+        cursor: wait;
+    }
+
+    .verify-btn.loading i {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="verify-container">
+    <div class="verify-card">
+        <!-- Card Header -->
+        <div class="verify-header">
+            <div class="verify-header-icon">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <h3>Two-Factor Authentication</h3>
+            <p>Secure your account with 2FA verification</p>
+        </div>
+
+        <!-- Card Body -->
+        <div class="verify-body">
+            <!-- Error Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert-message alert-{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}">
+                        <i class="bi bi-{% if message.tags == 'error' %}exclamation-triangle-fill{% elif message.tags == 'warning' %}info-circle-fill{% else %}check-circle-fill{% endif %}"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Phone Icon & Instructions -->
+            <div class="phone-icon-wrapper">
+                <div class="phone-icon">
+                    <i class="bi bi-phone"></i>
+                </div>
+                <div class="verify-title">Enter Verification Code</div>
+                <div class="verify-subtitle">
+                    Please enter the 6-digit code from your authenticator app
+                </div>
+            </div>
+
+            <!-- Verification Form -->
+            <form method="post" id="verifyForm">
+                {% csrf_token %}
+
+                <div class="code-input-group">
+                    <label class="code-label">
+                        <i class="bi bi-grid-3x3-gap-fill"></i> AUTHENTICATION CODE
+                    </label>
+                    <input type="text"
+                           name="otp_code"
+                           class="code-input"
+                           placeholder="000000"
+                           maxlength="6"
+                           minlength="6"
+                           pattern="[0-9]{6}"
+                           inputmode="numeric"
+                           required
+                           autofocus>
+                    <div class="input-hint">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Enter the 6-digit code from Google Authenticator or similar app</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="verify-btn" id="verifyBtn">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Verify & Continue</span>
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="divider">
+                <span>Need Help?</span>
+            </div>
+
+            <!-- Help Section -->
+            <div class="help-section">
+                <div class="help-title">
+                    <i class="bi bi-question-circle-fill"></i>
+                    <span>Trouble accessing your account?</span>
+                </div>
+                <div class="help-text">
+                    <i class="bi bi-key-fill"></i> If you've lost access to your authenticator device, please contact your system administrator to reset your 2FA settings or use your backup codes if you have them saved.
+                </div>
+            </div>
+
+            <!-- Alternative Options -->
+            <div class="alt-options">
+                <a href="{% url 'staff:staff_dashboard' %}" class="alt-link">
+                    <i class="bi bi-arrow-left-circle"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-submit when 6 digits are entered
+    document.addEventListener('DOMContentLoaded', function() {
+        const otpInput = document.querySelector('input[name="otp_code"]');
+        const verifyForm = document.getElementById('verifyForm');
+        const verifyBtn = document.getElementById('verifyBtn');
+
+        if (otpInput) {
+            // Auto-submit when 6 digits are entered
+            otpInput.addEventListener('input', function(e) {
+                // Remove any non-numeric characters
+                this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+
+                // Auto-submit if we have 6 digits
+                if (this.value.length === 6) {
+                    // Show loading state on button
+                    const originalBtnText = verifyBtn.innerHTML;
+                    verifyBtn.innerHTML = '<i class="bi bi-hourglass-split"></i><span>Verifying...</span>';
+                    verifyBtn.classList.add('loading');
+
+                    // Submit the form
+                    setTimeout(() => {
+                        verifyForm.submit();
+                    }, 300);
+                }
+            });
+
+            // Prevent form submission if not enough digits
+            verifyForm.addEventListener('submit', function(e) {
+                if (otpInput.value.length !== 6) {
+                    e.preventDefault();
+
+                    // Show error style on input
+                    otpInput.style.borderColor = 'var(--danger)';
+                    otpInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.15)';
+
+                    // Create temporary error message
+                    let errorDiv = document.querySelector('.input-error-message');
+                    if (!errorDiv) {
+                        errorDiv = document.createElement('div');
+                        errorDiv.className = 'input-error-message';
+                        errorDiv.style.cssText = 'color: var(--danger); font-size: 0.7rem; margin-top: 8px; text-align: center;';
+                        otpInput.parentNode.appendChild(errorDiv);
+                    }
+                    errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Please enter all 6 digits of your verification code';
+
+                    setTimeout(() => {
+                        otpInput.style.borderColor = '';
+                        otpInput.style.boxShadow = '';
+                        if (errorDiv) errorDiv.remove();
+                    }, 3000);
+                }
+            });
+
+            // Reset border style on focus
+            otpInput.addEventListener('focus', function() {
+                this.style.borderColor = '';
+                this.style.boxShadow = '';
+                const errorDiv = document.querySelector('.input-error-message');
+                if (errorDiv) errorDiv.remove();
+            });
+        }
+    });
+
+    // Handle paste event to support pasting full 6-digit code
+    document.addEventListener('DOMContentLoaded', function() {
+        const otpInput = document.querySelector('input[name="otp_code"]');
+        if (otpInput) {
+            otpInput.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                const cleanedText = pastedText.replace(/[^0-9]/g, '').slice(0, 6);
+                this.value = cleanedText;
+
+                // Trigger input event to auto-submit if needed
+                const inputEvent = new Event('input', { bubbles: true });
+                this.dispatchEvent(inputEvent);
+            });
+        }
+    });
+</script>
+{% endblock %}

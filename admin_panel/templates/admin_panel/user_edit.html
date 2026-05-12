@@ -1,0 +1,437 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Edit User - TOMPuCO Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================================
+       USER EDIT FORM STYLES
+    ============================================================ */
+    .edit-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 20px 24px;
+        color: white;
+    }
+    
+    .form-header h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .form-body {
+        padding: 28px;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+        color: #374151;
+        font-size: 0.85rem;
+    }
+
+    .form-group label i {
+        margin-right: 6px;
+        color: #0d6e6e;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 10px 14px;
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        color: #1f2937;
+        transition: all 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #0d6e6e;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    .form-group input:disabled {
+        background: #e5e7eb;
+        cursor: not-allowed;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .password-section {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .password-section h5 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: #374151;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .password-hint {
+        font-size: 0.65rem;
+        color: #6b7280;
+        margin-top: 5px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-save {
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        border: none;
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.35);
+    }
+
+    .btn-cancel {
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        color: #374151;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-cancel:hover {
+        background: #e5e7eb;
+        transform: translateY(-2px);
+    }
+
+    .alert-error {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .alert-success {
+        background: #d1fae5;
+        border: 1px solid #a7f3d0;
+        color: #065f46;
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .info-box {
+        background: #dbeafe;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        font-size: 0.8rem;
+        color: #1e40af;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Dark Mode */
+    [data-theme="dark"] .form-card {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+
+    [data-theme="dark"] .form-group label {
+        color: #eef2ff;
+    }
+
+    [data-theme="dark"] .form-group input,
+    [data-theme="dark"] .form-group select {
+        background: #15151f;
+        border-color: #2a2a3a;
+        color: #eef2ff;
+    }
+
+    [data-theme="dark"] .form-group input:disabled {
+        background: #2a2a3a;
+    }
+
+    [data-theme="dark"] .password-section {
+        background: #15151f;
+        border-color: #2a2a3a;
+    }
+
+    [data-theme="dark"] .password-section h5 {
+        color: #eef2ff;
+    }
+
+    [data-theme="dark"] .btn-cancel {
+        background: #374151;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+
+    [data-theme="dark"] .btn-cancel:hover {
+        background: #4b5563;
+    }
+
+    [data-theme="dark"] .alert-error {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: #ef4444;
+        color: #f87171;
+    }
+
+    [data-theme="dark"] .alert-success {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: #10b981;
+        color: #34d399;
+    }
+
+    [data-theme="dark"] .info-box {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: #3b82f6;
+        color: #60a5fa;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+        .form-body {
+            padding: 20px;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+        .action-buttons .btn-save,
+        .action-buttons .btn-cancel {
+            justify-content: center;
+        }
+    }
+
+    .role-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    .badge-superuser { background: #fef3c7; color: #92400e; }
+    .badge-staff { background: #dbeafe; color: #1e40af; }
+    .badge-manager { background: #ede9fe; color: #5b21b6; }
+    .badge-cashier { background: #d1fae5; color: #065f46; }
+    .badge-committee { background: #fce7f3; color: #be185d; }
+    .badge-normal { background: #f3f4f6; color: #374151; }
+
+    [data-theme="dark"] .badge-superuser { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    [data-theme="dark"] .badge-staff { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    [data-theme="dark"] .badge-manager { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+    [data-theme="dark"] .badge-cashier { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    [data-theme="dark"] .badge-committee { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+    [data-theme="dark"] .badge-normal { background: #374151; color: #e5e7eb; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h4>
+                <i class="bi bi-pencil-square"></i>
+                Edit User: {{ user.username }}
+                {% if user.is_superuser %}
+                    <span class="role-badge badge-superuser"><i class="bi bi-star-fill"></i> Superuser</span>
+                {% elif user.is_staff %}
+                    <span class="role-badge badge-staff"><i class="bi bi-briefcase-fill"></i> Staff</span>
+                {% else %}
+                    <span class="role-badge badge-normal"><i class="bi bi-person"></i> Normal</span>
+                {% endif %}
+            </h4>
+        </div>
+
+        <div class="form-body">
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
+                        <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" id="editUserForm">
+                {% csrf_token %}
+
+                <!-- IMPORTANT: Hidden input to preserve username -->
+                <input type="hidden" name="username" value="{{ user.username }}">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="bi bi-person"></i> Username *</label>
+                        <input type="text" value="{{ user.username }}" disabled>
+                        <div class="password-hint">Username cannot be changed</div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-envelope"></i> Email *</label>
+                        <input type="email" name="email" value="{{ user.email|default:'' }}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="bi bi-person-badge"></i> First Name</label>
+                        <input type="text" name="first_name" value="{{ user.first_name|default:'' }}">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-person-badge"></i> Last Name</label>
+                        <input type="text" name="last_name" value="{{ user.last_name|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="bi bi-shield"></i> Role / Access Level</label>
+                        <select name="role" id="roleSelect">
+                            <option value="normal" {% if not user.is_staff and not user.is_superuser %}selected{% endif %}>Normal User</option>
+                            <option value="staff" {% if user.is_staff and not user.is_superuser %}selected{% endif %}>Staff</option>
+                            <option value="superuser" {% if user.is_superuser %}selected{% endif %}>Superuser (Full Access)</option>
+                            <option value="cashier" {% if user.groups.all.0.name == 'Cashier' %}selected{% endif %}>Cashier</option>
+                            <option value="manager" {% if user.groups.all.0.name == 'Manager' %}selected{% endif %}>Manager</option>
+                            <option value="committee" {% if user.groups.all.0.name == 'Committee' %}selected{% endif %}>Committee</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="bi bi-check-circle"></i> Account Status</label>
+                        <select name="is_active">
+                            <option value="true" {% if user.is_active %}selected{% endif %}>Active</option>
+                            <option value="false" {% if not user.is_active %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Password Change Section -->
+                <div class="password-section">
+                    <h5><i class="bi bi-key"></i> Change Password (Optional)</h5>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" name="new_password" id="new_password" autocomplete="off">
+                            <div class="password-hint">Leave blank to keep current password. Minimum 8 characters.</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password" name="confirm_password" id="confirm_password" autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <div>
+                        <strong>Information:</strong> Changing user role affects their access permissions.
+                        Superusers have full system access including user management.
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="javascript:history.back()" class="btn-cancel">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('editUserForm')?.addEventListener('submit', function(e) {
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+
+        if (newPassword || confirmPassword) {
+            if (newPassword !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+                return;
+            }
+            if (newPassword.length < 8) {
+                e.preventDefault();
+                alert('Password must be at least 8 characters long!');
+                return;
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,1012 @@
+﻿{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Members Management - TOMPuCO Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================================
+       MEMBERS MANAGEMENT - FORCED VISIBILITY FOR LIGHT MODE
+    ============================================================ */
+
+    /* LIGHT MODE DEFAULT - EXPLICIT COLORS */
+    :root {
+        --primary-dark: #0a5a5a;
+        --primary: #0d6e6e;
+        --primary-light: #1a8a8a;
+        --primary-gradient: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+        --purple: #8b5cf6;
+        --pink: #ec4899;
+    }
+
+    /* FORCE LIGHT MODE STYLES - NO VARIABLES DEPENDENCY */
+    body.light-mode-active .members-section {
+        /* Ensure proper background */
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 28px;
+    }
+    @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+
+    .stat-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 18px 16px;
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border-color: #1a8a8a;
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+    .stat-card.total::before { background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%); }
+    .stat-card.active::before { background: #10b981; }
+    .stat-card.inactive::before { background: #ef4444; }
+    .stat-card.income::before { background: #f59e0b; }
+
+    .stat-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #1f2937;
+        line-height: 1.2;
+    }
+
+    /* Filter Section - EXPLICIT LIGHT MODE COLORS */
+    .filter-section {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid #e5e7eb;
+    }
+    .filter-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #6b7280;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .filter-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        margin-bottom: 8px;
+        display: block;
+    }
+    .filter-select, .filter-input {
+        border-radius: 12px;
+        border: 1.5px solid #e5e7eb;
+        background: #f9fafb;
+        color: #1f2937;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        width: 100%;
+    }
+    .filter-select option {
+        color: #1f2937;
+        background: #ffffff;
+    }
+    .filter-select:focus, .filter-input:focus {
+        outline: none;
+        border-color: #0d6e6e;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    /* Quick Filters - EXPLICIT LIGHT MODE COLORS */
+    .quick-filters {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .filter-chip {
+        padding: 6px 18px;
+        border-radius: 30px;
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #4b5563;
+    }
+    .filter-chip:hover {
+        border-color: #0d6e6e;
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-1px);
+    }
+    .filter-chip.active {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        border-color: #0d6e6e;
+        color: white;
+    }
+
+    /* Main Table Card */
+    .main-card {
+        background: #ffffff;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+    .card-header-custom {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .card-title {
+        color: white !important;
+        margin: 0 !important;
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .card-stats {
+        display: flex;
+        gap: 15px;
+        color: white !important;
+        font-size: 0.75rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .card-stats span {
+        background: rgba(255, 255, 255, 0.15);
+        padding: 5px 12px;
+        border-radius: 20px;
+    }
+
+    /* Professional Table */
+    .table-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+    .members-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        min-width: 1000px;
+    }
+    .members-table th {
+        padding: 16px 16px;
+        font-weight: 700;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #6b7280;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    .members-table td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f3f4f6;
+        color: #1f2937;
+    }
+    .members-table tbody tr {
+        transition: background 0.2s ease;
+    }
+    .members-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    /* Member Avatar */
+    .member-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    .member-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .member-details {
+        line-height: 1.4;
+    }
+    .member-name {
+        font-weight: 700;
+        color: #1f2937;
+        font-size: 0.85rem;
+    }
+    .member-initial {
+        font-size: 0.65rem;
+        color: #6b7280;
+    }
+    .member-code {
+        font-family: monospace;
+        background: #f9fafb;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        display: inline-block;
+        color: #1f2937;
+        border: 1px solid #e5e7eb;
+    }
+    .income-value {
+        font-weight: 700;
+        color: #0d6e6e;
+    }
+
+    /* Professional Status Badges - LIGHT MODE */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+    .badge-active {
+        background: rgba(16, 185, 129, 0.12);
+        color: #065f46;
+    }
+    .badge-inactive {
+        background: rgba(239, 68, 68, 0.12);
+        color: #991b1b;
+    }
+
+    /* ACTION BUTTONS - EXPLICIT LIGHT MODE VISIBLE */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .member-btn-view {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%) !important;
+        color: #ffffff !important;
+    }
+    .member-btn-view:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    .member-btn-edit {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: #3b82f6 !important;
+        color: #ffffff !important;
+    }
+    .member-btn-edit:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    .member-btn-delete {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: #ef4444 !important;
+        color: #ffffff !important;
+    }
+    .member-btn-delete:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    .btn-add-member {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        color: white !important;
+        border: none !important;
+        padding: 10px 20px !important;
+        font-weight: 600 !important;
+        border-radius: 12px !important;
+        font-size: 0.8rem !important;
+        transition: all 0.2s !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        text-decoration: none !important;
+    }
+    .btn-add-member:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+        color: white !important;
+    }
+
+    .btn-apply, .btn-reset {
+        padding: 10px 20px;
+        font-weight: 600;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+    }
+    .btn-apply {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+    }
+    .btn-apply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.35);
+    }
+    .btn-reset {
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        color: #4b5563;
+    }
+    .btn-reset:hover {
+        background: #e5e7eb;
+        transform: translateY(-2px);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    .empty-state i {
+        font-size: 3.5rem;
+        color: #6b7280;
+        margin-bottom: 15px;
+    }
+    .empty-state p {
+        color: #6b7280;
+        margin-bottom: 20px;
+    }
+
+    /* MODAL STYLES - FULLY VISIBLE IN LIGHT MODE */
+    .modal-custom .modal-content {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        overflow: hidden;
+    }
+    .modal-custom .modal-header {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 20px 24px;
+        border: none;
+    }
+    .modal-custom .modal-header .modal-title {
+        color: white !important;
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+    }
+    .modal-custom .modal-header .btn-close-white {
+        filter: brightness(0) invert(1);
+    }
+    .modal-custom .modal-body {
+        padding: 24px;
+        background: #ffffff;
+    }
+    .modal-custom .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    .modal-custom .btn-reset {
+        background: #e5e7eb;
+        border: 1px solid #d1d5db;
+        color: #374151;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .modal-custom .btn-reset:hover {
+        background: #d1d5db;
+    }
+
+    /* DETAIL GRID - EXPLICIT LIGHT MODE COLORS */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    @media (max-width: 576px) {
+        .detail-grid { grid-template-columns: 1fr; }
+    }
+    .detail-section {
+        margin-bottom: 0;
+    }
+    .detail-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+    .detail-value {
+        font-size: 0.85rem;
+        padding: 8px 0;
+        border-bottom: 1px solid #e5e7eb;
+        color: #1f2937;
+    }
+    .detail-value strong {
+        color: #0d6e6e;
+        font-weight: 700;
+    }
+
+    .profile-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2.5rem;
+        font-weight: 700;
+        border: 3px solid #1a8a8a;
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    .loading-state p {
+        color: #6b7280;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .stat-card, .main-card, .filter-section {
+        animation: fadeIn 0.4s ease forwards;
+    }
+
+    /* FORCE DARK MODE OVERRIDES - When dark theme is active */
+    [data-theme="dark"] .stat-card,
+    [data-theme="dark"] .filter-section,
+    [data-theme="dark"] .main-card,
+    [data-theme="dark"] .modal-custom .modal-content,
+    [data-theme="dark"] .modal-custom .modal-body {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+
+    [data-theme="dark"] .stat-value,
+    [data-theme="dark"] .member-name,
+    [data-theme="dark"] .detail-value,
+    [data-theme="dark"] .filter-select,
+    [data-theme="dark"] .filter-input {
+        color: #eef2ff;
+    }
+
+    [data-theme="dark"] .stat-label,
+    [data-theme="dark"] .filter-label,
+    [data-theme="dark"] .filter-title,
+    [data-theme="dark"] .members-table th,
+    [data-theme="dark"] .detail-label {
+        color: #9ca3af;
+    }
+
+    [data-theme="dark"] .member-code,
+    [data-theme="dark"] .filter-select,
+    [data-theme="dark"] .filter-input {
+        background: #15151f;
+        border-color: #2a2a3a;
+    }
+
+    [data-theme="dark"] .filter-chip {
+        background: #15151f;
+        border-color: #2a2a3a;
+        color: #9ca3af;
+    }
+
+    [data-theme="dark"] .members-table td {
+        color: #eef2ff;
+        border-bottom-color: #252536;
+    }
+
+    [data-theme="dark"] .members-table th {
+        background: #15151f;
+        border-bottom-color: #2a2a3a;
+    }
+
+    [data-theme="dark"] .badge-active {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+    }
+
+    [data-theme="dark"] .badge-inactive {
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+    }
+
+    [data-theme="dark"] .detail-value {
+        border-bottom-color: #374151;
+        color: #eef2ff;
+    }
+
+    [data-theme="dark"] .modal-custom .modal-footer {
+        background: #15151f;
+        border-top-color: #2a2a3a;
+    }
+
+    [data-theme="dark"] .modal-custom .btn-reset {
+        background: #374151;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+
+    [data-theme="dark"] .modal-custom .btn-reset:hover {
+        background: #4b5563;
+    }
+
+    [data-theme="dark"] .btn-reset {
+        background: #374151;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+
+    [data-theme="dark"] .btn-reset:hover {
+        background: #4b5563;
+    }
+
+    [data-theme="dark"] .loading-state p,
+    [data-theme="dark"] .empty-state p {
+        color: #9ca3af;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card total" onclick="applyFilter('all')">
+        <div class="stat-label">Total Members</div>
+        <div class="stat-value">{{ members|length }}</div>
+    </div>
+    <div class="stat-card active" onclick="applyFilter('active')">
+        <div class="stat-label">Active</div>
+        <div class="stat-value">{{ active_count|default:0 }}</div>
+    </div>
+    <div class="stat-card inactive" onclick="applyFilter('inactive')">
+        <div class="stat-label">Inactive</div>
+        <div class="stat-value">{{ inactive_count|default:0 }}</div>
+    </div>
+    <div class="stat-card income">
+        <div class="stat-label">Total Monthly Income</div>
+        <div class="stat-value">₱{{ total_income|floatformat:0|default:0 }}</div>
+    </div>
+</div>
+
+<!-- Advanced Filter Section -->
+<div class="filter-section">
+    <div class="filter-title"><i class="bi bi-funnel-fill"></i> Advanced Filters</div>
+    <form method="get" id="filterForm">
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <label class="filter-label"><i class="bi bi-search"></i> Search</label>
+                <input type="text" name="search" class="filter-input" id="searchInput" placeholder="Name, Member ID, or Contact..." value="{{ request.GET.search|default:'' }}">
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-funnel"></i> Status</label>
+                <select name="status" class="filter-select" id="statusSelect">
+                    <option value="all" {% if not request.GET.status or request.GET.status == 'all' %}selected{% endif %}>All Members</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active Only</option>
+                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive Only</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-cash"></i> Income Range</label>
+                <select name="income_range" class="filter-select" id="incomeRangeSelect">
+                    <option value="all" {% if not request.GET.income_range or request.GET.income_range == 'all' %}selected{% endif %}>All Income Levels</option>
+                    <option value="0-15000" {% if request.GET.income_range == '0-15000' %}selected{% endif %}>₱0 - ₱15,000</option>
+                    <option value="15001-30000" {% if request.GET.income_range == '15001-30000' %}selected{% endif %}>₱15,001 - ₱30,000</option>
+                    <option value="30001-50000" {% if request.GET.income_range == '30001-50000' %}selected{% endif %}>₱30,001 - ₱50,000</option>
+                    <option value="50001+" {% if request.GET.income_range == '50001+' %}selected{% endif %}>₱50,001+</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="filter-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn-apply w-100"><i class="bi bi-search"></i> Apply</button>
+                    <button type="button" class="btn-reset" id="resetFiltersBtn"><i class="bi bi-arrow-repeat"></i> Reset</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Quick Filter Chips -->
+<div class="quick-filters">
+    <div class="filter-chip {% if not request.GET.status or request.GET.status == 'all' %}active{% endif %}" data-filter="all">👥 All Members</div>
+    <div class="filter-chip {% if request.GET.status == 'active' %}active{% endif %}" data-filter="active">🟢 Active</div>
+    <div class="filter-chip {% if request.GET.status == 'inactive' %}active{% endif %}" data-filter="inactive">🔴 Inactive</div>
+</div>
+
+<!-- Main Members Table -->
+<div class="main-card">
+    <div class="card-header-custom">
+        <div class="card-title"><i class="bi bi-person-badge-fill"></i> Member Records</div>
+        <div class="card-stats">
+            <span><i class="bi bi-person"></i> Showing {{ members|length }} members</span>
+            <span><i class="bi bi-calendar3"></i> {% now "Y-m-d H:i" %}</span>
+            <a href="{% url 'admin_panel:member_create' %}" class="btn-add-member">
+                <i class="bi bi-person-plus-fill"></i> Add New Member
+            </a>
+        </div>
+    </div>
+    <div class="table-container">
+        <table class="members-table">
+            <thead>
+                <tr>
+                    <th width="50">ID</th>
+                    <th>Member</th>
+                    <th width="120">Member #</th>
+                    <th>Contact</th>
+                    <th width="120">Income</th>
+                    <th width="100">Status</th>
+                    <th width="220">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                <tr>
+                    <td><strong class="text-primary">{{ member.id }}</strong></td>
+                    <td>
+                        <div class="member-info">
+                            <div class="member-avatar">
+                                {{ member.first_name|first|upper }}{{ member.last_name|first|upper }}
+                            </div>
+                            <div class="member-details">
+                                <div class="member-name">{{ member.first_name }} {{ member.last_name }}</div>
+                                {% if member.middle_initial %}<div class="member-initial">MI: {{ member.middle_initial }}.</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <td><span class="member-code">{{ member.membership_number|default:"-" }}</span></div>
+                    <td>{{ member.contact_number|default:"<span class='text-muted'>-</span>"|safe }}</div>
+                    <td class="income-value">₱{{ member.monthly_income|floatformat:2 }}</div>
+                    <td>
+                        {% if member.is_active %}
+                            <span class="status-badge badge-active"><i class="bi bi-check-circle-fill"></i> Active</span>
+                        {% else %}
+                            <span class="status-badge badge-inactive"><i class="bi bi-x-circle-fill"></i> Inactive</span>
+                        {% endif %}
+                    </div>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="member-btn-view" onclick="viewMember({{ member.id }})">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                            <a href="{% url 'admin_panel:member_edit' member.id %}" class="member-btn-edit">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button class="member-btn-delete" onclick="deleteMember({{ member.id }}, '{{ member.first_name }} {{ member.last_name }}')">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <p>No members found matching your criteria</p>
+                            <a href="{% url 'admin_panel:member_create' %}" class="btn-add-member">
+                                <i class="bi bi-person-plus-fill"></i> Add Your First Member
+                            </a>
+                        </div>
+                    </div>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- View Member Modal -->
+<div class="modal fade modal-custom" id="viewMemberModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-circle me-2"></i>Member Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewMemberContent">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p>Loading member details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-reset" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade modal-custom" id="deleteMemberModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4" id="deleteMemberContent"></div>
+            <div class="modal-footer justify-content-center gap-3 border-0 pt-0 pb-4">
+                <button type="button" class="btn-reset" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="member-btn-delete" id="confirmDeleteBtn">Yes, Delete Member</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentDeleteId = null;
+let currentDeleteName = null;
+
+// Apply filter from stat cards
+function applyFilter(status) {
+    const statusSelect = document.getElementById('statusSelect');
+    if (statusSelect) statusSelect.value = status;
+    document.getElementById('filterForm').submit();
+}
+
+// View Member Details
+async function viewMember(memberId) {
+    const modal = new bootstrap.Modal(document.getElementById('viewMemberModal'));
+    const modalBody = document.getElementById('viewMemberContent');
+
+    modalBody.innerHTML = `
+        <div class="loading-state">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Loading member details...</p>
+        </div>
+    `;
+
+    modal.show();
+
+    try {
+        const response = await fetch(`/superadmin/members/${memberId}/`);
+        let data;
+
+        if (response.ok) {
+            data = await response.json();
+        } else {
+            data = getMemberDataFromTemplate(memberId);
+        }
+
+        const initials = (data.first_name ? data.first_name.charAt(0) : '') + (data.last_name ? data.last_name.charAt(0) : '');
+
+        modalBody.innerHTML = `
+            <div class="text-center mb-4">
+                <div class="profile-placeholder">${initials.toUpperCase()}</div>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-section">
+                    <div class="detail-label"><i class="bi bi-person me-1"></i> Personal Information</div>
+                    <div class="detail-value"><strong>Member #:</strong> ${data.membership_number || '-'}</div>
+                    <div class="detail-value"><strong>Full Name:</strong> ${escapeHtml(data.first_name || '')} ${escapeHtml(data.last_name || '')} ${data.middle_initial ? data.middle_initial + '.' : ''}</div>
+                    <div class="detail-value"><strong>Birthdate:</strong> ${data.birthdate || '-'}</div>
+                    <div class="detail-value"><strong>Contact:</strong> ${data.contact_number || '-'}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label"><i class="bi bi-geo-alt me-1"></i> Address & Financial</div>
+                    <div class="detail-value"><strong>Address:</strong> ${escapeHtml(data.residence_address) || '-'}</div>
+                    <div class="detail-value"><strong>Monthly Income:</strong> <span class="income-value">₱${parseFloat(data.monthly_income || 0).toLocaleString()}</span></div>
+                    <div class="detail-value"><strong>Status:</strong> ${data.is_active ? '<span class="status-badge badge-active"><i class="bi bi-check-circle-fill"></i> Active</span>' : '<span class="status-badge badge-inactive"><i class="bi bi-x-circle-fill"></i> Inactive</span>'}</div>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error:', error);
+        const data = getMemberDataFromTemplate(memberId);
+        const initials = (data.first_name ? data.first_name.charAt(0) : '') + (data.last_name ? data.last_name.charAt(0) : '');
+
+        modalBody.innerHTML = `
+            <div class="text-center mb-4">
+                <div class="profile-placeholder">${initials.toUpperCase()}</div>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-section">
+                    <div class="detail-label"><i class="bi bi-person me-1"></i> Personal Information</div>
+                    <div class="detail-value"><strong>Member #:</strong> ${data.membership_number || '-'}</div>
+                    <div class="detail-value"><strong>Full Name:</strong> ${escapeHtml(data.first_name || '')} ${escapeHtml(data.last_name || '')}</div>
+                    <div class="detail-value"><strong>Contact:</strong> ${data.contact_number || '-'}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label"><i class="bi bi-geo-alt me-1"></i> Address & Financial</div>
+                    <div class="detail-value"><strong>Address:</strong> ${escapeHtml(data.residence_address) || '-'}</div>
+                    <div class="detail-value"><strong>Monthly Income:</strong> <span class="income-value">₱${parseFloat(data.monthly_income || 0).toLocaleString()}</span></div>
+                    <div class="detail-value"><strong>Status:</strong> ${data.is_active ? '<span class="status-badge badge-active"><i class="bi bi-check-circle-fill"></i> Active</span>' : '<span class="status-badge badge-inactive"><i class="bi bi-x-circle-fill"></i> Inactive</span>'}</div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function getMemberDataFromTemplate(memberId) {
+    const rows = document.querySelectorAll('.members-table tbody tr');
+    for (let row of rows) {
+        const idCell = row.cells[0];
+        if (idCell && idCell.innerText.trim() === String(memberId)) {
+            return {
+                id: memberId,
+                membership_number: row.cells[2]?.innerText.trim() || '-',
+                first_name: row.cells[1]?.querySelector('.member-name')?.innerText.split(' ')[0] || 'Unknown',
+                last_name: row.cells[1]?.querySelector('.member-name')?.innerText.split(' ')[1] || 'Member',
+                middle_initial: '',
+                contact_number: row.cells[3]?.innerText.trim() || '-',
+                residence_address: '-',
+                monthly_income: parseFloat(row.cells[4]?.innerText.replace('₱', '').replace(/,/g, '')) || 0,
+                is_active: row.cells[5]?.innerText.includes('Active'),
+                birthdate: '-'
+            };
+        }
+    }
+    return {
+        id: memberId,
+        membership_number: 'M-' + String(memberId).padStart(5, '0'),
+        first_name: 'Member',
+        last_name: String(memberId),
+        middle_initial: '',
+        contact_number: '-',
+        residence_address: '-',
+        monthly_income: 0,
+        is_active: true,
+        birthdate: '-'
+    };
+}
+
+// Delete Member
+function deleteMember(memberId, memberName) {
+    currentDeleteId = memberId;
+    currentDeleteName = memberName;
+    document.getElementById('deleteMemberContent').innerHTML = `
+        <div class="mb-3">
+            <div class="empty-icon" style="margin: 0 auto; width: 70px; height: 70px; background: rgba(239, 68, 68, 0.12); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-trash" style="font-size: 2rem; color: #ef4444;"></i>
+            </div>
+        </div>
+        <h5 class="mb-2" style="color: #1f2937;">Delete Member?</h5>
+        <p style="color: #6b7280;">Are you sure you want to delete <strong>${escapeHtml(memberName)}</strong>?</p>
+        <p class="text-danger small" style="color: #991b1b;">⚠️ This action cannot be undone! All associated data will be permanently removed.</p>
+    `;
+    new bootstrap.Modal(document.getElementById('deleteMemberModal')).show();
+}
+
+document.getElementById('confirmDeleteBtn')?.addEventListener('click', function() {
+    if (currentDeleteId) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/superadmin/members/${currentDeleteId}/delete/`;
+
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = getCSRFToken();
+        form.appendChild(csrfInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+});
+
+// Reset Filters
+document.getElementById('resetFiltersBtn')?.addEventListener('click', function() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusSelect').value = 'all';
+    document.getElementById('incomeRangeSelect').value = 'all';
+    document.getElementById('filterForm').submit();
+});
+
+// Quick filter chips
+document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+        const filter = this.dataset.filter;
+        const statusSelect = document.getElementById('statusSelect');
+        if (statusSelect) statusSelect.value = filter;
+        document.getElementById('filterForm').submit();
+    });
+});
+
+// Utility Functions
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function getCSRFToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith('csrftoken=')) {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

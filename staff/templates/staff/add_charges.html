@@ -1,0 +1,3 @@
+﻿{% extends 'staff/base_staff.html' %}
+{% block page_title %}Add Charges{% endblock %}
+{% block content %}<div class="card"><div class="card-body"><p>Add charges for {{ application.application_id }}</p><a href="{% url 'staff:staff_applications' %}" class="btn btn-secondary">Back</a></div></div>{% endblock %}

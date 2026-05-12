@@ -1,0 +1,558 @@
+﻿{% extends 'staff/base_staff.html' %}
+{% load static %}
+
+{% block title %}My Profile - Staff{% endblock %}
+{% block page_title %}Staff Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-dark: #1e3c72;
+        --primary-light: #2a5298;
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-600: #6b7280;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+    }
+
+    .profile-card {
+        background: white;
+        border-radius: 20px;
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+        margin-bottom: 25px;
+    }
+    .profile-header {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+        padding: 30px;
+        color: white;
+        text-align: center;
+        position: relative;
+    }
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: white;
+        margin: 0 auto 15px;
+        overflow: hidden;
+        border: 4px solid white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        position: relative;
+        cursor: pointer;
+    }
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .profile-avatar .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: bold;
+        color: white;
+    }
+    .avatar-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.6);
+        padding: 8px;
+        text-align: center;
+        font-size: 0.7rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+        cursor: pointer;
+    }
+    .profile-avatar:hover .avatar-overlay {
+        opacity: 1;
+    }
+    .profile-name {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    .profile-role {
+        font-size: 0.8rem;
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        padding: 20px;
+        background: var(--gray-50);
+        border-top: 1px solid var(--gray-200);
+    }
+    .stat-item {
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--primary-dark);
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        color: var(--gray-600);
+        letter-spacing: 0.5px;
+    }
+    .info-section {
+        padding: 25px;
+    }
+    .info-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--gray-200);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .info-row {
+        display: flex;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    .info-label {
+        width: 140px;
+        font-weight: 600;
+        color: var(--gray-600);
+    }
+    .info-value {
+        flex: 1;
+        color: var(--gray-800);
+        font-weight: 500;
+    }
+    .edit-btn {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+    }
+    .edit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(30,60,114,0.3);
+    }
+    .change-password-btn {
+        background: var(--warning);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 500;
+    }
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid var(--gray-200);
+        padding: 10px 14px;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-light);
+        box-shadow: 0 0 0 3px rgba(42,82,152,0.1);
+    }
+    .badge-role {
+        background: rgba(255,255,255,0.2);
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+    }
+    .quick-action-btn {
+        text-align: left;
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        border-radius: 12px;
+        transition: all 0.2s;
+    }
+    .quick-action-btn:hover {
+        transform: translateX(5px);
+        background: var(--gray-50);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Left Column - Profile Card -->
+    <div class="col-lg-4">
+        <!-- Profile Card -->
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar" onclick="document.getElementById('avatarUpload').click()">
+                    {% if staff_profile and staff_profile.profile_picture %}
+                        <img src="{{ staff_profile.profile_picture.url }}" alt="Profile Picture">
+                    {% else %}
+                        <div class="avatar-placeholder">
+                            {{ staff_profile.user.first_name|first|default:staff_profile.user.username|first|upper }}{{ staff_profile.user.last_name|first|default:''|upper }}
+                        </div>
+                    {% endif %}
+                    <div class="avatar-overlay">
+                        <i class="bi bi-camera"></i> Change Photo
+                    </div>
+                </div>
+                <form method="post" action="{% url 'staff:upload_avatar' %}" enctype="multipart/form-data" id="avatarForm">
+                    {% csrf_token %}
+                    <input type="file" name="avatar" id="avatarUpload" accept="image/*" style="display: none;" onchange="document.getElementById('avatarForm').submit()">
+                </form>
+                <div class="profile-name">{{ staff_profile.user.get_full_name|default:staff_profile.user.username }}</div>
+                <div class="profile-role">
+                    <i class="bi bi-person-badge"></i>
+                    <span>{{ staff_profile.get_position_display|default:"Staff" }}</span>
+                    <span class="badge-role">{{ staff_profile.department|default:"Loans Department" }}</span>
+                </div>
+            </div>
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <div class="stat-number">{{ applications_reviewed|default:0 }}</div>
+                    <div class="stat-label">Applications Reviewed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ loans_processed|default:0 }}</div>
+                    <div class="stat-label">Loans Processed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ payments_processed|default:0 }}</div>
+                    <div class="stat-label">Payments Processed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="profile-card">
+            <div class="info-section">
+                <div class="info-title">
+                    <i class="bi bi-lightning-charge"></i> Quick Actions
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'staff:staff_applications' %}" class="btn btn-outline-primary quick-action-btn">
+                        <i class="bi bi-file-text me-2"></i> Review Applications
+                    </a>
+                    <a href="{% url 'staff:issue_payment_instruction' %}" class="btn btn-outline-success quick-action-btn">
+                        <i class="bi bi-receipt me-2"></i> Issue Payment Instruction
+                    </a>
+                    <a href="{% url 'staff:staff_reports' %}" class="btn btn-outline-info quick-action-btn">
+                        <i class="bi bi-graph-up me-2"></i> Generate Reports
+                    </a>
+                    <a href="{% url 'staff:restructuring_list' %}" class="btn btn-outline-warning quick-action-btn">
+                        <i class="bi bi-arrow-repeat me-2"></i> Process Restructuring
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Info Card -->
+        <div class="profile-card">
+            <div class="info-section">
+                <div class="info-title">
+                    <i class="bi bi-info-circle"></i> System Information
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Staff ID:</div>
+                    <div class="info-value"><code>{{ staff_profile.staff_id }}</code></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Department:</div>
+                    <div class="info-value">{{ staff_profile.department }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Position:</div>
+                    <div class="info-value">{{ staff_profile.get_position_display }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Hire Date:</div>
+                    <div class="info-value">{{ staff_profile.hire_date|date:"F d, Y"|default:"Not set" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-8">
+        <!-- Personal Information Card -->
+        <div class="profile-card">
+            <div class="info-section">
+                <div class="info-title">
+                    <i class="bi bi-person-circle"></i> Personal Information
+                    <button class="btn btn-sm edit-btn ms-auto" onclick="toggleEdit()">
+                        <i class="bi bi-pencil"></i> Edit Profile
+                    </button>
+                </div>
+
+                <!-- View Mode -->
+                <div id="viewMode">
+                    <div class="info-row">
+                        <div class="info-label"><i class="bi bi-person"></i> Full Name:</div>
+                        <div class="info-value">{{ staff_profile.user.get_full_name|default:"Not set" }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label"><i class="bi bi-envelope"></i> Email Address:</div>
+                        <div class="info-value">{{ staff_profile.user.email|default:"Not set" }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label"><i class="bi bi-person-badge"></i> Username:</div>
+                        <div class="info-value">{{ staff_profile.user.username }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label"><i class="bi bi-telephone"></i> Contact Number:</div>
+                        <div class="info-value">{{ staff_profile.contact_number|default:"Not set" }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label"><i class="bi bi-calendar"></i> Member Since:</div>
+                        <div class="info-value">{{ staff_profile.user.date_joined|date:"F d, Y" }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label"><i class="bi bi-clock-history"></i> Last Login:</div>
+                        <div class="info-value">{{ staff_profile.user.last_login|date:"F d, Y H:i"|default:"Never" }}</div>
+                    </div>
+                </div>
+
+                <!-- Edit Mode -->
+                <form method="post" action="{% url 'staff:update_profile' %}" id="editForm" style="display: none;">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">First Name</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ staff_profile.user.first_name }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ staff_profile.user.last_name }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control" value="{{ staff_profile.user.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" value="{{ staff_profile.user.username }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Number</label>
+                        <input type="text" name="contact_number" class="form-control" value="{{ staff_profile.contact_number|default:'' }}" placeholder="e.g., 09123456789">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" onclick="toggleEdit()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Security Settings Card -->
+        <div class="profile-card">
+            <div class="info-section">
+                <div class="info-title">
+                    <i class="bi bi-shield-lock"></i> Security Settings
+                </div>
+                <div class="d-flex gap-3 flex-wrap">
+                    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <i class="bi bi-key"></i> Change Password
+                    </button>
+                    <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#enable2FAModal">
+                        <i class="bi bi-shield-check"></i> Enable Two-Factor Authentication
+                    </button>
+                    <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#logoutAllModal">
+                        <i class="bi bi-box-arrow-right"></i> Logout All Devices
+                    </button>
+                </div>
+                <div class="alert alert-info mt-3 small">
+                    <i class="bi bi-info-circle"></i> Two-factor authentication adds an extra layer of security to your account.
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Card -->
+        <div class="profile-card">
+            <div class="info-section">
+                <div class="info-title">
+                    <i class="bi bi-activity"></i> Recent Activity
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>Entity</th>
+                                <th>IP Address</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_activities %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-{% if 'VIEW' in log.action %}secondary{% elif 'CREATE' in log.action %}success{% elif 'UPDATE' in log.action or 'EDIT' in log.action %}info{% elif 'DELETE' in log.action %}danger{% else %}primary{% endif %}">
+                                        {{ log.action }}
+                                    </span>
+                                </td>
+                                <td>{{ log.entity_type|title }}</td>
+                                <td><code>{{ log.ip_address|default:"—" }}</code></td>
+                                <td>{{ log.created_at|date:"H:i, M d" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox"></i> No recent activity
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--warning); color: white;">
+                <h5 class="modal-title"><i class="bi bi-key me-2"></i>Change Password</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'staff:change_password' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" name="current_password" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <input type="password" name="new_password" class="form-control" required>
+                        <small class="text-muted">Minimum 8 characters, at least one uppercase, one lowercase, one number</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" name="confirm_password" class="form-control" required>
+                    </div>
+                    <div class="alert alert-warning small">
+                        <i class="bi bi-exclamation-triangle"></i> After changing your password, you will be logged out from all devices.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 2FA Modal -->
+<div class="modal fade" id="enable2FAModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--info); color: white;">
+                <h5 class="modal-title"><i class="bi bi-shield-check me-2"></i>Two-Factor Authentication</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="qrcode" style="display: flex; justify-content: center; margin-bottom: 20px;"></div>
+                <i class="bi bi-qr-code" style="font-size: 5rem; color: var(--primary-dark);"></i>
+                <p class="mt-3"><strong>Scan this QR code with your authenticator app</strong></p>
+                <p>Google Authenticator, Microsoft Authenticator, or Authy</p>
+                <div class="alert alert-info small">
+                    <i class="bi bi-info-circle"></i> Setup key: <code>TOMPUCO-{{ staff_profile.staff_id }}</code>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Enter 6-digit code to verify</label>
+                    <input type="text" class="form-control text-center" placeholder="000000" maxlength="6" style="font-size: 1.5rem; letter-spacing: 5px;">
+                </div>
+                <button class="btn btn-primary" onclick="enable2FA()">Verify and Enable 2FA</button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logout All Devices Modal -->
+<div class="modal fade" id="logoutAllModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Logout All Devices</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="bi bi-device-hdd" style="font-size: 3rem; color: #dc2626;"></i>
+                </div>
+                <p>Are you sure you want to log out from all devices?</p>
+                <p class="text-muted small">This will end all active sessions across all browsers and devices.</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> You will need to log in again on all devices.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'staff:logout_all_devices' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Yes, Logout All Devices</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleEdit() {
+    const viewMode = document.getElementById('viewMode');
+    const editMode = document.getElementById('editForm');
+    if (viewMode.style.display === 'none') {
+        viewMode.style.display = 'block';
+        editMode.style.display = 'none';
+    } else {
+        viewMode.style.display = 'none';
+        editMode.style.display = 'block';
+    }
+}
+
+function enable2FA() {
+    alert('2FA feature coming soon. Contact your administrator.');
+    bootstrap.Modal.getInstance(document.getElementById('enable2FAModal')).hide();
+}
+
+// Auto-hide alerts after 3 seconds
+setTimeout(function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        if (!alert.closest('.modal')) {
+            alert.style.opacity = '0';
+            setTimeout(function() {
+                alert.remove();
+            }, 300);
+        }
+    });
+}, 3000);
+</script>
+{% endblock %}

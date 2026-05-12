@@ -1,0 +1,636 @@
+# main/views.py
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
+from django.contrib.auth.views import LoginView
+from django.contrib import messages
+from django.http import JsonResponse, HttpResponse
+from django.utils import timezone
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.urls import reverse_lazy
+from decimal import Decimal
+import json
+import random
+import base64
+from datetime import datetime, timedelta, date
+from django.db import models
+from django.db.models import Sum, Q
+
+from main.models import (
+    Member, LoanApplication, Loan, Payment, Notification,
+    PaymentSchedule, LoanProduct, StaffProfile
+)
+from main.forms import MemberRegistrationForm
+from main.notification_helper import create_notification, get_user_notifications, get_unread_count
+
+
+class CustomLoginView(LoginView):
+    template_name = 'main/login.html'
+    redirect_authenticated_user = True
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            user = request.user
+            if user.is_staff or user.groups.filter(name='Staff').exists():
+                return redirect('staff:staff_dashboard')
+            elif user.groups.filter(name='Committee').exists():
+                return redirect('committee:committee_dashboard')
+            elif user.groups.filter(name='Cashier').exists():
+                return redirect('cashier:cashier_dashboard')
+            else:
+                return redirect('main:dashboard')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse_lazy('main:dashboard')
+
+
+otp_storage = {}
+
+
+def landing_page(request):
+    return render(request, 'main/landing.html')
+
+
+def custom_logout(request):
+    logout(request)
+    return redirect('/')
+
+
+def register(request):
+    if request.user.is_authenticated:
+        return redirect('main:dashboard')
+
+    if request.method == 'POST':
+        form = MemberRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            member = Member.objects.create(
+                user=user,
+                first_name=user.first_name,
+                last_name=user.last_name,
+                contact_number=request.POST.get('contact_number', ''),
+                residence_address=request.POST.get('residence_address', ''),
+                monthly_income=Decimal(request.POST.get('monthly_income', 0)),
+                is_active=True
+            )
+            messages.success(request, 'Registration successful! You can now login.')
+            return redirect('main:login')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    else:
+        form = MemberRegistrationForm()
+
+    return render(request, 'main/register.html', {'form': form})
+
+
+@login_required
+def dashboard(request):
+    user = request.user
+
+    if user.is_staff or user.groups.filter(name='Staff').exists():
+        return redirect('staff:staff_dashboard')
+    if user.groups.filter(name='Committee').exists():
+        return redirect('committee:committee_dashboard')
+    if user.groups.filter(name='Cashier').exists():
+        return redirect('cashier:cashier_dashboard')
+    if user.is_superuser:
+        return redirect('admin_panel:admin_dashboard')
+
+    try:
+        member = user.member_profile
+        loans = Loan.objects.filter(borrower=member)
+        total_loaned = loans.aggregate(total=models.Sum('principal_amount'))['total'] or Decimal(0)
+        active_loans = loans.filter(status='active')
+        total_paid = Payment.objects.filter(member=member, status='completed').aggregate(total=models.Sum('amount'))[
+                         'total'] or Decimal(0)
+        applications = LoanApplication.objects.filter(member=member).order_by('-created_at')[:5]
+        pending_applications = LoanApplication.objects.filter(member=member, status='pending_staff_review').count()
+        profile_completeness = calculate_profile_completeness(member)
+        unread_count = get_unread_count(user)
+
+        context = {
+            'member': member,
+            'total_loaned': total_loaned,
+            'active_loans_count': active_loans.count(),
+            'active_loans': active_loans[:3],
+            'total_paid': total_paid,
+            'recent_applications': applications,
+            'pending_applications': pending_applications,
+            'profile_completeness': profile_completeness,
+            'unread_notifications_count': unread_count,
+        }
+        return render(request, 'main/dashboard.html', context)
+    except Member.DoesNotExist:
+        messages.warning(request, 'Please complete your member profile.')
+        return redirect('main:edit_profile')
+
+
+@login_required
+def member_profile(request):
+    try:
+        member = request.user.member_profile
+        profile_completeness = calculate_profile_completeness(member)
+        return render(request, 'main/member_profile.html', {
+            'member': member,
+            'profile_completeness': profile_completeness
+        })
+    except Member.DoesNotExist:
+        messages.warning(request, 'Please complete your profile first.')
+        return redirect('main:edit_profile')
+
+
+@login_required
+def edit_profile(request):
+    try:
+        member = request.user.member_profile
+    except Member.DoesNotExist:
+        member = Member.objects.create(
+            user=request.user,
+            first_name=request.user.first_name or '',
+            last_name=request.user.last_name or '',
+            is_active=True
+        )
+
+    if request.method == 'POST':
+        member.first_name = request.POST.get('first_name', member.first_name)
+        member.last_name = request.POST.get('last_name', member.last_name)
+        member.middle_initial = request.POST.get('middle_initial', member.middle_initial)
+        member.nickname = request.POST.get('nickname', member.nickname)
+        member.nationality = request.POST.get('nationality', member.nationality)
+        member.contact_number = request.POST.get('contact_number', member.contact_number)
+        member.residence_address = request.POST.get('residence_address', member.residence_address)
+
+        birthdate_str = request.POST.get('birthdate')
+        if birthdate_str:
+            try:
+                member.birthdate = datetime.strptime(birthdate_str, '%Y-%m-%d').date()
+            except:
+                member.birthdate = None
+
+        member.gender = request.POST.get('gender', member.gender)
+        member.spouse_name = request.POST.get('spouse_name', member.spouse_name)
+        member.num_dependents = int(request.POST.get('num_dependents', 0) or 0)
+        member.employer_name = request.POST.get('employer_name', member.employer_name)
+        member.position = request.POST.get('position', member.position)
+        member.monthly_income = Decimal(request.POST.get('monthly_income', 0) or 0)
+        member.farm_location = request.POST.get('farm_location', member.farm_location)
+        member.farm_owned_hectares = Decimal(request.POST.get('farm_owned_hectares', 0) or 0)
+        member.farm_leased_hectares = Decimal(request.POST.get('farm_leased_hectares', 0) or 0)
+        member.area_planted = Decimal(request.POST.get('area_planted', 0) or 0)
+
+        if request.FILES.get('profile_picture'):
+            member.profile_picture = request.FILES['profile_picture']
+
+        if request.FILES.get('valid_id'):
+            member.uploaded_id = request.FILES['valid_id']
+
+        member.save()
+
+        request.user.first_name = member.first_name
+        request.user.last_name = member.last_name
+        request.user.save()
+
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('main:member_profile')
+
+    context = {
+        'member': member,
+        'profile_completeness': calculate_profile_completeness(member),
+    }
+    return render(request, 'main/edit_profile.html', context)
+
+
+@login_required
+def upload_valid_id(request):
+    """Upload Valid ID"""
+    if request.method == 'POST' and request.FILES.get('valid_id'):
+        try:
+            member = request.user.member_profile
+            member.uploaded_id = request.FILES['valid_id']
+            member.save()
+            return JsonResponse({'success': True, 'message': 'ID uploaded successfully'})
+        except Member.DoesNotExist:
+            return JsonResponse({'error': 'Member profile not found'}, status=404)
+    return JsonResponse({'error': 'No file uploaded'}, status=400)
+
+
+@login_required
+def apply_loan(request):
+    try:
+        member = request.user.member_profile
+        loan_products = LoanProduct.objects.filter(is_active=True)
+        is_employee = member.is_employee
+
+        context = {
+            'member': member,
+            'loan_products': loan_products,
+            'is_employee': is_employee,
+        }
+        return render(request, 'main/apply_loan.html', context)
+    except Member.DoesNotExist:
+        messages.error(request, 'Please complete your profile first.')
+        return redirect('main:edit_profile')
+
+
+@login_required
+def submit_loan_application(request):
+    if request.method == 'POST':
+        if not request.session.get('otp_verified'):
+            return JsonResponse({'success': False, 'error': 'OTP verification required.'})
+
+        try:
+            member = request.user.member_profile
+        except Member.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Member profile not found'})
+
+        amount = Decimal(request.POST.get('amount', 0))
+        purpose = request.POST.get('purpose', '')
+        collateral = request.POST.get('collateral', '')
+        mode_of_payment = request.POST.get('mode_of_payment', 'monthly')
+        term = int(request.POST.get('term', 12))
+        co_maker_id = request.POST.get('co_maker_id')
+        loan_product_id = request.POST.get('loan_product_id')
+
+        loan_product = get_object_or_404(LoanProduct, id=loan_product_id) if loan_product_id else None
+
+        if amount < 1000:
+            return JsonResponse({'success': False, 'error': 'Minimum loan amount is ₱1,000.'})
+        if not purpose:
+            return JsonResponse({'success': False, 'error': 'Please select a loan purpose.'})
+
+        interest_rate = loan_product.interest_rate if loan_product else Decimal('20')
+        monthly_rate = (interest_rate / 100) / 12
+
+        if monthly_rate > 0:
+            monthly_payment = (amount * monthly_rate * (1 + monthly_rate) ** term) / ((1 + monthly_rate) ** term - 1)
+        else:
+            monthly_payment = amount / term
+
+        total_payable = monthly_payment * term
+        total_interest = total_payable - amount
+
+        # Handle collateral document
+        if request.FILES.get('collateral_document'):
+            member.collateral_document = request.FILES['collateral_document']
+            member.collateral_document_type = request.POST.get('collateral_document_type', '')
+            member.collateral_document_number = request.POST.get('collateral_document_number', '')
+            member.collateral_issued_by = request.POST.get('collateral_issued_by', '')
+            member.collateral_property_description = request.POST.get('collateral_property_description', '')
+            if request.POST.get('collateral_area'):
+                member.collateral_area = Decimal(request.POST.get('collateral_area'))
+            member.save()
+
+        application = LoanApplication.objects.create(
+            member=member,
+            co_maker_id=int(co_maker_id) if co_maker_id else None,
+            applicant_user=request.user,
+            loan_product=loan_product,
+            requested_amount=amount,
+            purpose=purpose,
+            collateral_offered=collateral,
+            mode_of_payment=mode_of_payment,
+            interest_rate=interest_rate,
+            total_interest=total_interest,
+            monthly_payment=monthly_payment,
+            total_payable=total_payable,
+            status='pending_staff_review'
+        )
+
+        request.session.pop('otp_verified', None)
+        if request.user.id in otp_storage:
+            del otp_storage[request.user.id]
+
+        create_notification(
+            recipient=request.user,
+            notification_type='application',
+            title='Loan Application Submitted',
+            message=f'Your loan application for ₱{amount:,.2f} has been submitted.',
+            link=f'/main/application/{application.id}/'
+        )
+
+        return JsonResponse({
+            'success': True,
+            'application_id': application.id,
+            'application_number': application.application_id
+        })
+
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+
+@login_required
+def search_co_maker(request):
+    if request.method == 'GET':
+        member_id = request.GET.get('member_id')
+        try:
+            co_maker = Member.objects.get(membership_number=member_id)
+            if co_maker.id == request.user.member_profile.id:
+                return JsonResponse({'error': 'You cannot be your own co-maker'}, status=400)
+            if not co_maker.is_active:
+                return JsonResponse({'error': 'Co-maker account is inactive'}, status=400)
+            return JsonResponse({
+                'success': True,
+                'id': co_maker.id,
+                'name': f"{co_maker.last_name}, {co_maker.first_name}",
+                'contact': co_maker.contact_number,
+                'address': co_maker.residence_address,
+                'membership': co_maker.membership_number
+            })
+        except Member.DoesNotExist:
+            return JsonResponse({'error': 'Member not found.'}, status=404)
+
+
+@login_required
+def send_otp(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        phone = data.get('phone')
+        otp = str(random.randint(100000, 999999))
+        otp_storage[request.user.id] = {
+            'otp': otp,
+            'expires': timezone.now() + timedelta(minutes=5),
+            'attempts': 0
+        }
+        print(f"[OTP] To {phone}: {otp}")
+        request.session['demo_otp'] = otp
+        return JsonResponse({'success': True, 'message': 'OTP sent successfully.'})
+
+
+@login_required
+def verify_otp(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_otp = data.get('otp')
+        stored = otp_storage.get(request.user.id)
+        if stored:
+            if stored['attempts'] >= 3:
+                return JsonResponse({'success': False, 'error': 'Too many failed attempts.'})
+            if stored['expires'] < timezone.now():
+                return JsonResponse({'success': False, 'error': 'OTP expired.'})
+            if stored['otp'] == user_otp:
+                request.session['otp_verified'] = True
+                return JsonResponse({'success': True, 'message': 'OTP verified!'})
+            else:
+                stored['attempts'] += 1
+                remaining = 3 - stored['attempts']
+                return JsonResponse({'success': False, 'error': f'Invalid OTP. {remaining} attempts left.'})
+        return JsonResponse({'success': False, 'error': 'No OTP request found.'})
+
+
+@login_required
+def save_signature(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        signature_data = data.get('signature')
+        try:
+            member = request.user.member_profile
+            member.signature = signature_data
+            member.save()
+            return JsonResponse({'success': True, 'message': 'Signature saved.'})
+        except Member.DoesNotExist:
+            return JsonResponse({'error': 'Member profile not found'}, status=404)
+
+
+@login_required
+def my_applications(request):
+    try:
+        applications = LoanApplication.objects.filter(member=request.user.member_profile).order_by('-created_at')
+        return render(request, 'main/my_applications.html', {'applications': applications})
+    except Member.DoesNotExist:
+        messages.error(request, 'Member profile not found.')
+        return redirect('main:edit_profile')
+
+
+@login_required
+def my_loans(request):
+    try:
+        loans = Loan.objects.filter(borrower=request.user.member_profile).order_by('-created_at')
+        for loan in loans:
+            loan.total_paid = \
+            Payment.objects.filter(loan=loan, status='completed').aggregate(total=models.Sum('amount'))[
+                'total'] or Decimal(0)
+            loan.remaining_balance = loan.total_payable_amount - loan.total_paid
+            loan.payment_percentage = int(
+                (loan.total_paid / loan.total_payable_amount) * 100) if loan.total_payable_amount > 0 else 0
+        return render(request, 'main/my_loans.html', {'loans': loans})
+    except Member.DoesNotExist:
+        messages.error(request, 'Member profile not found.')
+        return redirect('main:edit_profile')
+
+
+@login_required
+def payment_history(request):
+    try:
+        payments = Payment.objects.filter(member=request.user.member_profile).order_by('-payment_date')
+        total_paid = payments.aggregate(total=models.Sum('amount'))['total'] or Decimal(0)
+        return render(request, 'main/payment_history.html', {'payments': payments, 'total_paid': total_paid})
+    except Member.DoesNotExist:
+        messages.error(request, 'Member profile not found.')
+        return redirect('main:edit_profile')
+
+
+@login_required
+def get_notifications_api(request):
+    notifications = get_user_notifications(request.user, 30)
+    unread_count = get_unread_count(request.user)
+    data = {
+        'unread_count': unread_count,
+        'notifications': [{
+            'id': n.id,
+            'title': n.title,
+            'message': n.message,
+            'link': n.link,
+            'type': n.notification_type,
+            'created_at': n.created_at.strftime('%Y-%m-%d %I:%M %p'),
+            'is_read': n.is_read
+        } for n in notifications]
+    }
+    return JsonResponse(data)
+
+
+@login_required
+def mark_notification_read(request, notif_id):
+    notification = get_object_or_404(Notification, id=notif_id, recipient=request.user)
+    notification.is_read = True
+    notification.save()
+    return JsonResponse({'success': True})
+
+
+@login_required
+def mark_all_notifications_read(request):
+    Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({'success': True})
+
+
+@login_required
+def member_loan_status(request):
+    try:
+        member = request.user.member_profile
+        active_loans = Loan.objects.filter(borrower=member, status='active')
+        has_active_loan = active_loans.exists()
+        outstanding_balance = active_loans.aggregate(total=Sum('remaining_balance'))['total'] or 0
+
+        return JsonResponse({
+            'has_active_loan': has_active_loan,
+            'outstanding_balance': float(outstanding_balance),
+            'active_loan_count': active_loans.count(),
+        })
+    except Member.DoesNotExist:
+        return JsonResponse({'error': 'Member profile not found'}, status=404)
+
+
+@login_required
+def view_application_details(request, app_id):
+    try:
+        application = get_object_or_404(LoanApplication, id=app_id, member=request.user.member_profile)
+        return render(request, 'main/view_application.html', {'application': application})
+    except Member.DoesNotExist:
+        messages.error(request, 'Member profile not found.')
+        return redirect('main:edit_profile')
+
+
+@login_required
+def payment_schedule(request, loan_id):
+    try:
+        loan = get_object_or_404(Loan, id=loan_id, borrower=request.user.member_profile)
+        schedules = PaymentSchedule.objects.filter(loan=loan).order_by('due_date')
+        context = {
+            'loan': loan,
+            'schedules': schedules,
+            'next_payment': schedules.filter(status='pending').first(),
+            'paid_count': schedules.filter(status='paid').count(),
+            'pending_count': schedules.filter(status='pending').count(),
+        }
+        return render(request, 'main/payment_schedule.html', context)
+    except Member.DoesNotExist:
+        messages.error(request, 'Member profile not found.')
+        return redirect('main:edit_profile')
+
+
+@login_required
+def download_receipt(request, payment_id):
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas
+
+    try:
+        payment = get_object_or_404(Payment, id=payment_id, member=request.user.member_profile)
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="receipt_{payment.payment_number}.pdf"'
+
+        p = canvas.Canvas(response, pagesize=letter)
+        width, height = letter
+
+        p.setFont("Helvetica-Bold", 20)
+        p.drawString(180, height - 50, "TOMPuCO COOPERATIVE")
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(220, height - 80, "OFFICIAL RECEIPT")
+
+        p.setFont("Helvetica", 11)
+        y = height - 120
+        p.drawString(50, y, f"Receipt Number: {payment.payment_number}")
+        p.drawString(50, y - 20, f"Date: {payment.payment_date.strftime('%B %d, %Y')}")
+        p.drawString(50, y - 40, f"Member: {payment.member.last_name}, {payment.member.first_name}")
+        p.drawString(50, y - 60, f"Loan Number: {payment.loan.loan_number}")
+
+        p.line(50, y - 75, width - 50, y - 75)
+        p.drawString(50, y - 95, f"Amount Paid: ₱{payment.amount:,.2f}")
+        p.drawString(50, y - 115, f"Payment Method: {payment.get_payment_method_display()}")
+        p.drawString(50, y - 135, f"Remaining Balance: ₱{payment.remaining_balance_after:,.2f}")
+
+        p.setFont("Helvetica-Oblique", 10)
+        p.drawString(180, 50, "Thank you for your payment!")
+
+        p.save()
+        return response
+    except Member.DoesNotExist:
+        messages.error(request, 'Member profile not found.')
+        return redirect('main:edit_profile')
+
+
+def calculate_profile_completeness(member):
+    required_fields = [
+        member.first_name, member.last_name, member.contact_number,
+        member.residence_address, member.birthdate, member.gender,
+        member.monthly_income
+    ]
+    filled = sum(1 for field in required_fields if field)
+    total = len(required_fields)
+    return int((filled / total) * 100) if total > 0 else 0
+
+
+@login_required
+def validate_co_maker(request, co_maker_id):
+    """Validate co-maker before proceeding"""
+    try:
+        co_maker = get_object_or_404(Member, id=co_maker_id)
+
+        # Check eligibility
+        active_loans_as_comaker = Loan.objects.filter(co_maker=co_maker, status='active').count()
+        is_eligible = active_loans_as_comaker < 3
+
+        return JsonResponse({
+            'valid': is_eligible,
+            'active_loans': active_loans_as_comaker,
+            'max_allowed': 3,
+            'message': f'This co-maker has {active_loans_as_comaker} active loan(s). Maximum allowed is 3.' if not is_eligible else 'Co-maker is eligible and valid!'
+        })
+    except Member.DoesNotExist:
+        return JsonResponse({'error': 'Co-maker not found'}, status=404)
+
+
+@login_required
+def upload_collateral(request, application_id):
+    """Upload collateral documents for an application"""
+    if request.method == 'POST' and request.FILES.get('collateral_doc'):
+        try:
+            application = get_object_or_404(LoanApplication, id=application_id, member=request.user.member_profile)
+
+            collateral_file = request.FILES['collateral_doc']
+            file_name = f"collateral_{application.application_id}_{datetime.now().timestamp()}.{collateral_file.name.split('.')[-1]}"
+            application.collateral_offered = f"Document uploaded: {file_name}"
+            application.save()
+
+            default_storage.save(f'collateral/{file_name}', collateral_file)
+
+            return JsonResponse({'success': True, 'message': 'Collateral document uploaded successfully'})
+        except Member.DoesNotExist:
+            return JsonResponse({'error': 'Member profile not found'}, status=404)
+
+    return JsonResponse({'error': 'No file uploaded'}, status=400)
+
+
+@login_required
+def chatbot_api(request):
+    """FAQ Chatbot API"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        question = data.get('message', '').lower()
+
+        faq_responses = {
+            'interest rate': 'Our interest rate is 20% per annum for all loan types.',
+            'interest': 'Our interest rate is 20% per annum for all loan types.',
+            'requirements': 'Loan requirements: Valid ID, Proof of income, Collateral documents, and a valid co-maker.',
+            'payment': 'You can pay via cash at our office.',
+            'how to apply': 'Go to Apply for Loan page. The form is 95% auto-filled.',
+            'status': 'Check your application status in "My Applications" page.',
+            'co-maker': 'Co-makers must be active members with less than 3 active loans as co-maker.',
+            'otp': 'OTP is sent to verify your identity.',
+            'signature': 'Draw your signature on the canvas provided.',
+            'documents': 'You need to upload a valid ID and collateral documents.',
+            'processing time': 'Loan applications are processed within 3-5 business days.',
+        }
+
+        response = "Please contact our support team for assistance."
+
+        for keyword, answer in faq_responses.items():
+            if keyword in question:
+                response = answer
+                break
+
+        return JsonResponse({'response': response})
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)

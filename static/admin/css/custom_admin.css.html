@@ -1,0 +1,116 @@
+/* static/admin/css/custom_admin.css */
+
+:root {
+    --primary: #1e3c72;
+    --secondary: #2a5298;
+    --accent: #4a90e2;
+    --primary-fg: #fff;
+}
+
+#header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+}
+
+#branding h1, #branding h1 a:link, #branding h1 a:visited {
+    color: white;
+    font-weight: 600;
+}
+
+.module h2, .module caption, .inline-group h2 {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+}
+
+a:link, a:visited {
+    color: #1e3c72;
+}
+
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+    background: #1e3c72;
+    color: white;
+}
+
+.button:hover, input[type=submit]:hover, input[type=button]:hover {
+    background: #2a5298;
+}
+
+.object-tools a:link, .object-tools a:visited {
+    background: #2a5298;
+}
+
+.selector-chosen h2 {
+    background: #1e3c72 !important;
+}
+
+/* Dashboard styles */
+.dashboard .module {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.dashboard .module table th {
+    background: #f8f9fc;
+    font-weight: 600;
+}
+
+/* Change list styles */
+#changelist .actions {
+    background: #f8f9fc;
+    border-radius: 8px;
+}
+
+.results table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.results table th {
+    background: #f8f9fc;
+    font-weight: 600;
+}
+
+/* Sidebar */
+#nav-sidebar {
+    background: #f8f9fc;
+}
+
+/* Status badges */
+.field-status .badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Alert styles */
+.alert {
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #badbcc;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.alert-info {
+    background: #cfe2ff;
+    color: #084298;
+    border: 1px solid #b6d4fe;
+}

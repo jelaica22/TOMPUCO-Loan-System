@@ -1,0 +1,131 @@
+{% extends 'admin_panel/base_admin.html' %}
+{% load static %}
+
+{% block title %}Member Loan Statement{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .no-print { display: none; }
+        .print-area { margin: 0; padding: 0; }
+    }
+    .statement-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .statement-header h2 {
+        color: #1e3c72;
+        margin-bottom: 5px;
+    }
+    .summary-card {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .summary-number {
+        font-size: 24px;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}Member Loan Statement{% endblock %}
+
+{% block content %}
+<div class="no-print mb-3">
+    <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer"></i> Print</button>
+    <a href="{% url 'reports:member_loan_statement_pdf' member.id %}" class="btn btn-danger"><i class="bi bi-file-pdf"></i> Download PDF</a>
+    <a href="{% url 'admin_panel:members_list' %}" class="btn btn-secondary">Back</a>
+</div>
+
+<div class="print-area">
+    <div class="statement-header">
+        <h2>ToMPuCo Cooperative</h2>
+        <p>Member Loan Statement</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">Member Information</div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ member.last_name }}, {{ member.first_name }}</p>
+                    <p><strong>Membership #:</strong> {{ member.membership_number }}</p>
+                    <p><strong>Address:</strong> {{ member.residence_address }}</p>
+                    <p><strong>Contact:</strong> {{ member.contact_number }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">Loan Summary</div>
+                <div class="card-body">
+                    <p><strong>Total Borrowed:</strong> ₱{{ total_borrowed|floatformat:2 }}</p>
+                    <p><strong>Total Paid:</strong> ₱{{ total_paid|floatformat:2 }}</p>
+                    <p><strong>Outstanding Balance:</strong> ₱{{ total_balance|floatformat:2 }}</p>
+                    <p><strong>Statement Date:</strong> {{ generated_date|date:"F d, Y" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">Loan Details</div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr><th>Loan #</th><th>Principal</th><th>Interest Rate</th><th>Monthly Payment</th><th>Paid</th><th>Balance</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for loan in loans %}
+                            <tr>
+                                <td>{{ loan.loan_number }}</td>
+                                <td>₱{{ loan.principal_amount|floatformat:2 }}</td>
+                                <td>{{ loan.interest_rate }}%</td>
+                                <td>₱{{ loan.monthly_payment|floatformat:2 }}</td>
+                                <td>₱{{ loan.paid_amount|floatformat:2 }}</td>
+                                <td>₱{{ loan.remaining_balance|floatformat:2 }}</td>
+                                <td>{{ loan.get_status_display }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7" class="text-center">No loans found</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">Payment History</div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr><th>Date</th><th>Reference #</th><th>Amount</th><th>Payment Method</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.payment_date|date:"Y-m-d" }}</td>
+                                <td>{{ payment.payment_number }}</td>
+                                <td>₱{{ payment.amount|floatformat:2 }}</td>
+                                <td>{{ payment.get_payment_method_display }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center">No payments found</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

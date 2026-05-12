@@ -1,0 +1,18 @@
+﻿{% extends 'staff/base_staff.html' %}
+{% block page_title %}Request Revision{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">Request Revision for {{ application.application_id }}</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Reason for Revision</label>
+                <textarea name="revision_reason" class="form-control" rows="4" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-warning">Submit Revision Request</button>
+            <a href="{% url 'staff:review_application' application.id %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

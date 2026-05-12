@@ -1,0 +1,65 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Penalty Report{% endblock %}
+
+{% block page_title %}Penalty Report{% endblock %}
+
+{% block content %}
+<div class="no-print mb-3">
+    <a href="{% url 'reports:penalty_report_excel' %}" class="btn btn-success"><i class="bi bi-file-excel"></i> Export Excel</a>
+    <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer"></i> Print</button>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Penalty Report as of {{ generated_date|date:"F d, Y" }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="alert alert-warning">
+                    <h6>Total Penalty Amount</h6>
+                    <h3>₱{{ total_penalty|floatformat:2 }}</h3>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="alert alert-info">
+                    <h6>Loans with Penalty</h6>
+                    <h3>{{ total_count }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Loan ID</th>
+                    <th>Member Name</th>
+                    <th>Days Overdue</th>
+                    <th>Remaining Balance</th>
+                    <th>Penalty Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan_data in loans %}
+                <tr>
+                    <td>{{ loan_data.loan.loan_number }}</td>
+                    <td>{{ loan_data.member.last_name }}, {{ loan_data.member.first_name }}</td>
+                    <td class="text-end">{{ loan_data.days_overdue }}</td>
+                    <td class="text-end">₱{{ loan_data.remaining_balance|floatformat:2 }}</td>
+                    <td class="text-end text-danger">₱{{ loan_data.penalty_amount|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center">No penalties found</td></tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-dark">
+                <tr>
+                    <th colspan="4" class="text-end">TOTAL PENALTY:</th>
+                    <th class="text-end">₱{{ total_penalty|floatformat:2 }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}

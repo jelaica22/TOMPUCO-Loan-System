@@ -1,0 +1,20 @@
+﻿{% extends 'admin_panel/base.html' %}
+
+{% block title %}Delete Loan Product{% endblock %}
+{% block page_title %}Delete Loan Product{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body text-center">
+        <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+        <h4 class="mt-3">Confirm Delete</h4>
+        <p>Are you sure you want to delete loan product <strong>{{ product.name }} - {{ product.display_name }}</strong>?</p>
+        <p class="text-danger">This action cannot be undone!</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Yes, Delete</button>
+            <a href="{% url 'admin_panel:loan_products_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,977 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Edit Profile - ToMPuCo{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Main Container */
+    .edit-profile-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Header Section */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .page-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Alert Banner */
+    .alert-custom {
+        background: #dbeafe;
+        border-left: 4px solid #3b82f6;
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .alert-custom i {
+        font-size: 1.2rem;
+        color: #3b82f6;
+    }
+
+    [data-theme="dark"] .alert-custom {
+        background: #1e3a8a;
+    }
+
+    /* Form Sections */
+    .form-section {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 25px;
+        border: 1px solid var(--border-color);
+    }
+
+    .form-section h5 {
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-section h5 i {
+        color: #0d6e6e;
+    }
+
+    .section-badge {
+        background: rgba(13, 110, 110, 0.1);
+        color: #0d6e6e;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+
+    .info-note {
+        background: var(--bg-body);
+        padding: 12px 15px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid var(--border-color);
+    }
+
+    /* Form Controls */
+    .form-label {
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .required-field::after {
+        content: "*";
+        color: #ef4444;
+        margin-left: 5px;
+    }
+
+    .form-control, .form-select {
+        background: var(--input-bg);
+        border: 1.5px solid var(--border-color);
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        transition: all 0.2s;
+        width: 100%;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6e6e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    .help-text {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    /* Profile Picture */
+    .profile-image-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .profile-image-container img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 3px solid #0d6e6e;
+        box-shadow: var(--shadow);
+    }
+
+    .profile-placeholder {
+        width: 150px;
+        height: 150px;
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        box-shadow: var(--shadow);
+    }
+
+    .profile-placeholder i {
+        font-size: 80px;
+        color: white;
+    }
+
+    .camera-icon {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: #0d6e6e;
+        border-radius: 50%;
+        padding: 8px;
+        color: white;
+        border: 2px solid var(--bg-card);
+    }
+
+    /* Table for Real Estate */
+    .real-estate-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+    }
+
+    .real-estate-table th {
+        background: var(--bg-body);
+        padding: 12px;
+        font-weight: 700;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border-color);
+        text-align: left;
+    }
+
+    .real-estate-table td {
+        padding: 10px;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .real-estate-table .form-control {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+
+    /* 2FA Card */
+    .twofa-card {
+        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 25px;
+        color: white;
+    }
+
+    .twofa-card h5 {
+        color: white;
+        border-bottom-color: rgba(255,255,255,0.2);
+    }
+
+    .twofa-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .twofa-enabled {
+        background: rgba(16, 185, 129, 0.3);
+        color: #10b981;
+    }
+
+    .twofa-disabled {
+        background: rgba(239, 68, 68, 0.3);
+        color: #fecaca;
+    }
+
+    .btn-2fa {
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.4);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-2fa:hover {
+        background: rgba(255,255,255,0.3);
+        transform: translateY(-2px);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-2fa-danger {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-2fa-danger:hover {
+        background: #ef4444;
+    }
+
+    /* BUTTONS - VISIBLE IN LIGHT MODE */
+    .btn-save {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    .btn-cancel {
+        background: #ffffff;
+        border: 2px solid #6c757d;
+        color: #6c757d;
+        padding: 12px 32px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-cancel:hover {
+        background: #6c757d;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    [data-theme="dark"] .btn-cancel {
+        background: transparent;
+    }
+
+    /* Action Buttons Container */
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: flex-end;
+        margin-top: 25px;
+        flex-wrap: wrap;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .edit-profile-container {
+            padding: 10px;
+        }
+
+        .form-section {
+            padding: 16px;
+        }
+
+        .action-buttons {
+            justify-content: center;
+        }
+
+        .btn-save, .btn-cancel {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .real-estate-table {
+            font-size: 0.7rem;
+        }
+
+        .real-estate-table td {
+            padding: 5px;
+        }
+
+        .real-estate-table .form-control {
+            font-size: 0.7rem;
+            padding: 5px;
+        }
+
+        .page-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .twofa-card .row {
+            text-align: center;
+        }
+
+        .twofa-card .text-md-end {
+            text-align: center !important;
+            margin-top: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="edit-profile-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2><i class="bi bi-pencil-square"></i> Complete Profile</h2>
+        <a href="{% url 'main:member_profile' %}" class="btn-cancel">
+            <i class="bi bi-arrow-left"></i> Back to Profile
+        </a>
+    </div>
+
+    <!-- Info Alert -->
+    <div class="alert-custom">
+        <i class="bi bi-info-circle-fill"></i>
+        <div>
+            <strong>95% Auto-fill Ready!</strong> Complete your profile once, and it will auto-fill all your
+            future loan applications and co-maker statements.
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" id="profileForm">
+        {% csrf_token %}
+
+        <!-- Profile Picture Section -->
+        <div class="form-section">
+            <h5><i class="bi bi-camera"></i> Profile Picture</h5>
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center">
+                    <div class="profile-image-container">
+                        {% if member.profile_picture %}
+                            <img src="{{ member.profile_picture.url }}" alt="Profile Picture">
+                        {% else %}
+                            <div class="profile-placeholder">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                        {% endif %}
+                        <div class="camera-icon">
+                            <i class="bi bi-camera-fill"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="mb-3">
+                        <label class="form-label">Upload Profile Picture</label>
+                        <input type="file" name="profile_picture" class="form-control" accept="image/jpeg,image/png,image/jpg">
+                        <div class="help-text">Recommended: Square image, at least 300x300 pixels. Max size: 5MB</div>
+                    </div>
+                    {% if member.profile_picture %}
+                        <div class="form-check">
+                            <input type="checkbox" name="remove_profile_picture" class="form-check-input" id="removePic">
+                            <label class="form-check-label text-danger" for="removePic">
+                                <i class="bi bi-trash"></i> Remove current profile picture
+                            </label>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 2FA AUTHENTICATOR SECTION -->
+        <div class="twofa-card">
+            <h5><i class="bi bi-shield-lock"></i> Two-Factor Authentication (2FA)</h5>
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <p class="mb-2">Add an extra layer of security to your account</p>
+                    <p class="small opacity-75 mb-0">
+                        <i class="bi bi-info-circle"></i> 2FA protects your account even if someone steals your password
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    {% if member.otp_enabled %}
+                        <div class="mb-2">
+                            <span class="twofa-status twofa-enabled">
+                                <i class="bi bi-shield-check-fill"></i> Enabled
+                            </span>
+                        </div>
+                        <button type="button" class="btn-2fa btn-2fa-danger" onclick="showDisable2FAModal()">
+                            <i class="bi bi-x-circle"></i> Disable 2FA
+                        </button>
+                        <button type="button" class="btn-2fa mt-2" onclick="showBackupCodes()">
+                            <i class="bi bi-file-lock"></i> View Backup Codes
+                        </button>
+                    {% else %}
+                        <div class="mb-2">
+                            <span class="twofa-status twofa-disabled">
+                                <i class="bi bi-shield-exclamation"></i> Disabled
+                            </span>
+                        </div>
+                        <a href="{% url 'main:setup_2fa' %}" class="btn-2fa">
+                            <i class="bi bi-shield-lock"></i> Enable 2FA
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 1: LOAN APPLICATION INFORMATION -->
+        <div class="form-section">
+            <h5><i class="bi bi-file-earmark-text"></i> Loan Application Information</h5>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label required-field">Last Name</label>
+                    <input type="text" name="last_name" class="form-control" value="{{ member.last_name|default:'' }}" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label required-field">First Name</label>
+                    <input type="text" name="first_name" class="form-control" value="{{ member.first_name|default:'' }}" required>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">M.I.</label>
+                    <input type="text" name="middle_initial" class="form-control" maxlength="1" value="{% if member.middle_initial and member.middle_initial != 'None' %}{{ member.middle_initial }}{% endif %}">
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Nickname</label>
+                    <input type="text" name="nickname" class="form-control" value="{% if member.nickname and member.nickname != 'None' %}{{ member.nickname }}{% endif %}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Nationality</label>
+                    <input type="text" name="nationality" class="form-control" value="{{ member.nationality|default:'Filipino' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Birthdate</label>
+                    <input type="date" name="birthdate" class="form-control" value="{{ member.birthdate|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Gender</label>
+                    <select name="gender" class="form-select">
+                        <option value="">Select</option>
+                        <option value="M" {% if member.gender == 'M' %}selected{% endif %}>Male</option>
+                        <option value="F" {% if member.gender == 'F' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">Age</label>
+                    <input type="number" name="age" class="form-control" value="{{ member.age }}" readonly>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label required-field">Contact Number</label>
+                    <input type="text" name="contact_number" class="form-control" value="{{ member.contact_number|default:'' }}" required>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label class="form-label required-field">Residence Address</label>
+                    <input type="text" name="residence_address" class="form-control" value="{{ member.residence_address|default:'' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Spouse Name</label>
+                    <input type="text" name="spouse_name" class="form-control" value="{% if member.spouse_name and member.spouse_name != 'None' %}{{ member.spouse_name }}{% endif %}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Number of Dependents</label>
+                    <input type="number" name="num_dependents" class="form-control" min="0" value="{{ member.num_dependents }}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Farm Information -->
+        <div class="form-section">
+            <h5><i class="bi bi-tree"></i> Farm Information</h5>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Farm Location</label>
+                    <input type="text" name="farm_location" class="form-control" value="{% if member.farm_location and member.farm_location != 'None' %}{{ member.farm_location }}{% endif %}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Owned (hectares)</label>
+                    <input type="number" name="farm_owned_hectares" class="form-control" step="0.01" min="0" value="{{ member.farm_owned_hectares }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Leased (hectares)</label>
+                    <input type="number" name="farm_leased_hectares" class="form-control" step="0.01" min="0" value="{{ member.farm_leased_hectares }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Area Planted (has.)</label>
+                    <input type="number" name="area_planted" class="form-control" step="0.01" min="0" value="{{ member.area_planted }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">New Plant (has.)</label>
+                    <input type="number" name="new_plant" class="form-control" step="0.01" min="0" value="{{ member.new_plant }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Ratoon Crops (has.)</label>
+                    <input type="number" name="ratoon_crops" class="form-control" step="0.01" min="0" value="{{ member.ratoon_crops }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Adjacent Farm</label>
+                    <input type="text" name="adjacent_farm" class="form-control" value="{% if member.adjacent_farm and member.adjacent_farm != 'None' %}{{ member.adjacent_farm }}{% endif %}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Loan History -->
+        <div class="form-section">
+            <h5><i class="bi bi-bank"></i> Loan History</h5>
+            <div class="mb-3">
+                <label class="form-label">Loans from other coops/banks/lending institutions</label>
+                <textarea name="other_loans" class="form-control" rows="2" placeholder="If none, write 'None'">{% if member.other_loans and member.other_loans != 'None' %}{{ member.other_loans }}{% endif %}</textarea>
+            </div>
+        </div>
+
+        <!-- PAGE 2: CO-MAKER STATEMENT INFORMATION -->
+        <div class="form-section">
+            <h5><i class="bi bi-people"></i> Co-maker Personal Information <span class="section-badge">For Co-maker Statement</span></h5>
+            <div class="info-note">
+                <i class="bi bi-info-circle"></i> This information will be used when you act as a co-maker for other members
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Years in this address</label>
+                    <input type="number" name="years_in_address" class="form-control" min="0" value="{{ member.years_in_address }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Years in community</label>
+                    <input type="number" name="years_in_community" class="form-control" min="0" value="{{ member.years_in_community }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Monthly Income (₱)</label>
+                    <input type="number" name="monthly_income" class="form-control" step="1000" min="0" value="{{ member.monthly_income }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Other Income Sources</label>
+                    <input type="text" name="other_income_sources" class="form-control" value="{% if member.other_income_sources and member.other_income_sources != 'None' %}{{ member.other_income_sources }}{% endif %}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Your Bank</label>
+                    <input type="text" name="bank_name" class="form-control" value="{% if member.bank_name and member.bank_name != 'None' %}{{ member.bank_name }}{% endif %}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Bank Account Type</label>
+                    <select name="bank_account_type" class="form-select">
+                        <option value="">Select</option>
+                        <option value="checking" {% if member.bank_account_type == 'checking' %}selected{% endif %}>Checking Account</option>
+                        <option value="savings" {% if member.bank_account_type == 'savings' %}selected{% endif %}>Savings Account</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employment Information -->
+        <div class="form-section">
+            <h5><i class="bi bi-briefcase"></i> Employment Information</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Employer/Business Name</label>
+                    <input type="text" name="employer_name" class="form-control" value="{% if member.employer_name and member.employer_name != 'None' %}{{ member.employer_name }}{% endif %}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Employer/Business Address</label>
+                    <input type="text" name="employer_address" class="form-control" value="{% if member.employer_address and member.employer_address != 'None' %}{{ member.employer_address }}{% endif %}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Kind of Business</label>
+                    <input type="text" name="business_kind" class="form-control" value="{% if member.business_kind and member.business_kind != 'None' %}{{ member.business_kind }}{% endif %}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Your Position</label>
+                    <input type="text" name="position" class="form-control" value="{% if member.position and member.position != 'None' %}{{ member.position }}{% endif %}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">How long (years)</label>
+                    <input type="number" name="years_with_employer" class="form-control" min="0" value="{{ member.years_with_employer }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Supervisor Name & Title</label>
+                    <input type="text" name="supervisor_name" class="form-control" value="{% if member.supervisor_name and member.supervisor_name != 'None' %}{{ member.supervisor_name }}{% endif %}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Previous Employer</label>
+                    <input type="text" name="previous_employer" class="form-control" value="{% if member.previous_employer and member.previous_employer != 'None' %}{{ member.previous_employer }}{% endif %}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Self-Employment Information -->
+        <div class="form-section">
+            <h5><i class="bi bi-shop"></i> Self-Employment / Business</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Firm/Business Name</label>
+                    <input type="text" name="self_employed_firm" class="form-control" value="{% if member.self_employed_firm and member.self_employed_firm != 'None' %}{{ member.self_employed_firm }}{% endif %}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Business Address</label>
+                    <input type="text" name="self_employed_address" class="form-control" value="{% if member.self_employed_address and member.self_employed_address != 'None' %}{{ member.self_employed_address }}{% endif %}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Kind of Business</label>
+                    <input type="text" name="self_employed_business_kind" class="form-control" value="{% if member.self_employed_business_kind and member.self_employed_business_kind != 'None' %}{{ member.self_employed_business_kind }}{% endif %}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Years in business</label>
+                    <input type="number" name="years_in_business" class="form-control" min="0" value="{{ member.years_in_business }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Trade Reference</label>
+                    <input type="text" name="trade_reference" class="form-control" value="{% if member.trade_reference and member.trade_reference != 'None' %}{{ member.trade_reference }}{% endif %}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Real Estate Holdings -->
+        <div class="form-section">
+            <h5><i class="bi bi-building"></i> Real Estate Holdings</h5>
+            <div class="table-responsive">
+                <table class="real-estate-table">
+                    <thead>
+                        <tr>
+                            <th>Description and Location</th>
+                            <th>Record in the name of</th>
+                            <th>Assessed Value (₱)</th>
+                            <th>Mortgage (₱)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" name="real_estate_1" class="form-control" value="{% if member.real_estate_1 and member.real_estate_1 != 'None' %}{{ member.real_estate_1 }}{% endif %}"></div>
+                            <td><input type="text" name="real_estate_1_owner" class="form-control" value="{% if member.real_estate_1_owner and member.real_estate_1_owner != 'None' %}{{ member.real_estate_1_owner }}{% endif %}"></div>
+                            <td><input type="number" name="real_estate_1_value" class="form-control" step="1000" value="{{ member.real_estate_1_value }}"></div>
+                            <td><input type="number" name="real_estate_1_mortgage" class="form-control" step="1000" value="{{ member.real_estate_1_mortgage }}"></div>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="real_estate_2" class="form-control" value="{% if member.real_estate_2 and member.real_estate_2 != 'None' %}{{ member.real_estate_2 }}{% endif %}"></div>
+                            <td><input type="text" name="real_estate_2_owner" class="form-control" value="{% if member.real_estate_2_owner and member.real_estate_2_owner != 'None' %}{{ member.real_estate_2_owner }}{% endif %}"></div>
+                            <td><input type="number" name="real_estate_2_value" class="form-control" step="1000" value="{{ member.real_estate_2_value }}"></div>
+                            <td><input type="number" name="real_estate_2_mortgage" class="form-control" step="1000" value="{{ member.real_estate_2_mortgage }}"></div>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="real_estate_3" class="form-control" value="{% if member.real_estate_3 and member.real_estate_3 != 'None' %}{{ member.real_estate_3 }}{% endif %}"></div>
+                            <td><input type="text" name="real_estate_3_owner" class="form-control" value="{% if member.real_estate_3_owner and member.real_estate_3_owner != 'None' %}{{ member.real_estate_3_owner }}{% endif %}"></div>
+                            <td><input type="number" name="real_estate_3_value" class="form-control" step="1000" value="{{ member.real_estate_3_value }}"></div>
+                            <td><input type="number" name="real_estate_3_mortgage" class="form-control" step="1000" value="{{ member.real_estate_3_mortgage }}"></div>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Co-maker Relationship Information -->
+        <div class="form-section">
+            <h5><i class="bi bi-heart"></i> Co-maker Relationship Information</h5>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Years known applicant</label>
+                    <input type="number" name="years_known_applicant" class="form-control" min="0" value="{{ member.years_known_applicant }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Related to applicant?</label>
+                    <select name="is_related_to_applicant" class="form-select" id="is_related">
+                        <option value="False" {% if not member.is_related_to_applicant %}selected{% endif %}>No</option>
+                        <option value="True" {% if member.is_related_to_applicant %}selected{% endif %}>Yes</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3" id="relationship_div" {% if not member.is_related_to_applicant %}style="display:none;"{% endif %}>
+                    <label class="form-label">Relationship</label>
+                    <input type="text" name="relationship_type" class="form-control" value="{% if member.relationship_type and member.relationship_type != 'None' %}{{ member.relationship_type }}{% endif %}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Ever been a borrower?</label>
+                    <select name="has_been_borrower" class="form-select" id="has_borrower">
+                        <option value="False" {% if not member.has_been_borrower %}selected{% endif %}>No</option>
+                        <option value="True" {% if member.has_been_borrower %}selected{% endif %}>Yes</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3" id="lender_div" {% if not member.has_been_borrower %}style="display:none;"{% endif %}>
+                    <label class="form-label">Previous Lender</label>
+                    <input type="text" name="previous_lender" class="form-control" value="{% if member.previous_lender and member.previous_lender != 'None' %}{{ member.previous_lender }}{% endif %}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Ever been a co-maker?</label>
+                    <select name="has_been_comaker" class="form-select" id="has_comaker">
+                        <option value="False" {% if not member.has_been_comaker %}selected{% endif %}>No</option>
+                        <option value="True" {% if member.has_been_comaker %}selected{% endif %}>Yes</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3" id="borrower_div" {% if not member.has_been_comaker %}style="display:none;"{% endif %}>
+                    <label class="form-label">Previous Borrower Name</label>
+                    <input type="text" name="previous_borrower_name" class="form-control" value="{% if member.previous_borrower_name and member.previous_borrower_name != 'None' %}{{ member.previous_borrower_name }}{% endif %}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Government IDs -->
+        <div class="form-section">
+            <h5><i class="bi bi-credit-card"></i> Government IDs</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Upload Valid ID</label>
+                    <input type="file" name="valid_id" class="form-control" accept="image/*,.pdf">
+                    {% if member.uploaded_id %}
+                        <div class="help-text text-success mt-1">
+                            <i class="bi bi-check-circle"></i> Current ID uploaded
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Buttons -->
+        <div class="action-buttons">
+            <a href="{% url 'main:member_profile' %}" class="btn-cancel">
+                <i class="bi bi-x-circle"></i> Cancel
+            </a>
+            <button type="submit" class="btn-save" id="submitBtn">
+                <i class="bi bi-save"></i> Save All Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Disable 2FA Confirmation Modal -->
+<div class="modal fade" id="disable2FAModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border-radius: 20px 20px 0 0;">
+                <h5 class="modal-title"><i class="bi bi-shield-exclamation"></i> Disable Two-Factor Authentication</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to disable Two-Factor Authentication?</p>
+                <p class="text-muted small">This will make your account less secure. You will no longer need to enter a verification code when logging in.</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Warning:</strong> Your account will be more vulnerable to unauthorized access.
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'main:disable_2fa' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-save" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                        <i class="bi bi-check-circle"></i> Yes, Disable 2FA
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Codes Modal -->
+<div class="modal fade" id="backupCodesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white;">
+                <h5 class="modal-title"><i class="bi bi-file-lock"></i> Backup Codes</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Save these backup codes in a secure place. Each code can only be used once.</p>
+                <div class="row" id="backupCodesList">
+                    {% for code in member.otp_backup_codes %}
+                        <div class="col-md-6 mb-2">
+                            <code class="p-2 bg-dark text-light d-block text-center rounded">{{ code }}</code>
+                        </div>
+                    {% empty %}
+                        <div class="col-12 text-center py-3">
+                            <p class="text-muted">No backup codes generated yet.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i>
+                    <small>Keep these codes safe. You'll need them if you lose access to your authenticator app.</small>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn-2fa" onclick="generateNewBackupCodes()">
+                    <i class="bi bi-arrow-repeat"></i> Generate New Codes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Age auto-calculation from birthdate
+    const birthdateInput = document.querySelector('input[name="birthdate"]');
+    const ageInput = document.querySelector('input[name="age"]');
+
+    function calculateAge(birthdate) {
+        if (!birthdate) return '';
+        const today = new Date();
+        const birth = new Date(birthdate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    if (birthdateInput) {
+        birthdateInput.addEventListener('change', function() {
+            ageInput.value = calculateAge(this.value);
+        });
+    }
+
+    // Show/hide relationship field based on "related to applicant" selection
+    const isRelatedSelect = document.getElementById('is_related');
+    const relationshipDiv = document.getElementById('relationship_div');
+
+    if (isRelatedSelect) {
+        isRelatedSelect.addEventListener('change', function() {
+            relationshipDiv.style.display = this.value === 'True' ? 'block' : 'none';
+        });
+    }
+
+    // Show/hide previous lender field
+    const hasBorrowerSelect = document.getElementById('has_borrower');
+    const lenderDiv = document.getElementById('lender_div');
+
+    if (hasBorrowerSelect) {
+        hasBorrowerSelect.addEventListener('change', function() {
+            lenderDiv.style.display = this.value === 'True' ? 'block' : 'none';
+        });
+    }
+
+    // Show/hide previous borrower field
+    const hasComakerSelect = document.getElementById('has_comaker');
+    const borrowerDiv = document.getElementById('borrower_div');
+
+    if (hasComakerSelect) {
+        hasComakerSelect.addEventListener('change', function() {
+            borrowerDiv.style.display = this.value === 'True' ? 'block' : 'none';
+        });
+    }
+
+    // ============================================================
+    // FORM SUBMISSION HANDLER - CLEANS 'None' STRINGS BEFORE SUBMIT
+    // ============================================================
+    const profileForm = document.getElementById('profileForm');
+
+    if (profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            // List of fields that might contain 'None' string
+            const fieldsToClean = [
+                'middle_initial', 'nickname', 'spouse_name', 'farm_location',
+                'adjacent_farm', 'other_loans', 'employer_name', 'employer_address',
+                'business_kind', 'position', 'supervisor_name', 'previous_employer',
+                'self_employed_firm', 'self_employed_address', 'self_employed_business_kind',
+                'trade_reference', 'other_income_sources', 'bank_name', 'relationship_type',
+                'previous_lender', 'previous_borrower_name', 'nationality'
+            ];
+
+            fieldsToClean.forEach(fieldName => {
+                const field = document.querySelector(`[name="${fieldName}"]`);
+                if (field && (field.value === 'None' || field.value === 'null')) {
+                    field.value = '';
+                }
+            });
+
+            // Ensure middle_initial is max 1 character
+            const middleInitial = document.querySelector('[name="middle_initial"]');
+            if (middleInitial && middleInitial.value && middleInitial.value.length > 1) {
+                middleInitial.value = middleInitial.value.charAt(0);
+            }
+        });
+    }
+
+    // 2FA Functions
+    function showDisable2FAModal() {
+        const modal = new bootstrap.Modal(document.getElementById('disable2FAModal'));
+        modal.show();
+    }
+
+    function showBackupCodes() {
+        const modal = new bootstrap.Modal(document.getElementById('backupCodesModal'));
+        modal.show();
+    }
+
+    function generateNewBackupCodes() {
+        if (confirm('Generating new backup codes will invalidate your old codes. Continue?')) {
+            fetch('{% url "main:generate_backup_codes" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error generating new backup codes. Please try again.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('Error generating new backup codes.');
+            });
+        }
+    }
+</script>
+{% endblock %}

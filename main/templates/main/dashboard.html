@@ -1,0 +1,1183 @@
+﻿{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - TOMPuCO{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== Modern Dashboard Styles ===== */
+    :root {
+        --primary-dark: #0a5a5a;
+        --primary: #0d6e6e;
+        --primary-light: #1a8a8a;
+        --primary-gradient: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        --primary-gradient-light: linear-gradient(135deg, #1a8a8a 0%, #0d6e6e 100%);
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+        --gray-50: #f8fafc;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-600: #6b7280;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+    }
+
+    [data-theme="dark"] {
+        --primary-dark: #0a3d3d;
+        --primary: #0a5a5a;
+        --primary-light: #1a6e6e;
+        --gray-50: #1a2332;
+        --gray-100: #1e2a3a;
+        --gray-200: #2a3548;
+        --gray-600: #9aaebf;
+        --gray-700: #b0c4d4;
+        --gray-800: #c8dae8;
+        --gray-900: #e8edf2;
+    }
+
+    /* Welcome Section */
+    .welcome-section {
+        background: var(--primary-gradient);
+        border-radius: 20px;
+        padding: 28px 32px;
+        margin-bottom: 30px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .welcome-section::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -5%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    @media (max-width: 768px) {
+        .welcome-section {
+            padding: 20px;
+            text-align: center;
+        }
+        .date-time {
+            text-align: center !important;
+            margin-top: 10px;
+        }
+    }
+
+    .welcome-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-subtitle {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    .date-time {
+        text-align: right;
+        font-size: 0.85rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    }
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 576px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 22px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-card.total::before { background: var(--primary-gradient); }
+    .stat-card.active::before { background: linear-gradient(90deg, var(--success), #34d399); }
+    .stat-card.pending::before { background: linear-gradient(90deg, var(--warning), #fbbf24); }
+    .stat-card.paid::before { background: linear-gradient(90deg, var(--info), #60a5fa); }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+
+    .stat-icon.total { background: rgba(13, 110, 110, 0.1); color: var(--primary); }
+    .stat-icon.active { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .stat-icon.pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .stat-icon.paid { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    .stat-trend {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    /* Quick Actions */
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 992px) {
+        .quick-actions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 576px) {
+        .quick-actions-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .quick-action-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .quick-action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--primary);
+    }
+
+    .quick-action-card i {
+        font-size: 2rem;
+        color: var(--primary);
+        margin-bottom: 12px;
+    }
+
+    .quick-action-card h6 {
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: var(--text-primary);
+    }
+
+    .quick-action-card small {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    /* Analytics Charts */
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 992px) {
+        .analytics-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .chart-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    .chart-header {
+        padding: 16px 20px;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .chart-header h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+
+    .chart-body {
+        padding: 20px;
+        height: 300px;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 24px;
+    }
+
+    @media (max-width: 992px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .dashboard-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .card-header-custom {
+        padding: 16px 20px;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .card-header-custom h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+
+    .refresh-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .refresh-btn:hover {
+        background: var(--gray-100);
+        color: var(--primary);
+    }
+
+    .refresh-btn i {
+        font-size: 0.9rem;
+    }
+
+    /* Table Styles */
+    .table-responsive-custom {
+        overflow-x: auto;
+    }
+
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 500px;
+    }
+
+    .custom-table thead th {
+        padding: 14px 16px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-card);
+    }
+
+    .custom-table tbody td {
+        padding: 14px 16px;
+        font-size: 0.85rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .custom-table tbody tr:hover {
+        background: var(--gray-50);
+        cursor: pointer;
+    }
+
+    /* Badge Styles */
+    .badge-pending { background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-approved { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-rejected { background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-active { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+    .badge-overdue { background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+
+    /* Loan Item */
+    .loan-item {
+        background: var(--gray-50);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .loan-item:hover {
+        background: var(--gray-100);
+        transform: translateX(5px);
+    }
+
+    .loan-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .loan-title {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 0.9rem;
+    }
+
+    .progress-custom {
+        height: 6px;
+        background: var(--gray-200);
+        border-radius: 3px;
+        overflow: hidden;
+        margin: 10px 0;
+    }
+
+    .progress-bar-custom {
+        height: 100%;
+        background: linear-gradient(90deg, var(--success), #059669);
+        border-radius: 3px;
+        transition: width 0.3s;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 15px;
+    }
+
+    .btn-create {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+        color: white;
+    }
+
+    /* ===== Profile Completeness Alert - Dark Mode Compatible ===== */
+    .alert-profile {
+        border-radius: 16px;
+        border: none;
+        margin-bottom: 25px;
+        background: #fffbeb;
+        border-left: 4px solid #f59e0b;
+    }
+
+    [data-theme="dark"] .alert-profile {
+        background: #1e1b0a;
+        border-left: 4px solid #fbbf24;
+    }
+
+    .alert-profile .alert-icon {
+        background: #fef3c7;
+        border-radius: 12px;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    [data-theme="dark"] .alert-profile .alert-icon {
+        background: #422006;
+    }
+
+    .alert-profile .alert-icon i {
+        color: #f59e0b;
+        font-size: 1.5rem;
+    }
+
+    [data-theme="dark"] .alert-profile .alert-icon i {
+        color: #fbbf24;
+    }
+
+    .alert-profile strong {
+        color: #92400e;
+    }
+
+    [data-theme="dark"] .alert-profile strong {
+        color: #fde68a;
+    }
+
+    .alert-profile .text-muted {
+        color: #b45309;
+    }
+
+    [data-theme="dark"] .alert-profile .text-muted {
+        color: #fef08a;
+    }
+
+    .alert-profile .progress-custom {
+        height: 8px;
+        background: #fef3c7;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    [data-theme="dark"] .alert-profile .progress-custom {
+        background: #422006;
+    }
+
+    .alert-profile .progress-bar-custom {
+        height: 100%;
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        border-radius: 20px;
+        transition: width 0.3s;
+    }
+
+    [data-theme="dark"] .alert-profile .progress-bar-custom {
+        background: linear-gradient(90deg, #fbbf24, #fcd34d);
+    }
+
+    .alert-profile .btn-close {
+        filter: brightness(0.5);
+    }
+
+    [data-theme="dark"] .alert-profile .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    /* Activity Item */
+    .activity-item {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .activity-item:hover {
+        transform: translateX(5px);
+    }
+
+    .activity-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(13, 110, 110, 0.1);
+        color: var(--primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="padding-top: 10px;">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="welcome-title">
+                    👋 Welcome back, {{ member.first_name|default:user.username }}!
+                </div>
+                <div class="welcome-subtitle" id="realTimeMessage">
+                    Here's your loan portfolio performance overview.
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="date-time">
+                    <i class="bi bi-calendar3"></i> {% now "l, F j, Y" %}<br>
+                    <i class="bi bi-clock"></i> <span id="liveClock">{% now "g:i A" %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card total" onclick="location.href='{% url 'main:my_loans' %}'">
+            <div class="stat-header">
+                <div class="stat-icon total"><i class="bi bi-cash-stack"></i></div>
+                <div class="stat-value" id="totalLoaned">₱{{ total_loaned|floatformat:2|default:"0" }}</div>
+            </div>
+            <div class="stat-label">Total Loaned</div>
+            <div class="stat-trend">Overall borrowed amount</div>
+        </div>
+        <div class="stat-card active" onclick="location.href='{% url 'main:my_loans' %}'">
+            <div class="stat-header">
+                <div class="stat-icon active"><i class="bi bi-bank"></i></div>
+                <div class="stat-value" id="activeLoansCount">{{ active_loans_count|default:0 }}</div>
+            </div>
+            <div class="stat-label">Active Loans</div>
+            <div class="stat-trend">Currently active</div>
+        </div>
+        <div class="stat-card pending" onclick="location.href='{% url 'main:my_applications' %}'">
+            <div class="stat-header">
+                <div class="stat-icon pending"><i class="bi bi-clock-history"></i></div>
+                <div class="stat-value" id="pendingApps">{{ pending_applications|default:0 }}</div>
+            </div>
+            <div class="stat-label">Pending Apps</div>
+            <div class="stat-trend">Awaiting review</div>
+        </div>
+        <div class="stat-card paid" onclick="location.href='{% url 'main:payment_history' %}'">
+            <div class="stat-header">
+                <div class="stat-icon paid"><i class="bi bi-cash"></i></div>
+                <div class="stat-value" id="totalPaid">₱{{ total_paid|floatformat:2|default:"0" }}</div>
+            </div>
+            <div class="stat-label">Total Paid</div>
+            <div class="stat-trend">Successful payments</div>
+        </div>
+    </div>
+
+    <!-- Analytics Charts -->
+    <div class="analytics-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h6><i class="bi bi-graph-up"></i> Payment Activity (Last 6 Months)</h6>
+            </div>
+            <div class="chart-body">
+                <canvas id="paymentChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header">
+                <h6><i class="bi bi-pie-chart"></i> Loan Distribution</h6>
+            </div>
+            <div class="chart-body">
+                <canvas id="loanDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-grid">
+        <div class="quick-action-card" onclick="location.href='{% url 'main:apply_loan' %}'">
+            <i class="bi bi-file-text"></i>
+            <h6>Apply for Loan</h6>
+            <small>95% auto-filled from profile</small>
+        </div>
+        <div class="quick-action-card" onclick="location.href='{% url 'main:my_loans' %}'">
+            <i class="bi bi-calculator"></i>
+            <h6>View Payment Schedule</h6>
+            <small>Check due dates</small>
+        </div>
+        <div class="quick-action-card" onclick="location.href='{% url 'main:member_profile' %}'">
+            <i class="bi bi-person-gear"></i>
+            <h6>Update Profile</h6>
+            <small>Keep info current</small>
+        </div>
+        <div class="quick-action-card" id="openChatbot">
+            <i class="bi bi-chat-dots"></i>
+            <h6>Ask Assistant</h6>
+            <small>24/7 FAQ support</small>
+        </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+        <!-- Left Column -->
+        <div>
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-file-text"></i> Recent Applications</h6>
+                    <a href="{% url 'main:my_applications' %}" class="text-decoration-none small">View All <i class="bi bi-chevron-right"></i></a>
+                </div>
+                <div class="table-responsive-custom">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Application ID</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentAppsTable">
+                            {% for app in recent_applications %}
+                            <tr onclick="window.location.href='{% url 'main:view_application_details' app.id %}'" style="cursor: pointer;">
+                                <td>{{ app.created_at|date:"M d, Y" }}</div>
+                                <td><code class="fw-bold text-primary">{{ app.application_id }}</code></div>
+                                <td class="fw-bold">₱{{ app.requested_amount|floatformat:2 }}</div>
+                                <td>
+                                    {% if app.status == 'pending_staff_review' %}
+                                        <span class="badge-pending"><i class="bi bi-clock"></i> Pending</span>
+                                    {% elif app.status == 'line_approved' %}
+                                        <span class="badge-approved"><i class="bi bi-check-circle"></i> Approved</span>
+                                    {% elif app.status == 'rejected' %}
+                                        <span class="badge-rejected"><i class="bi bi-x-circle"></i> Rejected</span>
+                                    {% elif app.status == 'with_committee' %}
+                                        <span class="badge-pending"><i class="bi bi-people"></i> With Committee</span>
+                                    {% else %}
+                                        <span class="badge-pending">{{ app.status|title }}</span>
+                                    {% endif %}
+                                </div>
+                                <td>
+                                    <a href="{% url 'main:view_application_details' app.id %}" class="btn btn-sm btn-outline-primary rounded-pill">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </div>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <i class="bi bi-inbox"></i>
+                                        <p>No applications yet</p>
+                                        <a href="{% url 'main:apply_loan' %}" class="btn-create">Apply Now</a>
+                                    </div>
+                                </div>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-bank"></i> Active Loans</h6>
+                    <a href="{% url 'main:my_loans' %}" class="text-decoration-none small">View All <i class="bi bi-chevron-right"></i></a>
+                </div>
+                <div class="p-3" id="activeLoansContainer">
+                    {% for loan in active_loans %}
+                    <div class="loan-item" onclick="location.href='{% url 'main:payment_schedule' loan.id %}'">
+                        <div class="loan-header">
+                            <span class="loan-title">Loan #{{ loan.loan_number|default:loan.id }}</span>
+                            <span class="badge-active">Active</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-2">
+                            <span class="text-muted">Principal: ₱{{ loan.principal_amount|floatformat:2 }}</span>
+                            <span class="text-muted">Next Due: {{ loan.next_due_date|date:"M d, Y"|default:"—" }}</span>
+                        </div>
+                        <div class="progress-custom">
+                            {% widthratio loan.paid_amount loan.total_payable_amount 100 as percent %}
+                            <div class="progress-bar-custom" style="width: {{ percent|default:0 }}%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between small mt-2">
+                            <span>Paid: ₱{{ loan.paid_amount|default:"0"|floatformat:2 }}</span>
+                            <span class="fw-bold text-primary">Balance: ₱{{ loan.remaining_balance|default:loan.principal_amount|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="bi bi-bank"></i>
+                        <p>No active loans</p>
+                        <a href="{% url 'main:apply_loan' %}" class="btn-create">Apply for a Loan</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div>
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-cash-stack"></i> Payment Summary</h6>
+                    <button class="refresh-btn" onclick="refreshDashboard()" title="Refresh">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                </div>
+                <div class="p-3">
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span class="text-muted">Total Paid</span>
+                        <span class="fw-bold text-success" id="summaryTotalPaid">₱{{ total_paid|floatformat:2|default:"0" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span class="text-muted">Remaining Balance</span>
+                        <span class="fw-bold text-danger" id="summaryRemainingBalance">₱{{ total_remaining_balance|floatformat:2|default:"0" }}</span>
+                    </div>
+                    {% if next_due_date %}
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Next Due Date</span>
+                        <span class="fw-bold text-primary" id="nextDueDate">{{ next_due_date|date:"F d, Y" }}</span>
+                    </div>
+                    <div class="mt-3">
+                        <div class="alert alert-warning alert-dismissible fade show mb-0" role="alert">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Due Soon!</strong> Your next payment is due on {{ next_due_date|date:"F d, Y" }}.
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-activity"></i> Recent Activity</h6>
+                    <button class="refresh-btn" onclick="refreshRecentActivity()" title="Refresh">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                </div>
+                <div class="p-3" id="activityList">
+                    <div class="loading-state">
+                        <div class="d-flex justify-content-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unread Notifications Card -->
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-bell"></i> Unread Notifications</h6>
+                    <a href="{% url 'main:get_notifications' %}" class="text-decoration-none small">View All <i class="bi bi-chevron-right"></i></a>
+                </div>
+                <div class="p-3" id="unreadNotificationsList">
+                    <div class="loading-state">
+                        <div class="d-flex justify-content-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Completeness Alert - Dark Mode Compatible -->
+    {% if profile_completeness < 100 %}
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="alert alert-profile alert-dismissible fade show">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="alert-icon">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <strong>Profile Completeness: {{ profile_completeness }}%</strong>
+                        <p class="mb-0 small text-muted">Complete your profile for faster loan processing and better approval chances.</p>
+                        <div class="progress-custom">
+                            <div class="progress-bar-custom" style="width: {{ profile_completeness }}%;"></div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let paymentChart = null;
+    let distributionChart = null;
+    let refreshInterval = null;
+
+    // Live Clock
+    function updateLiveClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const clockElement = document.getElementById('liveClock');
+        if (clockElement) clockElement.textContent = timeString;
+    }
+    setInterval(updateLiveClock, 1000);
+
+    // Random welcome messages
+    const welcomeMessages = [
+        "Here's your loan portfolio performance overview.",
+        "Your financial health at a glance.",
+        "Keep track of your loans and payments.",
+        "Apply for a new loan in minutes!",
+        "Your payments are up to date.",
+        "Stay on top of your financial goals!"
+    ];
+    setInterval(() => {
+        const msgElement = document.getElementById('realTimeMessage');
+        if (msgElement) {
+            const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
+            msgElement.textContent = welcomeMessages[randomIndex];
+        }
+    }, 10000);
+
+    // Load Charts
+    function loadCharts() {
+        fetch('/api/member-analytics/')
+            .then(response => response.json())
+            .then(data => {
+                const paymentCtx = document.getElementById('paymentChart');
+                if (paymentCtx && data.payment_labels && data.payment_data) {
+                    if (paymentChart) paymentChart.destroy();
+                    paymentChart = new Chart(paymentCtx, {
+                        type: 'line',
+                        data: {
+                            labels: data.payment_labels,
+                            datasets: [{
+                                label: 'Payments (₱)',
+                                data: data.payment_data,
+                                borderColor: '#0d6e6e',
+                                backgroundColor: 'rgba(13, 110, 110, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#0d6e6e',
+                                pointBorderColor: '#fff',
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.05)'
+                                    },
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '₱' + value.toLocaleString();
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                const distributionCtx = document.getElementById('loanDistributionChart');
+                if (distributionCtx && data.distribution_labels && data.distribution_data) {
+                    if (distributionChart) distributionChart.destroy();
+                    distributionChart = new Chart(distributionCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.distribution_labels,
+                            datasets: [{
+                                data: data.distribution_data,
+                                backgroundColor: ['#0d6e6e', '#1a8a8a', '#2c7da0', '#3b82f6', '#10b981', '#f59e0b'],
+                                borderWidth: 0,
+                                hoverOffset: 10
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            },
+                            cutout: '60%'
+                        }
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading charts:', error));
+    }
+
+    // Load Recent Activity
+    function loadRecentActivity() {
+        fetch('/api/notifications/')
+            .then(response => response.json())
+            .then(data => {
+                const activityList = document.getElementById('activityList');
+                const unreadList = document.getElementById('unreadNotificationsList');
+
+                if (data.notifications && data.notifications.length > 0) {
+                    activityList.innerHTML = data.notifications.slice(0, 5).map(n => `
+                        <div class="activity-item" onclick="window.location.href='${n.link || '#'}'">
+                            <div class="activity-icon"><i class="bi ${n.type === 'payment' ? 'bi-cash-stack' : n.type === 'application' ? 'bi-file-text' : 'bi-bell'}"></i></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold small">${escapeHtml(n.title)}</div>
+                                <div class="text-muted small">${escapeHtml(n.message.substring(0, 60))}${n.message.length > 60 ? '...' : ''}</div>
+                                <div class="text-muted" style="font-size: 0.65rem;">${formatRelativeTime(n.created_at)}</div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    const unread = data.notifications.filter(n => !n.is_read);
+                    if (unread.length > 0) {
+                        unreadList.innerHTML = unread.slice(0, 3).map(n => `
+                            <div class="activity-item" onclick="markAndRedirect('${n.id}', '${n.link || '#'}')">
+                                <div class="activity-icon"><i class="bi bi-envelope"></i></div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold small">${escapeHtml(n.title)}</div>
+                                    <div class="text-muted small">${escapeHtml(n.message.substring(0, 50))}...</div>
+                                    <div class="text-muted" style="font-size: 0.65rem;">${formatRelativeTime(n.created_at)}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        unreadList.innerHTML = `
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p>No unread notifications</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    activityList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <p>No recent activity</p>
+                        </div>
+                    `;
+                    unreadList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <p>No unread notifications</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => console.error('Error loading activity:', error));
+    }
+
+    function markAndRedirect(notificationId, link) {
+        fetch(`/api/notifications/${notificationId}/read/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(() => {
+            window.location.href = link;
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function formatRelativeTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} min ago`;
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function refreshDashboard() {
+        const refreshBtn = document.querySelector('.refresh-btn i');
+        if (refreshBtn) {
+            refreshBtn.style.animation = 'spin 0.5s ease';
+            setTimeout(() => { refreshBtn.style.animation = ''; }, 500);
+        }
+
+        loadRecentActivity();
+        loadCharts();
+
+        fetch('/api/member-stats/')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('totalLoaned').innerHTML = '₱' + data.total_loaned.toLocaleString();
+                document.getElementById('activeLoansCount').innerHTML = data.active_loans_count;
+                document.getElementById('pendingApps').innerHTML = data.pending_applications;
+                document.getElementById('totalPaid').innerHTML = '₱' + data.total_paid.toLocaleString();
+                document.getElementById('summaryTotalPaid').innerHTML = '₱' + data.total_paid.toLocaleString();
+                document.getElementById('summaryRemainingBalance').innerHTML = '₱' + data.total_remaining_balance.toLocaleString();
+                if (data.next_due_date && document.getElementById('nextDueDate')) {
+                    document.getElementById('nextDueDate').innerHTML = formatDate(data.next_due_date);
+                }
+            })
+            .catch(error => console.error('Error refreshing stats:', error));
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    function refreshRecentActivity() {
+        loadRecentActivity();
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function getCSRFToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    document.getElementById('openChatbot')?.addEventListener('click', function() {
+        const chatbotBtn = document.getElementById('chatbotButton');
+        if (chatbotBtn) chatbotBtn.click();
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCharts();
+        loadRecentActivity();
+
+        refreshInterval = setInterval(() => {
+            refreshDashboard();
+        }, 30000);
+    });
+
+    window.addEventListener('beforeunload', function() {
+        if (refreshInterval) clearInterval(refreshInterval);
+    });
+
+    // Force add favicon to dashboard
+(function() {
+    // Remove any existing favicons
+    var oldLinks = document.querySelectorAll("link[rel*='icon']");
+    oldLinks.forEach(function(link) {
+        link.parentNode.removeChild(link);
+    });
+
+    // Create new favicon with your actual logo
+    var link = document.createElement('link');
+    link.rel = 'icon';
+    link.type = 'image/png';
+    link.href = "{% static 'images/logo.png' %}?v=" + Date.now();
+    document.head.appendChild(link);
+
+    var link2 = document.createElement('link');
+    link2.rel = 'shortcut icon';
+    link2.type = 'image/png';
+    link2.href = "{% static 'images/logo.png' %}?v=" + Date.now();
+    document.head.appendChild(link2);
+
+    console.log('Favicon added to dashboard');
+})();
+</script>
+{% endblock %}

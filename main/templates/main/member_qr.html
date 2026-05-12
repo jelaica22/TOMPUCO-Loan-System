@@ -1,0 +1,163 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}My QR Code - TOMPuCO{% endblock %}
+{% block page_title %}Payment QR Code{% endblock %}
+
+{% block extra_css %}
+<style>
+    .qr-container {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .qr-card {
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        text-align: center;
+        padding: 40px;
+    }
+    
+    .qr-header {
+        margin-bottom: 30px;
+    }
+    
+    .qr-header h3 {
+        color: var(--text-primary);
+        font-weight: 700;
+    }
+    
+    .qr-header p {
+        color: var(--text-muted);
+    }
+    
+    .qr-code-wrapper {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        display: inline-block;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow);
+    }
+    
+    .qr-code-wrapper img {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .member-info {
+        background: var(--gray-50);
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+    
+    .info-value {
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .btn-print {
+        background: var(--brand-gradient);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        margin-top: 20px;
+        width: 100%;
+        transition: all 0.3s;
+    }
+    
+    .btn-print:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+    
+    .instructions {
+        background: #dbeafe;
+        border-radius: 16px;
+        padding: 16px;
+        margin-top: 20px;
+        text-align: left;
+        color: #1e40af;
+    }
+    
+    [data-theme="dark"] .instructions {
+        background: #1e3a8a;
+        color: #bfdbfe;
+    }
+    
+    @media (max-width: 768px) {
+        .qr-card {
+            padding: 20px;
+        }
+        
+        .qr-code-wrapper img {
+            width: 180px;
+            height: 180px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qr-container">
+    <div class="qr-card">
+        <div class="qr-header">
+            <h3><i class="bi bi-upc-scan"></i> My Payment QR Code</h3>
+            <p>Show this QR code to the cashier for faster payment processing</p>
+        </div>
+        
+        <div class="qr-code-wrapper">
+            <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code">
+        </div>
+        
+        <div class="member-info">
+            <div class="info-row">
+                <span class="info-label">Member ID:</span>
+                <span class="info-value">{{ member.membership_number }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value">{{ member.last_name }}, {{ member.first_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">QR Data:</span>
+                <span class="info-value"><code>{{ qr_data }}</code></span>
+            </div>
+        </div>
+        
+        <button class="btn-print" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print QR Code
+        </button>
+        
+        <div class="instructions">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <strong>How to use:</strong><br>
+            1. Present this QR code to the cashier<br>
+            2. Cashier will scan the code using the cashier portal<br>
+            3. Your payment instruction will be automatically loaded<br>
+            4. Confirm the amount and complete your payment
+        </div>
+    </div>
+</div>
+{% endblock %}

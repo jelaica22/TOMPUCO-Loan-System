@@ -1,0 +1,889 @@
+{% extends 'committee/base_committee.html' %}
+{% load static %}
+
+{% block title %}My Profile - Committee{% endblock %}
+{% block page_title %}Committee Member Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Profile Container */
+    .profile-container {
+        padding-top: 10px;
+    }
+
+    /* Profile Card */
+    .profile-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
+    }
+
+    .profile-card:hover {
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Profile Header */
+    .profile-header {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 30px;
+        color: white;
+        text-align: center;
+        position: relative;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: white;
+        margin: 0 auto 15px;
+        overflow: hidden;
+        border: 4px solid white;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .profile-avatar:hover {
+        transform: scale(1.05);
+    }
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .profile-avatar .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #0d6e6e, #1a8a8a);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 800;
+        color: white;
+    }
+
+    .avatar-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 8px;
+        text-align: center;
+        font-size: 0.7rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+        cursor: pointer;
+    }
+
+    .profile-avatar:hover .avatar-overlay {
+        opacity: 1;
+    }
+
+    /* Image Preview Modal */
+    .image-preview-modal .modal-content {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .preview-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .preview-image {
+        max-width: 100%;
+        max-height: 70vh;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    .profile-name {
+        font-size: 1.3rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .profile-role {
+        font-size: 0.8rem;
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .badge-role {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    /* Profile Stats */
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+        padding: 20px;
+        background: var(--bg-body);
+        border-top: 1px solid var(--border-color);
+    }
+
+    .stat-item {
+        text-align: center;
+        border-right: 1px solid var(--border-color);
+    }
+
+    .stat-item:last-child {
+        border-right: none;
+    }
+
+    .stat-number {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #0d6e6e;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    /* Voting Progress */
+    .voting-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: var(--bg-card);
+        border-top: 1px solid var(--border-color);
+    }
+
+    .voting-percent {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #10b981;
+    }
+
+    .voting-progress {
+        height: 6px;
+        background: var(--border-color);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .voting-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981, #059669);
+        border-radius: 3px;
+        transition: width 0.3s;
+    }
+
+    /* Section Titles */
+    .section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0d6e6e;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title i {
+        font-size: 1.1rem;
+    }
+
+    /* Info Rows */
+    .info-row {
+        display: flex;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .info-label {
+        width: 140px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    .info-value {
+        flex: 1;
+        color: var(--text-primary);
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .info-value code {
+        background: var(--bg-body);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+    }
+
+    /* Quick Action Buttons */
+    .quick-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.3s;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+
+    .quick-action-btn:hover {
+        transform: translateX(5px);
+        border-color: #0d6e6e;
+        color: #0d6e6e;
+    }
+
+    .quick-action-btn i {
+        font-size: 1.2rem;
+        width: 24px;
+    }
+
+    /* Form Controls */
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1.5px solid var(--border-color);
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        background: var(--bg-card);
+        color: var(--text-primary);
+        transition: all 0.2s;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6e6e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+    }
+
+    /* Buttons */
+    .btn-edit {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .btn-edit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    .btn-secondary {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .btn-secondary:hover {
+        border-color: #0d6e6e;
+        color: #0d6e6e;
+        transform: translateY(-2px);
+    }
+
+    .btn-warning {
+        background: #f59e0b;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .btn-warning:hover {
+        background: #d97706;
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-danger {
+        border: 1.5px solid #ef4444;
+        color: #ef4444;
+        background: transparent;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .btn-outline-danger:hover {
+        background: #ef4444;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Badges */
+    .badge-approved {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .badge-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .badge-pending {
+        background: #fef3c7;
+        color: #92400e;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Tables */
+    .table {
+        color: var(--text-primary);
+        font-size: 0.8rem;
+    }
+
+    .table thead th {
+        background: var(--bg-body);
+        border-bottom: 2px solid var(--border-color);
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 12px;
+    }
+
+    .table tbody td {
+        padding: 12px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .table tbody tr:hover {
+        background: var(--table-hover);
+    }
+
+    /* Alert */
+    .alert-info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .alert-warning {
+        background: #fef3c7;
+        color: #92400e;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Modal */
+    .modal-content {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        border: none;
+    }
+
+    .modal-header .modal-title {
+        color: white;
+        font-weight: 700;
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .info-row {
+            flex-direction: column;
+        }
+        .info-label {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        .profile-stats {
+            gap: 10px;
+        }
+        .stat-number {
+            font-size: 1.2rem;
+        }
+        .stat-label {
+            font-size: 0.6rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="row g-4">
+        <!-- Left Column - Profile Card -->
+        <div class="col-lg-4">
+            <!-- Profile Card -->
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profileAvatar" onclick="document.getElementById('avatarUpload').click()">
+                        {% if committee_profile and committee_profile.avatar %}
+                            <img id="avatarPreview" src="{{ committee_profile.avatar.url }}" alt="Profile Picture">
+                        {% elif request.user.committee_profile and request.user.committee_profile.avatar %}
+                            <img id="avatarPreview" src="{{ request.user.committee_profile.avatar.url }}" alt="Profile Picture">
+                        {% else %}
+                            <div id="avatarPreview" class="avatar-placeholder">
+                                {{ user.first_name|first|default:user.username|first|upper }}{{ user.last_name|first|default:''|upper }}
+                            </div>
+                        {% endif %}
+                        <div class="avatar-overlay">
+                            <i class="bi bi-camera"></i> Change Photo
+                        </div>
+                    </div>
+                    <form method="post" action="{% url 'committee:upload_avatar' %}" enctype="multipart/form-data" id="avatarForm">
+                        {% csrf_token %}
+                        <input type="file" name="avatar" id="avatarUpload" accept="image/*" style="display: none;" onchange="previewAndUpload(this)">
+                    </form>
+                    <div class="profile-name">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="profile-role">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Committee Member</span>
+                        {% if committee_profile.position == 'head' %}
+                            <span class="badge-role"><i class="bi bi-star-fill"></i> Head Committee</span>
+                        {% else %}
+                            <span class="badge-role">Committee Member</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ total_votes|default:0 }}</div>
+                        <div class="stat-label">Total Votes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ approved_votes|default:0 }}</div>
+                        <div class="stat-label">Approved</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ rejected_votes|default:0 }}</div>
+                        <div class="stat-label">Rejected</div>
+                    </div>
+                </div>
+                <div class="voting-stats">
+                    <span class="small">Approval Rate</span>
+                    <span class="voting-percent">{{ approval_rate|default:0 }}%</span>
+                </div>
+                <div class="voting-progress">
+                    <div class="voting-progress-bar" style="width: {{ approval_rate|default:0 }}%"></div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="profile-card">
+                <div class="p-4">
+                    <div class="section-title">
+                        <i class="bi bi-lightning-charge"></i> Quick Actions
+                    </div>
+                    <a href="{% url 'committee:applications_list' %}" class="quick-action-btn">
+                        <i class="bi bi-file-text"></i>
+                        <span>Review Applications</span>
+                    </a>
+                    <a href="{% url 'committee:history' %}" class="quick-action-btn">
+                        <i class="bi bi-clock-history"></i>
+                        <span>View Decision History</span>
+                    </a>
+                    <a href="{% url 'committee:notifications_list' %}" class="quick-action-btn">
+                        <i class="bi bi-bell"></i>
+                        <span>View Notifications</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- System Info Card -->
+            <div class="profile-card">
+                <div class="p-4">
+                    <div class="section-title">
+                        <i class="bi bi-info-circle"></i> System Information
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Committee ID:</div>
+                        <div class="info-value"><code>{{ committee_profile.committee_id|default:"-" }}</code></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Position:</div>
+                        <div class="info-value">{{ committee_profile.get_position_display|default:"Committee Member" }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">User ID:</div>
+                        <div class="info-value"><code>{{ user.id }}</code></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Member Since:</div>
+                        <div class="info-value">{{ user.date_joined|date:"F d, Y" }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Last Login:</div>
+                        <div class="info-value">{{ user.last_login|date:"F d, Y H:i"|default:"Never" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-8">
+            <!-- Personal Information Card -->
+            <div class="profile-card">
+                <div class="p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="section-title mb-0">
+                            <i class="bi bi-person-circle"></i> Personal Information
+                        </div>
+                        <button class="btn-edit" onclick="toggleEdit()">
+                            <i class="bi bi-pencil"></i> Edit Profile
+                        </button>
+                    </div>
+
+                    <!-- View Mode -->
+                    <div id="viewMode">
+                        <div class="info-row">
+                            <div class="info-label"><i class="bi bi-person"></i> Full Name:</div>
+                            <div class="info-value">{{ user.get_full_name|default:"Not set" }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label"><i class="bi bi-envelope"></i> Email Address:</div>
+                            <div class="info-value">{{ user.email|default:"Not set" }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label"><i class="bi bi-person-badge"></i> Username:</div>
+                            <div class="info-value">{{ user.username }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label"><i class="bi bi-telephone"></i> Contact Number:</div>
+                            <div class="info-value">{{ contact_number|default:"Not set" }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <form method="post" action="{% url 'committee:update_profile' %}" id="editForm" style="display: none;">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">First Name</label>
+                                <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Username</label>
+                                <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Contact Number</label>
+                                <input type="text" name="contact_number" class="form-control" value="{{ contact_number|default:'' }}" placeholder="e.g., 09123456789">
+                            </div>
+                            <div class="col-12">
+                                <hr>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    <button type="button" class="btn btn-secondary" onclick="toggleEdit()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Committee Statistics Card -->
+            <div class="profile-card">
+                <div class="p-4">
+                    <div class="section-title">
+                        <i class="bi bi-bar-chart-steps"></i> Committee Statistics
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-row">
+                                <div class="info-label">Total Applications Reviewed:</div>
+                                <div class="info-value">{{ total_votes|default:0 }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Approved Applications:</div>
+                                <div class="info-value text-success">{{ approved_votes|default:0 }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-row">
+                                <div class="info-label">Rejected Applications:</div>
+                                <div class="info-value text-danger">{{ rejected_votes|default:0 }}</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">This Month Votes:</div>
+                                <div class="info-value">{{ monthly_votes|default:0 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voting History Card -->
+            <div class="profile-card">
+                <div class="p-4">
+                    <div class="section-title">
+                        <i class="bi bi-clock-history"></i> Recent Voting Activity
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Application ID</th>
+                                    <th>Vote</th>
+                                    <th>Date</th>
+                                    <th>Final Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vote in recent_votes %}
+                                <tr>
+                                    <td><code>{{ vote.application.application_id }}</code></td>
+                                    <td>
+                                        {% if vote.vote == 'approved' %}
+                                            <span class="badge-approved"><i class="bi bi-check-circle-fill"></i> Approved</span>
+                                        {% else %}
+                                            <span class="badge-rejected"><i class="bi bi-x-circle-fill"></i> Rejected</span>
+                                        {% endif %}
+                                    </div>
+                                    <td>{{ vote.voted_at|date:"M d, Y H:i" }}</div>
+                                    <td>
+                                        {% if vote.application.status == 'line_approved' %}
+                                            <span class="badge-approved"><i class="bi bi-check-circle-fill"></i> Line Approved</span>
+                                        {% elif vote.application.status == 'rejected' %}
+                                            <span class="badge-rejected"><i class="bi bi-x-circle-fill"></i> Rejected</span>
+                                        {% else %}
+                                            <span class="badge-pending"><i class="bi bi-clock"></i> {{ vote.application.status|title }}</span>
+                                        {% endif %}
+                                    </div>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox"></i> No voting activity yet
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings Card -->
+            <div class="profile-card">
+                <div class="p-4">
+                    <div class="section-title">
+                        <i class="bi bi-shield-lock"></i> Security Settings
+                    </div>
+                    <div class="d-flex gap-3 flex-wrap mb-3">
+                        <button class="btn-warning" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                            <i class="bi bi-key"></i> Change Password
+                        </button>
+                        <form method="post" action="{% url 'committee:logout_all_devices' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-outline-danger">
+                                <i class="bi bi-box-arrow-right"></i> Logout All Devices
+                            </button>
+                        </form>
+                    </div>
+                    <div class="alert-info">
+                        <i class="bi bi-info-circle-fill"></i>
+                        Your account is secured with your password. For additional security, we recommend changing your password regularly.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-key me-2"></i>Change Password</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'committee:change_password' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" name="current_password" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <input type="password" name="new_password" class="form-control" required>
+                        <small class="text-muted">Minimum 8 characters with uppercase, lowercase, and numbers</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" name="confirm_password" class="form-control" required>
+                    </div>
+                    <div class="alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        After changing your password, you will be logged out from all devices.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-warning">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleEdit() {
+    const viewMode = document.getElementById('viewMode');
+    const editMode = document.getElementById('editForm');
+    if (viewMode.style.display === 'none') {
+        viewMode.style.display = 'block';
+        editMode.style.display = 'none';
+    } else {
+        viewMode.style.display = 'none';
+        editMode.style.display = 'block';
+    }
+}
+
+// Image preview before upload
+function previewAndUpload(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const previewContainer = document.getElementById('avatarPreview');
+            const avatarDiv = document.getElementById('profileAvatar');
+
+            // Create or update image element
+            if (previewContainer.tagName === 'IMG') {
+                previewContainer.src = e.target.result;
+            } else {
+                // Replace placeholder with image
+                const img = document.createElement('img');
+                img.id = 'avatarPreview';
+                img.src = e.target.result;
+                img.alt = 'Profile Picture';
+                avatarDiv.innerHTML = '';
+                avatarDiv.appendChild(img);
+                // Add the overlay back
+                const overlay = document.createElement('div');
+                overlay.className = 'avatar-overlay';
+                overlay.innerHTML = '<i class="bi bi-camera"></i> Change Photo';
+                avatarDiv.appendChild(overlay);
+            }
+        };
+
+        reader.readAsDataURL(input.files[0]);
+
+        // Submit the form after preview
+        document.getElementById('avatarForm').submit();
+    }
+}
+
+// Also make the avatar clickable for viewing full size
+document.getElementById('profileAvatar')?.addEventListener('click', function(e) {
+    // Don't trigger file upload if clicking on a different element
+    if (e.target.closest('.avatar-overlay')) {
+        return;
+    }
+    const img = this.querySelector('img');
+    if (img && img.src) {
+        // Open image in new tab
+        window.open(img.src, '_blank');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Monthly Summary Report{% endblock %}
+
+{% block page_title %}Monthly Summary Report - {{ month_name }} {{ year }}{% endblock %}
+
+{% block content %}
+<div class="no-print mb-3">
+    <form method="get" class="row g-3">
+        <div class="col-auto">
+            <select name="year" class="form-select">
+                {% for y in years %}
+                <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <select name="month" class="form-select">
+                {% for m in "123456789101112"|make_list %}
+                <option value="{{ m }}" {% if month|stringformat:"d" == m %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto"><button type="submit" class="btn btn-primary">Filter</button></div>
+        <div class="col-auto"><a href="{% url 'reports:monthly_summary_pdf' %}?year={{ year }}&month={{ month }}" class="btn btn-danger">PDF</a></div>
+        <div class="col-auto"><a href="{% url 'reports:monthly_summary_excel' %}?year={{ year }}&month={{ month }}" class="btn btn-success">Excel</a></div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Monthly Summary - {{ month_name }} {{ year }}</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Loan Type</th>
+                    <th class="text-end"># of Loans</th>
+                    <th class="text-end">Principal</th>
+                    <th class="text-end">Interest</th>
+                    <th class="text-end">Penalty</th>
+                    <th class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in summary %}
+                <tr>
+                    <td>{{ item.product.display_name }}</td>
+                    <td class="text-end">{{ item.count }}</td>
+                    <td class="text-end">₱{{ item.principal|floatformat:2 }}</td>
+                    <td class="text-end">₱{{ item.interest|floatformat:2 }}</td>
+                    <td class="text-end">₱{{ item.penalty|floatformat:2 }}</td>
+                    <td class="text-end"><strong>₱{{ item.total|floatformat:2 }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-dark">
+                <tr>
+                    <th>TOTAL</th>
+                    <th class="text-end">{{ summary|length }}</th>
+                    <th class="text-end">₱{{ total_principal|floatformat:2 }}</th>
+                    <th class="text-end">₱{{ total_interest|floatformat:2 }}</th>
+                    <th class="text-end">₱{{ total_penalty|floatformat:2 }}</th>
+                    <th class="text-end">₱{{ grand_total|floatformat:2 }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}

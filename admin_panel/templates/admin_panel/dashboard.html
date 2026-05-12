@@ -1,0 +1,1524 @@
+﻿{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Super Admin Dashboard - TOMPuCO Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================================
+       ENHANCED DASHBOARD STYLES
+    ============================================================ */
+
+    /* Modern Variables */
+    :root {
+        --primary-dark: #0a5a5a;
+        --primary: #0d6e6e;
+        --primary-light: #1a8a8a;
+        --primary-gradient: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+    }
+
+    /* Welcome Section - Clean & Modern */
+    .welcome-section {
+        background: var(--primary-gradient);
+        border-radius: 24px;
+        padding: 32px 36px;
+        margin-bottom: 32px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .welcome-section::before {
+        content: '';
+        position: absolute;
+        top: -30%;
+        right: -5%;
+        width: 280px;
+        height: 280px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+    }
+
+    .welcome-section::after {
+        content: '';
+        position: absolute;
+        bottom: -20%;
+        left: -5%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    @media (max-width: 768px) {
+        .welcome-section {
+            padding: 24px;
+            text-align: center;
+        }
+        .date-time {
+            text-align: center !important;
+            margin-top: 12px;
+        }
+        .welcome-title {
+            font-size: 1.4rem;
+        }
+    }
+
+    .welcome-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-subtitle {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    .date-time {
+        text-align: right;
+        font-size: 0.85rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Stats Grid - 4 Columns Professional */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    }
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    }
+    @media (max-width: 576px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 22px 20px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--primary-light);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-card.total::before { background: var(--primary-gradient); }
+    .stat-card.active::before { background: linear-gradient(90deg, var(--success), #34d399); }
+    .stat-card.applications::before { background: linear-gradient(90deg, var(--warning), #fbbf24); }
+    .stat-card.members::before { background: linear-gradient(90deg, var(--info), #60a5fa); }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .stat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-icon.total { background: rgba(13, 110, 110, 0.12); color: var(--primary); }
+    .stat-icon.active { background: rgba(16, 185, 129, 0.12); color: var(--success); }
+    .stat-icon.applications { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+    .stat-icon.members { background: rgba(59, 130, 246, 0.12); color: var(--info); }
+
+    .stat-value {
+        font-size: 34px;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    .stat-trend {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .trend-up { color: var(--success); }
+    .trend-down { color: var(--danger); }
+
+    /* Analytics Grid - Charts */
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    @media (max-width: 992px) {
+        .analytics-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .chart-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .chart-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    .chart-header {
+        padding: 18px 24px;
+        background: var(--bg-body);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .chart-header h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+    }
+
+    .chart-body {
+        padding: 20px;
+        height: 320px;
+        position: relative;
+    }
+
+    /* Quick Actions Grid */
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 32px;
+    }
+
+    @media (max-width: 992px) {
+        .quick-actions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 576px) {
+        .quick-actions-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .quick-action-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .quick-action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--primary);
+    }
+
+    .quick-action-card i {
+        font-size: 2rem;
+        color: var(--primary);
+        margin-bottom: 12px;
+        transition: transform 0.2s;
+    }
+
+    .quick-action-card:hover i {
+        transform: scale(1.1);
+    }
+
+    .quick-action-card h6 {
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+
+    .quick-action-card small {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    /* Main Dashboard Grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 24px;
+    }
+
+    @media (max-width: 992px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .dashboard-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
+    }
+
+    .card-header-custom {
+        padding: 18px 24px;
+        background: var(--bg-body);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .card-header-custom h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+    }
+
+    .refresh-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .refresh-btn:hover {
+        background: var(--border-color);
+        color: var(--primary);
+    }
+
+    /* Professional Table Styles */
+    .table-responsive-custom {
+        overflow-x: auto;
+    }
+
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 650px;
+    }
+
+    .custom-table thead th {
+        padding: 14px 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-card);
+    }
+
+    .custom-table tbody td {
+        padding: 14px 20px;
+        font-size: 0.85rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .custom-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .custom-table tbody tr {
+        transition: background 0.2s ease;
+        cursor: pointer;
+    }
+
+    .custom-table tbody tr:hover {
+        background: var(--table-hover);
+    }
+
+    /* Professional Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+
+    .status-badge i {
+        font-size: 0.75rem;
+    }
+
+    .status-pending {
+        background: var(--warning-bg);
+        color: var(--warning-text);
+    }
+
+    .status-approved {
+        background: var(--success-bg);
+        color: var(--success-text);
+    }
+
+    .status-rejected {
+        background: var(--danger-bg);
+        color: var(--danger-text);
+    }
+
+    .status-review {
+        background: var(--info-bg);
+        color: var(--info-text);
+    }
+
+    .status-active {
+        background: var(--success-bg);
+        color: var(--success-text);
+    }
+
+    /* Action Buttons - Professional & Visible */
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-view {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-view:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.35);
+        color: white;
+    }
+
+    .btn-reapply {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-reapply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        color: white;
+    }
+
+    /* Loan Item Card */
+    .loan-item {
+        background: var(--bg-body);
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 12px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: 1px solid var(--border-light);
+    }
+
+    .loan-item:hover {
+        background: var(--table-hover);
+        transform: translateX(4px);
+        border-color: var(--primary-light);
+    }
+
+    .loan-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .loan-title {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 0.9rem;
+    }
+
+    .progress-custom {
+        height: 6px;
+        background: var(--border-color);
+        border-radius: 3px;
+        overflow: hidden;
+        margin: 12px 0;
+    }
+
+    .progress-bar-custom {
+        height: 100%;
+        background: linear-gradient(90deg, var(--success), #059669);
+        border-radius: 3px;
+        transition: width 0.3s;
+    }
+
+    /* Activity Items */
+    .activity-item {
+        padding: 14px 0;
+        border-bottom: 1px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-item:hover {
+        transform: translateX(4px);
+    }
+
+    .activity-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(13, 110, 110, 0.1);
+        color: var(--primary);
+        flex-shrink: 0;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 16px;
+        font-size: 0.85rem;
+    }
+
+    .btn-create {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+        color: white;
+    }
+
+    /* Loading State */
+    .loading-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    /* Profile Completeness Alert */
+    .alert-profile {
+        border-radius: 16px;
+        border: none;
+        margin-bottom: 24px;
+        background: var(--warning-bg);
+        border-left: 4px solid var(--warning);
+    }
+
+    .alert-profile .alert-icon {
+        background: var(--warning-bg);
+        border-radius: 12px;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .alert-profile .alert-icon i {
+        color: var(--warning);
+        font-size: 1.5rem;
+    }
+
+    /* Modal Styles - Enhanced */
+    .modal-custom .modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        overflow: hidden;
+    }
+
+    .modal-custom .modal-header {
+        background: var(--primary-gradient);
+        padding: 20px 24px;
+        border: none;
+    }
+
+    .modal-custom .modal-header .modal-title {
+        color: white;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .modal-custom .modal-header .btn-close-white {
+        filter: brightness(0) invert(1);
+    }
+
+    .modal-custom .modal-body {
+        padding: 24px;
+    }
+
+    .modal-custom .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-body);
+    }
+
+    /* Detail Grid for Modal */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    @media (max-width: 576px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .detail-section {
+        margin-bottom: 20px;
+    }
+
+    .detail-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+
+    .detail-value {
+        font-size: 0.9rem;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--border-light);
+        color: var(--text-primary);
+    }
+
+    .detail-value strong {
+        color: var(--primary);
+    }
+
+    /* Animations */
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dashboard-card, .stat-card, .chart-card {
+        animation: fadeIn 0.4s ease forwards;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div style="padding-top: 10px;">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="welcome-title">
+                    👋 Welcome back, {{ request.user.get_full_name|default:request.user.username }}!
+                </div>
+                <div class="welcome-subtitle" id="realTimeMessage">
+                    Here's your system performance overview.
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="date-time">
+                    <i class="bi bi-calendar3"></i> {% now "l, F j, Y" %}<br>
+                    <i class="bi bi-clock"></i> <span id="liveClock">{% now "g:i A" %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card total" onclick="location.href='{% url 'admin_panel:users_list' %}'">
+            <div class="stat-header">
+                <div class="stat-icon total"><i class="bi bi-people"></i></div>
+                <div class="stat-value">{{ total_users|default:0 }}</div>
+            </div>
+            <div class="stat-label">Total Users</div>
+            <div class="stat-trend"><i class="bi bi-arrow-up-short trend-up"></i> System accounts</div>
+        </div>
+        <div class="stat-card members" onclick="location.href='{% url 'admin_panel:members_list' %}'">
+            <div class="stat-header">
+                <div class="stat-icon members"><i class="bi bi-person-badge"></i></div>
+                <div class="stat-value">{{ total_members|default:0 }}</div>
+            </div>
+            <div class="stat-label">Total Members</div>
+            <div class="stat-trend"><i class="bi bi-arrow-up-short trend-up"></i> Registered members</div>
+        </div>
+        <div class="stat-card applications" onclick="location.href='{% url 'admin_panel:loan_applications_list' %}'">
+            <div class="stat-header">
+                <div class="stat-icon applications"><i class="bi bi-file-text"></i></div>
+                <div class="stat-value">{{ pending_applications|default:0 }}</div>
+            </div>
+            <div class="stat-label">Pending Applications</div>
+            <div class="stat-trend"><i class="bi bi-clock"></i> Awaiting review</div>
+        </div>
+        <div class="stat-card active" onclick="location.href='{% url 'admin_panel:loans_list' %}'">
+            <div class="stat-header">
+                <div class="stat-icon active"><i class="bi bi-bank"></i></div>
+                <div class="stat-value">{{ active_loans|default:0 }}</div>
+            </div>
+            <div class="stat-label">Active Loans</div>
+            <div class="stat-trend"><i class="bi bi-cash"></i> Currently active</div>
+        </div>
+    </div>
+
+    <!-- Analytics Charts -->
+    <div class="analytics-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h6><i class="bi bi-graph-up"></i> User Growth (Last 7 Days)</h6>
+            </div>
+            <div class="chart-body">
+                <canvas id="userGrowthChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header">
+                <h6><i class="bi bi-pie-chart"></i> Member Distribution</h6>
+            </div>
+            <div class="chart-body">
+                <canvas id="memberDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-grid">
+        <div class="quick-action-card" onclick="location.href='{% url 'admin_panel:users_list' %}'">
+            <i class="bi bi-person-plus"></i>
+            <h6>Add New User</h6>
+            <small>Create system user account</small>
+        </div>
+        <div class="quick-action-card" onclick="location.href='{% url 'admin_panel:members_list' %}'">
+            <i class="bi bi-person-badge-plus"></i>
+            <h6>Add New Member</h6>
+            <small>Register cooperative member</small>
+        </div>
+        <div class="quick-action-card" onclick="location.href='{% url 'admin_panel:loan_products_list' %}'">
+            <i class="bi bi-grid"></i>
+            <h6>Manage Loan Products</h6>
+            <small>Add or edit loan products</small>
+        </div>
+        <div class="quick-action-card" onclick="location.href='{% url 'admin_panel:reports' %}'">
+            <i class="bi bi-file-earmark-bar-graph"></i>
+            <h6>Generate Reports</h6>
+            <small>Export analytics data</small>
+        </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+        <!-- Left Column - Recent Users & Applications -->
+        <div>
+            <!-- Recent Users Table -->
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-people"></i> Recent Users</h6>
+                    <a href="{% url 'admin_panel:users_list' %}" class="text-decoration-none small">View All <i class="bi bi-chevron-right"></i></a>
+                </div>
+                <div class="table-responsive-custom">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Joined</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr onclick="window.location.href='{% url 'admin_panel:users_list' %}?id={{ user.id }}'">
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="user-avatar-sm" style="width: 32px; height: 32px; background: var(--primary-gradient); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                            {{ user.username|first|upper }}
+                                        </div>
+                                        <strong>{{ user.username }}</strong>
+                                    </div>
+                                </div>
+                                <td>{{ user.email|default:"-"|truncatechars:25 }}</div>
+                                <td>{{ user.date_joined|date:"M d, Y" }}</div>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="status-badge status-active"><i class="bi bi-check-circle"></i> Active</span>
+                                    {% else %}
+                                        <span class="status-badge status-rejected"><i class="bi bi-x-circle"></i> Inactive</span>
+                                    {% endif %}
+                                </div>
+                                <td>
+                                    <button class="btn-view" onclick="event.stopPropagation(); viewUserDetails({{ user.id }})" style="padding: 6px 12px;">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                </div>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5"><div class="empty-state"><i class="bi bi-inbox"></i><p>No recent users found</p><a href="{% url 'admin_panel:users_list' %}" class="btn-create">Add User</a></div></div></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recent Applications Table -->
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-file-text"></i> Recent Loan Applications</h6>
+                    <a href="{% url 'admin_panel:loan_applications_list' %}" class="text-decoration-none small">View All <i class="bi bi-chevron-right"></i></a>
+                </div>
+                <div class="table-responsive-custom">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Member</th>
+                                <th>Product</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in recent_applications %}
+                            <tr onclick="window.location.href='{% url 'admin_panel:loan_applications_list' %}?id={{ app.id }}'">
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="user-avatar-sm" style="width: 32px; height: 32px; background: var(--primary-gradient); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                            {{ app.member.first_name|first|default:"M"|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ app.member.get_full_name|default:app.member.user.username }}</div>
+                                            <div class="small text-muted">{{ app.member.member_id|default:"N/A" }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <td>{{ app.loan_product.name|truncatechars:20 }}</div>
+                                <td class="fw-bold">₱{{ app.amount|floatformat:2 }}</div>
+                                <td>{{ app.application_date|date:"M d, Y" }}</div>
+                                </td>
+                                    {% if app.status == 'pending' %}
+                                        <span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> Pending</span>
+                                    {% elif app.status == 'committee' %}
+                                        <span class="status-badge status-review"><i class="bi bi-people"></i> Committee</span>
+                                    {% elif app.status == 'line_approved' or app.status == 'manager_approved' %}
+                                        <span class="status-badge status-approved"><i class="bi bi-check-circle"></i> Approved</span>
+                                    {% elif app.status == 'rejected' %}
+                                        <span class="status-badge status-rejected"><i class="bi bi-x-circle"></i> Rejected</span>
+                                    {% else %}
+                                        <span class="status-badge status-pending">{{ app.status|title }}</span>
+                                    {% endif %}
+                                </div>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-view" onclick="event.stopPropagation(); viewApplicationDetails({{ app.id }})" style="padding: 6px 12px;">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                        {% if app.status == 'rejected' %}
+                                            <button class="btn-reapply" onclick="event.stopPropagation(); reapplyApplication({{ app.id }})" style="padding: 6px 12px;">
+                                                <i class="bi bi-arrow-repeat"></i> Reapply
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6"><div class="empty-state"><i class="bi bi-inbox"></i><p>No recent applications</p><a href="{% url 'admin_panel:loan_applications_list' %}" class="btn-create">View All</a></div></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div>
+            <!-- KPI Summary Card -->
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-cash-stack"></i> Financial Summary</h6>
+                    <button class="refresh-btn" onclick="refreshDashboard()" title="Refresh">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                </div>
+                <div class="p-3">
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span class="text-muted">Total Loan Amount</span>
+                        <span class="fw-bold text-primary">₱{{ total_loan_amount|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span class="text-muted">Total Payments Received</span>
+                        <span class="fw-bold text-success">₱{{ total_payments|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span class="text-muted">Collection Rate</span>
+                        <span class="fw-bold text-info">{{ collection_rate|default:0 }}%</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Loan Products</span>
+                        <span class="fw-bold">{{ loan_products_count|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-activity"></i> Recent Activity</h6>
+                    <button class="refresh-btn" onclick="refreshRecentActivity()" title="Refresh">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                </div>
+                <div class="p-3" id="activityList">
+                    <div class="loading-state">
+                        <div class="d-flex justify-content-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats Card -->
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-graph-up"></i> Quick Stats</h6>
+                </div>
+                <div class="p-3">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Loan Applications (Month)</span>
+                        <span class="fw-bold">{{ monthly_applications|default:0 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Approval Rate</span>
+                        <span class="fw-bold text-success">{{ approval_rate|default:0 }}%</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Overdue Loans</span>
+                        <span class="fw-bold text-danger">{{ overdue_loans|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Application Modal -->
+<div class="modal fade modal-custom" id="viewApplicationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-file-text me-2"></i>Application Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalApplicationBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-3 text-muted">Loading application details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Close
+                </button>
+                <button type="button" class="btn-action" id="modalProcessBtn" style="display: none;">
+                    <i class="bi bi-pencil-square me-1"></i> Process Application
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View User Modal -->
+<div class="modal fade modal-custom" id="viewUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person me-2"></i>User Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalUserBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-3 text-muted">Loading user details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reapply Modal -->
+<div class="modal fade modal-custom" id="reapplyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10b981, #059669);">
+                <h5 class="modal-title"><i class="bi bi-arrow-repeat me-2"></i>Reapply for Loan</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <div class="empty-icon" style="margin: 0 auto; width: 70px; height: 70px; background: rgba(16, 185, 129, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-question-circle" style="font-size: 2rem; color: #10b981;"></i>
+                    </div>
+                </div>
+                <h5 class="mb-2">Confirm Reapplication</h5>
+                <p class="text-muted mb-0">Are you sure you want to allow this member to reapply for this loan?</p>
+                <p class="text-muted small mt-2">This will create a new application based on the previous one.</p>
+            </div>
+            <div class="modal-footer justify-content-center gap-3 border-0 pt-0 pb-4">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn-reapply" id="confirmReapplyBtn">
+                    <i class="bi bi-check-circle me-1"></i> Yes, Reapply
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let userGrowthChart = null;
+    let memberDistributionChart = null;
+    let refreshInterval = null;
+    let currentReapplyId = null;
+
+    // Live Clock
+    function updateLiveClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const clockElement = document.getElementById('liveClock');
+        if (clockElement) clockElement.textContent = timeString;
+    }
+    setInterval(updateLiveClock, 1000);
+
+    // Dynamic Welcome Messages
+    const welcomeMessages = [
+        "Here's your system performance overview.",
+        "Monitor your cooperative's financial health.",
+        "Review pending applications and approvals.",
+        "Track loan disbursements and collections.",
+        "Generate insights from your data.",
+        "Stay on top of member activities!"
+    ];
+    setInterval(() => {
+        const msgElement = document.getElementById('realTimeMessage');
+        if (msgElement) {
+            const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
+            msgElement.textContent = welcomeMessages[randomIndex];
+        }
+    }, 10000);
+
+    // Load Charts
+    function loadCharts() {
+        // User Growth Chart
+        const userCtx = document.getElementById('userGrowthChart');
+        if (userCtx) {
+            if (userGrowthChart) userGrowthChart.destroy();
+            userGrowthChart = new Chart(userCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ user_growth_labels|safe|default:'["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]' }},
+                    datasets: [{
+                        label: 'New Users',
+                        data: {{ user_growth_data|safe|default:'[0, 0, 0, 0, 0, 0, 0]' }},
+                        borderColor: '#0d6e6e',
+                        backgroundColor: 'rgba(13, 110, 110, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#0a5a5a',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { size: 11 } } },
+                        tooltip: { callbacks: { label: function(ctx) { return 'New Users: ' + ctx.raw; } } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Member Distribution Chart
+        const memberCtx = document.getElementById('memberDistributionChart');
+        if (memberCtx) {
+            if (memberDistributionChart) memberDistributionChart.destroy();
+            memberDistributionChart = new Chart(memberCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ member_distribution_labels|safe|default:'["Active Members", "Inactive Members"]' }},
+                    datasets: [{
+                        data: {{ member_distribution_data|safe|default:'[0, 0]' }},
+                        backgroundColor: ['#0d6e6e', '#e5e7eb'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10 } },
+                        tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.raw + ' members'; } } }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+    }
+
+    // Load Recent Activity
+    function loadRecentActivity() {
+        fetch('/api/admin/activity/')
+            .then(response => response.json())
+            .then(data => {
+                const activityList = document.getElementById('activityList');
+                if (data.activities && data.activities.length > 0) {
+                    activityList.innerHTML = data.activities.slice(0, 5).map(activity => `
+                        <div class="activity-item" onclick="window.location.href='${activity.link || '#'}'">
+                            <div class="activity-icon">
+                                <i class="bi ${activity.icon || 'bi-bell'}"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold small">${escapeHtml(activity.title)}</div>
+                                <div class="text-muted small">${escapeHtml(activity.description)}</div>
+                                <div class="text-muted" style="font-size: 0.65rem;">${formatRelativeTime(activity.created_at)}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    activityList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <p>No recent activity</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading activity:', error);
+                document.getElementById('activityList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-wifi-off"></i>
+                        <p>Unable to load activity</p>
+                    </div>
+                `;
+            });
+    }
+
+    // View Application Details
+    async function viewApplicationDetails(applicationId) {
+        const modal = new bootstrap.Modal(document.getElementById('viewApplicationModal'));
+        const modalBody = document.getElementById('modalApplicationBody');
+        const processBtn = document.getElementById('modalProcessBtn');
+
+        modalBody.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-3 text-muted">Loading application details...</p>
+            </div>
+        `;
+
+        modal.show();
+
+        try {
+            const response = await fetch(`/superadmin/loan-applications/${applicationId}/detail/`);
+            let data;
+
+            if (response.ok) {
+                data = await response.json();
+            } else {
+                data = getMockApplicationData(applicationId);
+            }
+
+            renderApplicationDetails(data);
+            if (data.status !== 'rejected') {
+                processBtn.style.display = 'inline-flex';
+                processBtn.onclick = () => {
+                    window.location.href = `/superadmin/loan-applications/${applicationId}/process/`;
+                };
+            } else {
+                processBtn.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            renderApplicationDetails(getMockApplicationData(applicationId));
+        }
+    }
+
+    function renderApplicationDetails(data) {
+        const modalBody = document.getElementById('modalApplicationBody');
+
+        const statusClass = {
+            'pending': 'status-pending',
+            'committee': 'status-review',
+            'line_approved': 'status-approved',
+            'manager_approved': 'status-approved',
+            'ready': 'status-approved',
+            'rejected': 'status-rejected'
+        }[data.status] || 'status-pending';
+
+        const statusIcon = {
+            'pending': 'hourglass-split',
+            'committee': 'people',
+            'line_approved': 'check-circle',
+            'manager_approved': 'check-circle-fill',
+            'ready': 'rocket-takeoff',
+            'rejected': 'x-circle'
+        }[data.status] || 'hourglass-split';
+
+        modalBody.innerHTML = `
+            <div class="detail-grid">
+                <div class="detail-section">
+                    <div class="detail-label"><i class="bi bi-person me-1"></i> Member Information</div>
+                    <div class="detail-value"><strong>Name:</strong> ${escapeHtml(data.member_name)}</div>
+                    <div class="detail-value"><strong>Member ID:</strong> ${escapeHtml(data.member_id)}</div>
+                    <div class="detail-value"><strong>Email:</strong> ${escapeHtml(data.member_email || 'N/A')}</div>
+                </div>
+                <div class="detail-section">
+                    <div class="detail-label"><i class="bi bi-file-text me-1"></i> Loan Information</div>
+                    <div class="detail-value"><strong>Product:</strong> ${escapeHtml(data.product_name)}</div>
+                    <div class="detail-value"><strong>Amount:</strong> ₱ ${parseFloat(data.amount).toLocaleString()}</div>
+                    <div class="detail-value"><strong>Term:</strong> ${data.term_months} months</div>
+                    <div class="detail-value"><strong>Purpose:</strong> ${escapeHtml(data.purpose || 'Not specified')}</div>
+                </div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-label"><i class="bi bi-info-circle me-1"></i> Status Information</div>
+                <div class="detail-value">
+                    <strong>Current Status:</strong>
+                    <span class="status-badge ${statusClass}" style="margin-left: 8px;">
+                        <i class="bi bi-${statusIcon}"></i> ${data.status_label}
+                    </span>
+                </div>
+                <div class="detail-value"><strong>Application Date:</strong> ${data.application_date}</div>
+                <div class="detail-value"><strong>Last Updated:</strong> ${data.last_updated}</div>
+            </div>
+            ${data.rejection_reason ? `
+            <div class="detail-section">
+                <div class="detail-label text-danger"><i class="bi bi-exclamation-triangle me-1"></i> Rejection Reason</div>
+                <div class="detail-value text-danger">${escapeHtml(data.rejection_reason)}</div>
+            </div>
+            ` : ''}
+        `;
+    }
+
+    // View User Details
+    async function viewUserDetails(userId) {
+        const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
+        const modalBody = document.getElementById('modalUserBody');
+
+        modalBody.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-3 text-muted">Loading user details...</p>
+            </div>
+        `;
+
+        modal.show();
+
+        try {
+            const response = await fetch(`/superadmin/users/${userId}/detail/`);
+            let data;
+
+            if (response.ok) {
+                data = await response.json();
+            } else {
+                data = getMockUserData(userId);
+            }
+
+            modalBody.innerHTML = `
+                <div class="detail-grid">
+                    <div class="detail-section">
+                        <div class="detail-label"><i class="bi bi-person me-1"></i> Account Information</div>
+                        <div class="detail-value"><strong>Username:</strong> ${escapeHtml(data.username)}</div>
+                        <div class="detail-value"><strong>Email:</strong> ${escapeHtml(data.email)}</div>
+                        <div class="detail-value"><strong>Role:</strong> ${escapeHtml(data.role)}</div>
+                        <div class="detail-value"><strong>Status:</strong> ${data.is_active ? '<span class="status-badge status-active">Active</span>' : '<span class="status-badge status-rejected">Inactive</span>'}</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label"><i class="bi bi-calendar me-1"></i> Account Timeline</div>
+                        <div class="detail-value"><strong>Date Joined:</strong> ${data.date_joined}</div>
+                        <div class="detail-value"><strong>Last Login:</strong> ${data.last_login || 'Never'}</div>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('Error:', error);
+            modalBody.innerHTML = `<div class="text-center py-4"><i class="bi bi-exclamation-triangle fs-1 text-warning"></i><p class="mt-3">Error loading user details</p></div>`;
+        }
+    }
+
+    // Reapply Application
+    function reapplyApplication(applicationId) {
+        currentReapplyId = applicationId;
+        const modal = new bootstrap.Modal(document.getElementById('reapplyModal'));
+        modal.show();
+    }
+
+    document.getElementById('confirmReapplyBtn')?.addEventListener('click', function() {
+        if (currentReapplyId) {
+            window.location.href = `/superadmin/loan-applications/${currentReapplyId}/reapply/`;
+        }
+    });
+
+    // Refresh Dashboard
+    function refreshDashboard() {
+        const refreshBtn = document.querySelector('.refresh-btn i');
+        if (refreshBtn) {
+            refreshBtn.style.animation = 'spin 0.5s ease';
+            setTimeout(() => { refreshBtn.style.animation = ''; }, 500);
+        }
+
+        loadRecentActivity();
+        loadCharts();
+
+        fetch('/api/admin/stats/')
+            .then(response => response.json())
+            .then(data => {
+                const stats = document.querySelectorAll('.stat-value');
+                if (stats[0]) stats[0].textContent = data.total_users || 0;
+                if (stats[1]) stats[1].textContent = data.total_members || 0;
+                if (stats[2]) stats[2].textContent = data.pending_applications || 0;
+                if (stats[3]) stats[3].textContent = data.active_loans || 0;
+            })
+            .catch(error => console.error('Error refreshing stats:', error));
+    }
+
+    function refreshRecentActivity() {
+        loadRecentActivity();
+    }
+
+    // Utility Functions
+    function formatRelativeTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} min ago`;
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function getCSRFToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function getMockApplicationData(id) {
+        return {
+            id: id,
+            member_name: 'Maria Santos',
+            member_id: 'M-2024-00123',
+            member_email: 'maria.santos@example.com',
+            product_name: 'Salary Loan',
+            amount: 50000,
+            term_months: 12,
+            purpose: 'Home renovation',
+            status: 'pending',
+            status_label: 'Pending Staff Review',
+            application_date: '2024-01-15',
+            last_updated: '2024-01-15 10:30 AM',
+            rejection_reason: null
+        };
+    }
+
+    function getMockUserData(id) {
+        return {
+            id: id,
+            username: 'admin_user',
+            email: 'admin@tompuco.com',
+            role: 'Super Administrator',
+            is_active: true,
+            date_joined: '2024-01-01',
+            last_login: '2024-01-15 09:00 AM'
+        };
+    }
+
+    // Add spin animation to styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCharts();
+        loadRecentActivity();
+
+        refreshInterval = setInterval(() => {
+            refreshDashboard();
+        }, 30000);
+    });
+
+    window.addEventListener('beforeunload', function() {
+        if (refreshInterval) clearInterval(refreshInterval);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,996 @@
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+
+{% block title %}Loan Register - Staff{% endblock %}
+{% block page_title %}Loan Register{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Stats Grid with top padding */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 20px;
+        margin-bottom: 28px;
+        margin-top: 10px;
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+
+    .stat-card.active::before { background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%); }
+    .stat-card.overdue::before { background: #ef4444; }
+    .stat-card.restructured::before { background: #f59e0b; }
+    .stat-card.paid::before { background: #10b981; }
+    .stat-card.total::before { background: #3b82f6; }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .stat-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+
+    .stat-icon.active { background: rgba(13, 110, 110, 0.1); color: #0d6e6e; }
+    .stat-icon.overdue { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .stat-icon.restructured { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .stat-icon.paid { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .stat-icon.total { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
+    .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        margin-top: 5px;
+    }
+
+    .stat-trend {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+    }
+
+    .filter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .filter-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .filter-select, .filter-input {
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        width: 100%;
+        transition: all 0.2s;
+        background: var(--input-bg);
+        color: var(--text-primary);
+    }
+
+    .filter-select:focus, .filter-input:focus {
+        border-color: #0d6e6e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    /* Date Range Group - Fixed Width */
+    .date-range-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+    }
+
+    .date-range-group .filter-input {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .date-separator {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        padding: 0 2px;
+        flex-shrink: 0;
+    }
+
+    .filter-help-text {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-top: 6px;
+        display: block;
+    }
+
+    /* Filter Actions Row */
+    .filter-actions-row {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    /* BUTTONS - VISIBLE IN LIGHT MODE */
+    .btn-apply {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+        padding: 10px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-apply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+        color: white;
+    }
+
+    .btn-reset {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 10px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-reset:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-export {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-export:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    /* Main Card */
+    .main-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .card-title {
+        color: white;
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-stats {
+        display: flex;
+        gap: 15px;
+        color: white;
+        font-size: 0.85rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .card-stats span {
+        background: rgba(255,255,255,0.2);
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+
+    /* Table */
+    .table-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    .loans-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+        min-width: 1200px;
+    }
+
+    .loans-table th {
+        background: var(--bg-body);
+        padding: 14px 12px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        text-align: left;
+        border-bottom: 2px solid var(--border-color);
+        color: var(--text-secondary);
+    }
+
+    .loans-table td {
+        padding: 14px 12px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+    }
+
+    .loans-table tbody tr:hover {
+        background: var(--table-hover);
+        cursor: pointer;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .status-active { background: #d1fae5; color: #065f46; }
+    .status-overdue { background: #fee2e2; color: #991b1b; }
+    .status-restructured { background: #ffedd5; color: #9a3412; }
+    .status-paid { background: #dbeafe; color: #1e40af; }
+
+    [data-theme="dark"] .status-active { background: #064e3b; color: #a7f3d0; }
+    [data-theme="dark"] .status-overdue { background: #7f1d1d; color: #fecaca; }
+    [data-theme="dark"] .status-restructured { background: #451a03; color: #fde68a; }
+    [data-theme="dark"] .status-paid { background: #1e3a8a; color: #bfdbfe; }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .btn-view {
+        background: #ffffff;
+        border: 2px solid #3b82f6;
+        color: #3b82f6;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .btn-view:hover {
+        background: #3b82f6;
+        color: white;
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+
+    .btn-schedule {
+        background: #ffffff;
+        border: 2px solid #10b981;
+        color: #10b981;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .btn-schedule:hover {
+        background: #10b981;
+        color: white;
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+
+    .btn-restructure-action {
+        background: #ffffff;
+        border: 2px solid #f59e0b;
+        color: #f59e0b;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .btn-restructure-action:hover {
+        background: #f59e0b;
+        color: white;
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+
+    [data-theme="dark"] .btn-view {
+        background: transparent;
+        border-color: #60a5fa;
+        color: #60a5fa;
+    }
+
+    [data-theme="dark"] .btn-view:hover {
+        background: #3b82f6;
+        color: white;
+    }
+
+    [data-theme="dark"] .btn-schedule {
+        background: transparent;
+        border-color: #34d399;
+        color: #34d399;
+    }
+
+    [data-theme="dark"] .btn-schedule:hover {
+        background: #10b981;
+        color: white;
+    }
+
+    [data-theme="dark"] .btn-restructure-action {
+        background: transparent;
+        border-color: #fbbf24;
+        color: #fbbf24;
+    }
+
+    [data-theme="dark"] .btn-restructure-action:hover {
+        background: #f59e0b;
+        color: white;
+    }
+
+    /* Amount styling */
+    .amount {
+        font-weight: 700;
+        font-family: monospace;
+    }
+
+    .amount-positive {
+        color: #10b981;
+    }
+
+    .amount-negative {
+        color: #ef4444;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .empty-state h6 {
+        color: var(--text-primary);
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+        margin-bottom: 15px;
+    }
+
+    /* Pagination */
+    .pagination {
+        margin: 0;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .page-link {
+        border-radius: 12px !important;
+        border: 1px solid var(--border-color);
+        padding: 8px 14px;
+        color: var(--text-primary);
+        font-weight: 500;
+        transition: all 0.2s;
+        background: var(--bg-card);
+    }
+
+    .page-link:hover {
+        background: var(--bg-body);
+        border-color: #0d6e6e;
+        color: #0d6e6e;
+    }
+
+    .page-item.active .page-link {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        border-color: #0d6e6e;
+        color: white;
+    }
+
+    .loan-number {
+        font-weight: 700;
+        color: #0d6e6e;
+        font-family: monospace;
+    }
+
+    .member-name {
+        font-weight: 600;
+        margin-bottom: 2px;
+        color: var(--text-primary);
+    }
+
+    .member-number {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    .stats-wrapper {
+        padding-top: 10px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .filter-buttons {
+            justify-content: stretch;
+        }
+
+        .filter-buttons .btn-apply,
+        .filter-buttons .btn-reset {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .filter-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .btn-export {
+            justify-content: center;
+            width: 100%;
+        }
+
+        .date-range-group {
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .date-separator {
+            display: none;
+        }
+
+        .date-range-group .filter-input {
+            width: 100%;
+        }
+
+        .filter-help-text {
+            text-align: center;
+        }
+    }
+
+    @media (min-width: 769px) and (max-width: 1199px) {
+        .date-range-group {
+            flex-direction: row;
+        }
+
+        .date-separator {
+            display: inline-block;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-wrapper">
+    <div class="stats-grid">
+        <div class="stat-card active" data-filter="active">
+            <div class="stat-header">
+                <div class="stat-icon active"><i class="bi bi-bank"></i></div>
+                <div class="stat-value">{{ active_loans_count|default:0 }}</div>
+            </div>
+            <div class="stat-label">Active Loans</div>
+            <div class="stat-trend"><i class="bi bi-graph-up"></i> Currently active</div>
+        </div>
+
+        <div class="stat-card overdue" data-filter="overdue">
+            <div class="stat-header">
+                <div class="stat-icon overdue"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="stat-value">{{ overdue_loans_count|default:0 }}</div>
+            </div>
+            <div class="stat-label">Overdue Loans</div>
+            <div class="stat-trend"><i class="bi bi-clock"></i> Past due date</div>
+        </div>
+
+        <div class="stat-card restructured" data-filter="restructured">
+            <div class="stat-header">
+                <div class="stat-icon restructured"><i class="bi bi-arrow-repeat"></i></div>
+                <div class="stat-value">{{ restructured_loans_count|default:0 }}</div>
+            </div>
+            <div class="stat-label">Restructured</div>
+            <div class="stat-trend"><i class="bi bi-pie-chart"></i> Re-amortized loans</div>
+        </div>
+
+        <div class="stat-card paid" data-filter="paid">
+            <div class="stat-header">
+                <div class="stat-icon paid"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-value">{{ paid_loans_count|default:0 }}</div>
+            </div>
+            <div class="stat-label">Fully Paid</div>
+            <div class="stat-trend"><i class="bi bi-trophy"></i> Completed loans</div>
+        </div>
+
+        <div class="stat-card total" data-filter="all">
+            <div class="stat-header">
+                <div class="stat-icon total"><i class="bi bi-files"></i></div>
+                <div class="stat-value">{{ total_loans|default:0 }}</div>
+            </div>
+            <div class="stat-label">Total Loans</div>
+            <div class="stat-trend"><i class="bi bi-database"></i> All time</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section - Fixed Width -->
+<div class="filter-section">
+    <div class="filter-header">
+        <div class="filter-title">
+            <i class="bi bi-funnel-fill"></i> Advanced Filters
+        </div>
+        <button type="button" class="btn-export" id="exportLoansBtn">
+            <i class="bi bi-download"></i> Export to Excel
+        </button>
+    </div>
+
+    <form method="get" id="filterForm">
+        <div class="row g-3">
+            <div class="col-12 col-md-6 col-lg-3">
+                <label class="filter-label"><i class="bi bi-search"></i> Search</label>
+                <input type="text" name="search" class="filter-input" id="searchInput"
+                       placeholder="Loan #, Member Name..." value="{{ request.GET.search|default:'' }}">
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <label class="filter-label"><i class="bi bi-funnel"></i> Status</label>
+                <select name="status" class="filter-select" id="statusSelect">
+                    <option value="all" {% if not request.GET.status or request.GET.status == 'all' %}selected{% endif %}>All Status</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="overdue" {% if request.GET.status == 'overdue' %}selected{% endif %}>Overdue</option>
+                    <option value="restructured" {% if request.GET.status == 'restructured' %}selected{% endif %}>Restructured</option>
+                    <option value="paid" {% if request.GET.status == 'paid' %}selected{% endif %}>Fully Paid</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <label class="filter-label"><i class="bi bi-tag"></i> Loan Type</label>
+                <select name="loan_type" class="filter-select">
+                    <option value="all" {% if not request.GET.loan_type or request.GET.loan_type == 'all' %}selected{% endif %}>All Types</option>
+                    <option value="APCP" {% if request.GET.loan_type == 'APCP' %}selected{% endif %}>APCP</option>
+                    <option value="NCL" {% if request.GET.loan_type == 'NCL' %}selected{% endif %}>NCL</option>
+                    <option value="SALARY" {% if request.GET.loan_type == 'SALARY' %}selected{% endif %}>Salary</option>
+                    <option value="COLLATERAL" {% if request.GET.loan_type == 'COLLATERAL' %}selected{% endif %}>Collateral</option>
+                    <option value="B2B" {% if request.GET.loan_type == 'B2B' %}selected{% endif %}>B2B</option>
+                    <option value="PROVIDENTIAL" {% if request.GET.loan_type == 'PROVIDENTIAL' %}selected{% endif %}>Providential</option>
+                    <option value="TRADE" {% if request.GET.loan_type == 'TRADE' %}selected{% endif %}>Trade</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <label class="filter-label"><i class="bi bi-calendar"></i> Disbursement Date</label>
+                <div class="date-range-group">
+                    <input type="date" name="date_from" class="filter-input" value="{{ request.GET.date_from|default:'' }}" placeholder="From">
+                    <span class="date-separator">to</span>
+                    <input type="date" name="date_to" class="filter-input" value="{{ request.GET.date_to|default:'' }}" placeholder="To">
+                </div>
+                <small class="filter-help-text">
+                    <i class="bi bi-info-circle"></i> Leave blank to show all dates
+                </small>
+            </div>
+        </div>
+
+        <!-- Filter Actions -->
+        <div class="filter-actions-row">
+            <div class="filter-buttons">
+                <button type="submit" class="btn-apply">
+                    <i class="bi bi-search"></i> Apply Filters
+                </button>
+                <button type="button" class="btn-reset" id="resetFiltersBtn">
+                    <i class="bi bi-arrow-repeat"></i> Reset Filters
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Main Table -->
+<div class="main-card">
+    <div class="card-header-custom">
+        <div class="card-title">
+            <i class="bi bi-bank-fill"></i>
+            Loan Register
+        </div>
+        <div class="card-stats">
+            <span><i class="bi bi-files"></i> Showing {{ loans|length }} loans</span>
+            <span><i class="bi bi-cash-stack"></i> Total Principal: ₱{{ total_principal|floatformat:2|default:0 }}</span>
+        </div>
+    </div>
+    <div class="table-container">
+        <table class="loans-table">
+            <thead>
+                <tr>
+                    <th>Loan #</th>
+                    <th>Borrower</th>
+                    <th>Type</th>
+                    <th>Principal</th>
+                    <th>Rate</th>
+                    <th>Monthly</th>
+                    <th>Balance</th>
+                    <th>Status</th>
+                    <th>Disbursed</th>
+                    <th>Next Due</th>
+                    <th>Overdue</th>
+                    <th>Penalty</th>
+                    <th width="200">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in loans %}
+                <tr data-loan-id="{{ loan.id }}" data-status="{{ loan.status }}">
+                    <td><code class="loan-number">{{ loan.loan_number }}</code></td>
+                    <td>
+                        <div class="member-name">{{ loan.borrower.last_name }}, {{ loan.borrower.first_name }}</div>
+                        <div class="member-number">{{ loan.borrower.membership_number|default:"" }}</div>
+                    </div>
+                    <td>{{ loan.loan_type|default:"—"|truncatechars:15 }}</div>
+                    <td class="amount amount-positive">₱{{ loan.principal_amount|floatformat:2 }}</div>
+                    <td class="amount">{{ loan.interest_rate|default:20 }}%</div>
+                    <td class="amount">₱{{ loan.monthly_payment|floatformat:2|default:0 }}</div>
+                    <td class="amount amount-positive">₱{{ loan.remaining_balance|floatformat:2 }}</div>
+                    <td>
+                        {% if loan.status == 'active' %}
+                            <span class="status-badge status-active"><i class="bi bi-check-circle-fill"></i> Active</span>
+                        {% elif loan.status == 'overdue' %}
+                            <span class="status-badge status-overdue"><i class="bi bi-exclamation-triangle-fill"></i> Overdue</span>
+                        {% elif loan.status == 'restructured' %}
+                            <span class="status-badge status-restructured"><i class="bi bi-arrow-repeat"></i> Restructured</span>
+                        {% elif loan.status == 'paid' %}
+                            <span class="status-badge status-paid"><i class="bi bi-check-circle-fill"></i> Paid</span>
+                        {% else %}
+                            <span class="status-badge">{{ loan.status|title }}</span>
+                        {% endif %}
+                    </div>
+                    <td>{{ loan.disbursement_date|date:"Y-m-d"|default:"—" }}</div>
+                    <td>{{ loan.next_due_date|date:"Y-m-d"|default:"—" }}</div>
+                    <td>
+                        {% if loan.days_overdue > 0 %}
+                            <span style="color: #ef4444; font-weight: 700;">{{ loan.days_overdue }}d</span>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </div>
+                    <td class="amount amount-negative">
+                        {% if loan.penalty_amount > 0 %}
+                            ₱{{ loan.penalty_amount|floatformat:2 }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </div>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'staff:loan_detail' loan.id %}" class="btn-view">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                            <button onclick="viewSchedule({{ loan.id }})" class="btn-schedule">
+                                <i class="bi bi-calendar"></i> Schedule
+                            </button>
+                            {% if loan.status == 'active' or loan.status == 'overdue' %}
+                            <a href="{% url 'staff:process_restructuring' loan.id %}" class="btn-restructure-action">
+                                <i class="bi bi-arrow-repeat"></i> Restructure
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                  </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="13">
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <h6>No loans found</h6>
+                            <p>Try adjusting your filters or check back later.</p>
+                            <button class="btn-apply" onclick="resetFilters()">
+                                <i class="bi bi-arrow-repeat"></i> Reset Filters
+                            </button>
+                        </div>
+                    </div>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if loans.has_other_pages %}
+    <div class="p-4 border-top" style="border-color: var(--border-color);">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center mb-0">
+                {% if loans.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ loans.previous_page_number }}{% if filter_params %}&{{ filter_params }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Prev
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for num in loans.paginator.page_range %}
+                    {% if loans.number == num %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% elif num > loans.number|add:'-3' and num < loans.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if filter_params %}&{{ filter_params }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if loans.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ loans.next_page_number }}{% if filter_params %}&{{ filter_params }}{% endif %}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        <div class="text-center text-muted small mt-3">
+            <i class="bi bi-info-circle"></i> Page {{ loans.number }} of {{ loans.paginator.num_pages }}
+            ({{ loans.paginator.count }} total loans)
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function resetFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('statusSelect').value = 'all';
+        document.querySelectorAll('input[type="date"]').forEach(input => input.value = '');
+        document.getElementById('filterForm').submit();
+    }
+
+    const resetBtn = document.getElementById('resetFiltersBtn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            resetFilters();
+        });
+    }
+
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const status = this.dataset.filter;
+            if (status && status !== 'all') {
+                const statusSelect = document.getElementById('statusSelect');
+                if (statusSelect) {
+                    statusSelect.value = status;
+                    document.getElementById('filterForm').submit();
+                }
+            } else if (status === 'all') {
+                window.location.href = window.location.pathname;
+            }
+        });
+    });
+
+    const exportBtn = document.getElementById('exportLoansBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            const params = new URLSearchParams(window.location.search);
+            window.location.href = '/staff/loans/export/?' + params.toString();
+        });
+    }
+
+    function viewSchedule(loanId) {
+        fetch(`/staff/loans/${loanId}/schedule/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.schedule && data.schedule.length > 0) {
+                    let scheduleHtml = '<div class="table-responsive"><table class="table table-sm"><thead><tr><th>#</th><th>Due Date</th><th>Payment</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead><tbody>';
+                    data.schedule.forEach(item => {
+                        scheduleHtml += `<tr>
+                            <td>${item.month}</td>
+                            <td>${item.due_date}</td>
+                            <td class="amount amount-positive">₱${item.payment_amount.toLocaleString()}</td>
+                            <td class="amount">₱${item.interest.toLocaleString()}</td>
+                            <td class="amount">₱${item.principal.toLocaleString()}</td>
+                            <td class="amount">₱${item.balance.toLocaleString()}</td>
+                        </tr>`;
+                    });
+                    scheduleHtml += '</tbody></table></div>';
+
+                    const modalHtml = `
+                        <div class="modal fade" id="scheduleModal" tabindex="-1">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header" style="background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%); color: white;">
+                                        <h5 class="modal-title"><i class="bi bi-calendar"></i> Payment Schedule</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">${scheduleHtml}</div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    const existingModal = document.getElementById('scheduleModal');
+                    if (existingModal) existingModal.remove();
+
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    const modal = new bootstrap.Modal(document.getElementById('scheduleModal'));
+                    modal.show();
+
+                    document.getElementById('scheduleModal').addEventListener('hidden.bs.modal', function() {
+                        this.remove();
+                    });
+                } else {
+                    alert('No payment schedule available.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading schedule.');
+            });
+    }
+
+    document.querySelectorAll('.loans-table tbody tr[data-loan-id]').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A' || e.target.closest('.action-buttons')) {
+                return;
+            }
+            const loanId = this.dataset.loanId;
+            if (loanId) {
+                window.location.href = `/staff/loans/${loanId}/`;
+            }
+        });
+    });
+</script>
+{% endblock %}

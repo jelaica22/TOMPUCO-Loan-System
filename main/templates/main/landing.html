@@ -1,0 +1,1286 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>TOMPUCO ALMS - Automated Loan Management System</title>
+
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            --brand-primary: #0d6e6e;
+            --brand-primary-dark: #0a5a5a;
+            --brand-primary-light: #1a8a8a;
+            --brand-secondary: #1e293b;
+            --brand-accent: #00b4b4;
+            --brand-gradient: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+            --brand-gradient-light: linear-gradient(135deg, #1a8a8a 0%, #0d6e6e 100%);
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-body);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--brand-primary);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--brand-primary-dark);
+        }
+
+        /* ===== Navbar ===== */
+        .navbar {
+            background: var(--brand-gradient) !important;
+            padding: 1.2rem 0;
+            box-shadow: var(--shadow-xl);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.4s ease;
+        }
+
+        .navbar.scrolled {
+            padding: 0.8rem 0;
+            backdrop-filter: blur(10px);
+            background: rgba(13, 110, 110, 0.95) !important;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .brand-logo {
+            height: 45px;
+            width: 45px;
+            border-radius: 14px;
+            background: white;
+            padding: 8px;
+            object-fit: contain;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s;
+        }
+
+        .brand-logo:hover {
+            transform: scale(1.05) rotate(5deg);
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: white;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.85);
+            letter-spacing: 0.5px;
+        }
+
+        .navbar-toggler {
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 14px;
+            border-radius: 12px;
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin: 0 6px;
+            padding: 8px 18px !important;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: white;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::before {
+            width: 60%;
+        }
+
+        .nav-link:hover {
+            color: white !important;
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0 6px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.08) rotate(15deg);
+        }
+
+        .btn-login, .btn-register, .btn-dashboard {
+            border-radius: 12px;
+            padding: 8px 24px !important;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            margin-left: 8px;
+        }
+
+        .btn-login {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white !important;
+        }
+
+        .btn-login:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-register {
+            background: white;
+            color: var(--brand-primary) !important;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-dashboard {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white !important;
+        }
+
+        .btn-dashboard:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        /* ===== Hero Section ===== */
+        .hero-section {
+            background: var(--brand-gradient);
+            color: white;
+            padding: 140px 0 120px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(to top, var(--bg-body), transparent);
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.15);
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero-subtitle {
+            font-size: 1.15rem;
+            opacity: 0.95;
+            margin-bottom: 2.5rem;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.7;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .hero-buttons {
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+
+        .hero-buttons .btn {
+            margin: 0 10px;
+            padding: 14px 36px;
+            font-weight: 700;
+            border-radius: 50px;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .hero-buttons .btn-light {
+            background: white;
+            color: var(--brand-primary);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .hero-buttons .btn-light:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+        }
+
+        .hero-buttons .btn-outline-light:hover {
+            transform: translateY(-3px);
+            background: white;
+            color: var(--brand-primary);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== Stats Section ===== */
+        .stats-section {
+            background: var(--bg-card);
+            padding: 70px 0;
+            margin-top: -50px;
+            position: relative;
+            z-index: 10;
+            border-radius: 40px 40px 0 0;
+            box-shadow: var(--shadow-2xl);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 25px;
+            border-radius: 24px;
+            transition: all 0.4s;
+            cursor: pointer;
+            background: var(--bg-card);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            background: var(--bg-body);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--brand-primary);
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover .stat-number {
+            transform: scale(1.05);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-label i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+
+        /* ===== Section Headers ===== */
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            letter-spacing: -0.02em;
+        }
+
+        .section-header .divider {
+            width: 70px;
+            height: 4px;
+            background: var(--brand-gradient);
+            margin: 20px auto;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .section-header .divider::before,
+        .section-header .divider::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--brand-primary);
+            border-radius: 50%;
+            top: -2px;
+        }
+
+        .section-header .divider::before {
+            left: -15px;
+        }
+
+        .section-header .divider::after {
+            right: -15px;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ===== Loan Cards ===== */
+        .loan-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 32px 24px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-color);
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .loan-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--brand-gradient);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .loan-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .loan-card:hover {
+            transform: translateY(-12px);
+            box-shadow: var(--shadow-2xl);
+        }
+
+        .loan-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--brand-gradient);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            transition: all 0.4s;
+        }
+
+        .loan-card:hover .loan-icon {
+            transform: scale(1.1) rotate(8deg);
+            border-radius: 30px;
+        }
+
+        .loan-icon i {
+            font-size: 2.2rem;
+            color: white;
+        }
+
+        .loan-card h4 {
+            font-weight: 800;
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .loan-rate {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--brand-primary);
+            margin: 12px 0;
+        }
+
+        .loan-amount {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .loan-desc {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .loan-badge {
+            display: inline-block;
+            background: var(--brand-primary);
+            color: white;
+            padding: 5px 14px;
+            border-radius: 25px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .loan-badge-success {
+            background: #10b981;
+        }
+
+        .loan-badge-info {
+            background: #3b82f6;
+        }
+
+        /* ===== How It Works ===== */
+        .how-it-works {
+            padding: 80px 0;
+            background: linear-gradient(180deg, var(--bg-body) 0%, var(--bg-card) 100%);
+        }
+
+        .step-card {
+            text-align: center;
+            padding: 40px 25px;
+            background: var(--bg-card);
+            border-radius: 28px;
+            border: 1px solid var(--border-color);
+            transition: all 0.4s ease;
+            height: 100%;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--brand-gradient);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .step-card:hover::after {
+            transform: scaleX(1);
+        }
+
+        .step-card:hover {
+            transform: translateY(-12px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .step-number {
+            width: 65px;
+            height: 65px;
+            background: var(--brand-gradient);
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 800;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            transition: all 0.3s;
+        }
+
+        .step-card:hover .step-number {
+            transform: scale(1.1);
+            border-radius: 28px;
+        }
+
+        .step-card h5 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .step-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ===== CTA Section ===== */
+        .cta-section {
+            padding: 90px 0;
+            background: var(--brand-gradient);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .cta-section h3 {
+            font-size: 2.3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+
+        .cta-section p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 35px;
+        }
+
+        .cta-section .btn {
+            padding: 14px 38px;
+            border-radius: 50px;
+            font-weight: 700;
+            margin: 0 10px;
+            transition: all 0.3s;
+        }
+
+        .cta-section .btn-light {
+            background: white;
+            color: var(--brand-primary);
+        }
+
+        .cta-section .btn-light:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .cta-section .btn-outline-light:hover {
+            transform: translateY(-3px);
+            background: white;
+            color: var(--brand-primary);
+        }
+
+        /* ===== Contact Cards ===== */
+        .contact-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 35px 25px;
+            text-align: center;
+            height: 100%;
+            border: 1px solid var(--border-color);
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--brand-primary);
+        }
+
+        .contact-card i {
+            font-size: 2.5rem;
+            color: var(--brand-primary);
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .contact-card:hover i {
+            transform: scale(1.15);
+        }
+
+        .contact-card h5 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .contact-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            background: var(--brand-secondary);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 50px 0 30px;
+            font-size: 0.85rem;
+        }
+
+        .footer p {
+            margin: 0;
+        }
+
+        /* ===== Back to Top ===== */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 48px;
+            height: 48px;
+            background: var(--brand-gradient);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 999;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-5px) scale(1.1);
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--border-color);
+            border-radius: 50%;
+            border-top-color: var(--brand-primary);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 100px 0 80px;
+            }
+            .hero-title {
+                font-size: 2rem;
+            }
+            .hero-subtitle {
+                font-size: 0.95rem;
+            }
+            .stat-number {
+                font-size: 2rem;
+            }
+            .section-header h2 {
+                font-size: 1.6rem;
+            }
+            .cta-section h3 {
+                font-size: 1.6rem;
+            }
+            .hero-buttons .btn {
+                padding: 10px 24px;
+                margin: 5px;
+            }
+            .back-to-top {
+                bottom: 20px;
+                right: 20px;
+                width: 42px;
+                height: 42px;
+            }
+            .stats-section {
+                margin-top: -30px;
+                padding: 50px 0;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stat-number {
+                font-size: 1.5rem;
+            }
+            .stat-label {
+                font-size: 0.7rem;
+            }
+            .loan-card {
+                padding: 20px 16px;
+            }
+            .loan-rate {
+                font-size: 1.2rem;
+            }
+            .step-card {
+                padding: 25px 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img class="brand-logo" src="{% static 'images/logo.png' %}" alt="TOMPUCO Logo">
+                <div class="brand-text">
+                    <span class="brand-title">TOMPUCO ALMS</span>
+                    <span class="brand-subtitle">Automated Loan Management System</span>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#products">Loan Products</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#how-it-works">How It Works</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                    <li class="nav-item">
+                        <button class="theme-toggle" id="themeToggle">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
+                    </li>
+                    {% if request.user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="btn btn-dashboard" href="
+                                {% if request.user.is_superuser %}{% url 'admin_panel:dashboard' %}
+                                {% elif request.user.member_profile %}{% url 'main:dashboard' %}
+                                {% elif request.user.staff_profile %}{% url 'staff:dashboard' %}
+                                {% elif request.user.cashier_profile %}{% url 'cashier:dashboard' %}
+                                {% elif request.user.committee_profile %}{% url 'committee:dashboard' %}
+                                {% else %}{% url 'main:dashboard' %}
+                                {% endif %}
+                            ">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="btn btn-register" href="{% url 'main:register' %}">Register</a></li>
+                        <li class="nav-item"><a class="btn btn-login" href="{% url 'main:login' %}">Log in</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="home">
+        <div class="container text-center position-relative">
+            <h1 class="hero-title">Welcome to TOMPUCO ALMS</h1>
+            <p class="hero-subtitle">Experience the future of cooperative lending. Fast, transparent, and fully automated loan management for every Filipino.</p>
+            <div class="hero-buttons">
+                {% if request.user.is_authenticated %}
+                    <a href="
+                        {% if request.user.is_superuser %}{% url 'admin_panel:dashboard' %}
+                        {% elif request.user.member_profile %}{% url 'main:dashboard' %}
+                        {% elif request.user.staff_profile %}{% url 'staff:dashboard' %}
+                        {% elif request.user.cashier_profile %}{% url 'cashier:dashboard' %}
+                        {% elif request.user.committee_profile %}{% url 'committee:dashboard' %}
+                        {% else %}{% url 'main:dashboard' %}
+                        {% endif %}
+                    " class="btn btn-light">Go to Dashboard →</a>
+                {% else %}
+                    <a href="{% url 'main:register' %}" class="btn btn-light">Get Started</a>
+                    <a href="{% url 'main:login' %}" class="btn btn-outline-light">Log in</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="0">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-members">--</div>
+                        <div class="stat-label"><i class="bi bi-people-fill"></i> Active Members</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-loans">--</div>
+                        <div class="stat-label"><i class="bi bi-bank2"></i> Loans Disbursed</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-amount">--</div>
+                        <div class="stat-label"><i class="bi bi-cash-stack"></i> Total Disbursed</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="stat-card">
+                        <div class="stat-number" id="active-loans">--</div>
+                        <div class="stat-label"><i class="bi bi-graph-up"></i> Active Loans</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loan Products -->
+    <section class="py-5" id="products">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>Our Loan Products</h2>
+                <div class="divider"></div>
+                <p>Choose from 7 different loan products tailored to your specific needs</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="0">
+                    <div class="loan-card">
+                        <div class="loan-icon"><i class="bi bi-cash"></i></div>
+                        <h4>NCL</h4>
+                        <div class="loan-rate">20% p.a.</div>
+                        <div class="loan-amount">₱5K - ₱500K</div>
+                        <div class="loan-desc">Non-Collateralized Loan<br>Sugarcane Production</div>
+                        <span class="loan-badge">Co-maker Required</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="loan-card">
+                        <div class="loan-icon"><i class="bi bi-tree"></i></div>
+                        <h4>APCP</h4>
+                        <div class="loan-rate">15% p.a.</div>
+                        <div class="loan-amount">₱10K - ₱1M</div>
+                        <div class="loan-desc">Agricultural Production Credit Program<br>Sugar/CLOA Title</div>
+                        <span class="loan-badge">Co-maker Required</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="loan-card">
+                        <div class="loan-icon"><i class="bi bi-person-badge"></i></div>
+                        <h4>SALARY LOAN</h4>
+                        <div class="loan-rate">8% p.a.</div>
+                        <div class="loan-amount">₱5K - ₱500K</div>
+                        <div class="loan-desc">Salary Loan<br>For Employees Only</div>
+                        <span class="loan-badge loan-badge-success">No Co-maker Required</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="loan-card">
+                        <div class="loan-icon"><i class="bi bi-truck"></i></div>
+                        <h4>COLLATERAL</h4>
+                        <div class="loan-rate">20% p.a.</div>
+                        <div class="loan-amount">₱20K - ₱2M</div>
+                        <div class="loan-desc">Collateralized Loan<br>Land/Vehicle/Equipment</div>
+                        <span class="loan-badge">Co-maker Required</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="400">
+                    <div class="loan-card">
+                        <div class="loan-icon"><i class="bi bi-shield-check"></i></div>
+                        <h4>PROVIDENTIAL</h4>
+                        <div class="loan-rate">16% p.a.</div>
+                        <div class="loan-amount">₱10K - ₱1M</div>
+                        <div class="loan-desc">Providential Loan<br>CBU/Any Collateral</div>
+                        <span class="loan-badge">Co-maker Required</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="500">
+                    <div class="loan-card">
+                        <div class="loan-icon"><i class="bi bi-arrow-left-right"></i></div>
+                        <h4>B2B</h4>
+                        <div class="loan-rate">20% p.a.</div>
+                        <div class="loan-amount">₱50K - ₱5M</div>
+                        <div class="loan-desc">Back to Back Loan<br>CBU Collateral</div>
+                        <span class="loan-badge">Co-maker Required</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="600">
+                    <div class="loan-card">
+                        <div class="loan-icon"><i class="bi bi-cart"></i></div>
+                        <h4>TRADE</h4>
+                        <div class="loan-rate">1.5% per month</div>
+                        <div class="loan-amount">₱10K - ₱500K</div>
+                        <div class="loan-desc">Trade Loan (Receivables)<br>30 days term</div>
+                        <span class="loan-badge">Co-maker Required</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="700">
+                    <div class="loan-card">
+                        <div class="loan-icon"><i class="bi bi-question-circle"></i></div>
+                        <h4>Need Help?</h4>
+                        <div class="loan-rate">FAQ Assistant</div>
+                        <div class="loan-amount">24/7 Support</div>
+                        <div class="loan-desc">Our AI assistant is ready<br>to answer your questions</div>
+                        <span class="loan-badge loan-badge-info">🤖 FAQ Available</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>How It Works</h2>
+                <div class="divider"></div>
+                <p>A simple 4-step journey to your financial freedom</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="0">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <h5>Register Online</h5>
+                        <p>Create your free account and complete your profile. Upload your Valid ID once.</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="100">
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <h5>Apply for Loan</h5>
+                        <p>95% auto-filled form. Simply select loan type, amount, and add a co-maker.</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <h5>Quick Approval</h5>
+                        <p>Staff review → Committee approves line → Manager final approval.</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="step-card">
+                        <div class="step-number">4</div>
+                        <h5>Receive Funds</h5>
+                        <p>Get your loan proceeds and access your payment schedule online.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container" data-aos="zoom-in">
+            <h3>Ready to Join Our Community?</h3>
+            <p>Become a member today and enjoy the benefits of cooperation since 1992</p>
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'main:dashboard' %}" class="btn btn-light">Go to Dashboard →</a>
+            {% else %}
+                <a href="{% url 'main:register' %}" class="btn btn-light">Register Now</a>
+                <a href="{% url 'main:login' %}" class="btn btn-outline-light">Log in</a>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="py-5" id="contact">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>Contact Information</h2>
+                <div class="divider"></div>
+                <p>We're here to assist you every step of the way</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="0">
+                    <div class="contact-card">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <h5>Visit Us</h5>
+                        <p>National Highway, Villareal<br>Bayawan City, Negros Oriental</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="contact-card">
+                        <i class="bi bi-telephone-fill"></i>
+                        <h5>Call Us</h5>
+                        <p>0955 933 6573</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="contact-card">
+                        <i class="bi bi-envelope-fill"></i>
+                        <h5>Email Us</h5>
+                        <p>tolongmultipurposecooperative92@gmail.com</p>
+                    </div>
+                </div>
+                <div class="col-md-6 mx-auto" data-aos="fade-up" data-aos-delay="300">
+                    <div class="contact-card">
+                        <i class="bi bi-calendar-event-fill"></i>
+                        <h5>Office Hours</h5>
+                        <p>Monday - Friday: 7:00 AM - 4:00 PM<br>Saturday: 7:00 AM - 12:00 PM</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-5" data-aos="fade-up">
+                <p class="text-muted small">Established: November 13, 1992 | CDA Reg. No. 9520-0700431</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container text-center">
+            <p>&copy; 2025 TOMPUCO Automated Loan Management System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 100
+        });
+
+        // Theme handling
+        const theme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+
+        const themeToggle = document.getElementById('themeToggle');
+        const updateThemeIcon = () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            if (currentTheme === 'dark') {
+                themeToggle.innerHTML = '<i class="bi bi-sun-fill"></i>';
+            } else {
+                themeToggle.innerHTML = '<i class="bi bi-moon-stars-fill"></i>';
+            }
+        };
+        updateThemeIcon();
+
+        themeToggle?.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon();
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('mainNav');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Back to Top Button
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 300) {
+                backToTop.classList.add('show');
+            } else {
+                backToTop.classList.remove('show');
+            }
+        });
+
+        backToTop.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    e.preventDefault();
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Real-time stats with animation
+        async function fetchStats() {
+            try {
+                const response = await fetch('/api/dashboard-stats/');
+                const data = await response.json();
+
+                animateNumber('total-members', data.total_members || 500);
+                animateNumber('total-loans', data.total_loans_disbursed || 1234);
+                document.getElementById('total-amount').textContent = '₱' + (data.total_disbursed_amount?.toLocaleString() || '10M+');
+                animateNumber('active-loans', data.active_loans || 456);
+            } catch (error) {
+                console.log('Using fallback stats');
+                animateNumber('total-members', 500);
+                animateNumber('total-loans', 1234);
+                document.getElementById('total-amount').textContent = '₱10M+';
+                animateNumber('active-loans', 456);
+            }
+        }
+
+        function animateNumber(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            let currentValue = 0;
+            const duration = 1000;
+            const step = Math.ceil(targetValue / (duration / 16));
+
+            const timer = setInterval(() => {
+                currentValue += step;
+                if (currentValue >= targetValue) {
+                    element.textContent = targetValue.toLocaleString();
+                    clearInterval(timer);
+                } else {
+                    element.textContent = currentValue.toLocaleString();
+                }
+            }, 16);
+        }
+
+        fetchStats();
+        setInterval(fetchStats, 30000);
+                        // Force add favicon to dashboard
+        (function() {
+            // Remove any existing favicons
+            var oldLinks = document.querySelectorAll("link[rel*='icon']");
+            oldLinks.forEach(function(link) {
+                link.parentNode.removeChild(link);
+            });
+
+            // Create new favicon with your actual logo
+            var link = document.createElement('link');
+            link.rel = 'icon';
+            link.type = 'image/png';
+            link.href = "{% static 'images/logo.png' %}?v=" + Date.now();
+            document.head.appendChild(link);
+
+            var link2 = document.createElement('link');
+            link2.rel = 'shortcut icon';
+            link2.type = 'image/png';
+            link2.href = "{% static 'images/logo.png' %}?v=" + Date.now();
+            document.head.appendChild(link2);
+
+            console.log('Favicon added to dashboard');
+        })();
+    </script>
+</body>
+</html>

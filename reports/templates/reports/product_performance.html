@@ -1,0 +1,73 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Loan Product Performance Report{% endblock %}
+
+{% block page_title %}Loan Product Performance Report{% endblock %}
+
+{% block content %}
+<div class="no-print mb-3">
+    <a href="{% url 'reports:product_performance_excel' %}" class="btn btn-success"><i class="bi bi-file-excel"></i> Export Excel</a>
+    <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer"></i> Print</button>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Loan Product Performance as of {{ generated_date|date:"F d, Y" }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="alert alert-info">
+                    <h6>Total Applications</h6>
+                    <h3>{{ total_applications }}</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="alert alert-success">
+                    <h6>Total Disbursed</h6>
+                    <h3>{{ total_disbursed }}</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="alert alert-primary">
+                    <h6>Total Amount Disbursed</h6>
+                    <h3>₱{{ total_amount|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Product</th>
+                    <th class="text-end">Applications</th>
+                    <th class="text-end">Approved</th>
+                    <th class="text-end">Disbursed</th>
+                    <th class="text-end">Active</th>
+                    <th class="text-end">Defaulted</th>
+                    <th class="text-end">Default Rate</th>
+                    <th class="text-end">Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in performance %}
+                <tr>
+                    <td>{{ item.product.display_name }}</td>
+                    <td class="text-end">{{ item.applications }}</td>
+                    <td class="text-end">{{ item.approved }}</td>
+                    <td class="text-end">{{ item.disbursed }}</td>
+                    <td class="text-end">{{ item.active }}</td>
+                    <td class="text-end">{{ item.defaulted }}</td>
+                    <td class="text-end">
+                        <span class="{% if item.default_rate > 10 %}text-danger{% else %}text-success{% endif %}">
+                            {{ item.default_rate|floatformat:1 }}%
+                        </span>
+                    </td>
+                    <td class="text-end">₱{{ item.total_amount|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

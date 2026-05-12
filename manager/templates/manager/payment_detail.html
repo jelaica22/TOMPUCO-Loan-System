@@ -1,0 +1,269 @@
+{% extends 'manager/base_manager.html' %}
+{% load static %}
+
+{% block title %}Payment Receipt - Manager{% endblock %}
+{% block page_title %}Payment Receipt{% endblock %}
+
+{% block extra_css %}
+<style>
+    .receipt-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .receipt-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .receipt-header {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 24px;
+        text-align: center;
+        color: white;
+    }
+
+    .receipt-header h3 {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .receipt-header p {
+        margin: 5px 0 0;
+        opacity: 0.9;
+    }
+
+    .receipt-body {
+        padding: 32px;
+    }
+
+    .receipt-logo {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .receipt-logo i {
+        font-size: 3rem;
+        color: #0d6e6e;
+    }
+
+    .receipt-title {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .receipt-title h4 {
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 5px;
+    }
+
+    .receipt-title p {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px dashed var(--border-light);
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .info-value {
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .amount-row {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 2px solid var(--border-color);
+    }
+
+    .amount-label {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .amount-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #10b981;
+    }
+
+    .receipt-footer {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+        color: var(--text-muted);
+        font-size: 0.75rem;
+    }
+
+    .btn-back {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .btn-back:hover {
+        background: #0d6e6e;
+        color: white;
+    }
+
+    .btn-print {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        margin-left: 12px;
+    }
+
+    .btn-print:hover {
+        background: #2563eb;
+        color: white;
+    }
+
+    @media print {
+        .top-navbar, .sidebar, .app-footer, .action-buttons, .btn-back, .btn-print {
+            display: none !important;
+        }
+        .main-content {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .receipt-card {
+            border: none;
+            box-shadow: none;
+        }
+    }
+
+    .payment-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .badge-cash {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-quedan {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-pesada {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="receipt-container">
+    <div class="receipt-card">
+        <div class="receipt-header">
+            <h3><i class="bi bi-receipt"></i> OFFICIAL RECEIPT</h3>
+            <p>TOMPuCO Multi-Purpose Cooperative</p>
+        </div>
+
+        <div class="receipt-body">
+            <div class="receipt-logo">
+                <i class="bi bi-bank2"></i>
+            </div>
+
+            <div class="receipt-title">
+                <h4>PAYMENT CONFIRMATION</h4>
+                <p>This serves as an official payment receipt</p>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Receipt Number:</span>
+                <span class="info-value"><strong>{{ payment.payment_number }}</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Transaction Date:</span>
+                <!-- FIXED: Removed 'h:i A' since payment_date is a date object -->
+                <span class="info-value">{{ payment.payment_date|date:"F d, Y" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Member Name:</span>
+                <span class="info-value">{{ payment.member.last_name }}, {{ payment.member.first_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Membership Number:</span>
+                <span class="info-value">{{ payment.member.membership_number|default:"N/A" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Loan Number:</span>
+                <span class="info-value">{{ payment.loan.loan_number|default:"—" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Payment Method:</span>
+                <span class="info-value">
+                    <span class="payment-badge badge-{{ payment.payment_method }}">
+                        {% if payment.payment_method == 'cash' %}
+                            <i class="bi bi-cash"></i> Cash
+                        {% elif payment.payment_method == 'quedan' %}
+                            <i class="bi bi-receipt"></i> Quedan
+                        {% else %}
+                            <i class="bi bi-scale"></i> Pesada
+                        {% endif %}
+                    </span>
+                </span>
+            </div>
+            {% if payment.reference_number %}
+            <div class="info-row">
+                <span class="info-label">Reference Number:</span>
+                <span class="info-value">{{ payment.reference_number }}</span>
+            </div>
+            {% endif %}
+
+            <div class="amount-row">
+                <div class="info-row">
+                    <span class="amount-label">AMOUNT PAID:</span>
+                    <span class="amount-value">₱{{ payment.amount|floatformat:2 }}</span>
+                </div>
+            </div>
+
+            <div class="receipt-footer">
+                <p>Thank you for your payment!</p>
+                <p>This is a system-generated receipt. For any concerns, please contact our office.</p>
+                <p><strong>TOMPuCO - Tolong Multi-Purpose Cooperative</strong><br>
+                Villareal, Bayawan City, Negros Oriental<br>
+                Tel: (035) 123-4567 | Email: support@tompuco.com.ph</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-end">
+        <a href="{% url 'manager:staff_payments' %}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <button class="btn-print" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print Receipt
+        </button>
+    </div>
+</div>
+{% endblock %}

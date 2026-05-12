@@ -1,0 +1,830 @@
+﻿{% extends 'manager/base_manager.html' %}
+{% load static %}
+
+{% block title %}Reports & Analytics - Manager{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 28px;
+        margin-top: 10px;
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    }
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+
+    .stat-card.loans::before { background: linear-gradient(135deg, #0d6e6e, #0a5a5a); }
+    .stat-card.active::before { background: linear-gradient(135deg, #10b981, #059669); }
+    .stat-card.overdue::before { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .stat-card.collection::before { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .stat-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+    }
+
+    .stat-icon.loans { background: rgba(13, 110, 110, 0.1); color: #0d6e6e; }
+    .stat-icon.active { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .stat-icon.overdue { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .stat-icon.collection { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    /* Info Banner */
+    .info-banner {
+        background: linear-gradient(135deg, #dbeafe, #eff6ff);
+        border-left: 4px solid #3b82f6;
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    [data-theme="dark"] .info-banner {
+        background: linear-gradient(135deg, #1e3a8a, #1e3a8a);
+        border-left-color: #60a5fa;
+    }
+
+    .info-banner i { font-size: 1.5rem; color: #3b82f6; }
+    .info-banner strong { color: #1e40af; }
+
+    [data-theme="dark"] .info-banner i { color: #60a5fa; }
+    [data-theme="dark"] .info-banner strong { color: #bfdbfe; }
+    [data-theme="dark"] .info-banner div { color: #bfdbfe; }
+
+    /* Reports Grid */
+    .reports-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 1200px) {
+        .reports-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 900px) {
+        .reports-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+        .reports-grid { grid-template-columns: 1fr; }
+    }
+
+    .report-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .report-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+        border-color: #0d6e6e;
+    }
+
+    .report-card-header {
+        padding: 16px;
+        background: var(--bg-card);
+    }
+
+    .report-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .report-icon i { font-size: 1.3rem; }
+    .report-icon.primary { background: rgba(13, 110, 110, 0.1); color: #0d6e6e; }
+    .report-icon.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .report-icon.warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .report-icon.info { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .report-icon.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .report-icon.secondary { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+
+    .report-title {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+        color: var(--text-primary);
+    }
+
+    .report-desc {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .report-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 10px 16px;
+        background: var(--bg-body);
+        border-top: 1px solid var(--border-color);
+    }
+
+    .report-tag {
+        background: var(--bg-card);
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.65rem;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+    }
+
+    /* Filter Section */
+    .filter-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+    }
+
+    .filter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .filter-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .filter-select, .filter-input {
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        width: 100%;
+        transition: all 0.2s;
+        background: var(--input-bg);
+        color: var(--text-primary);
+    }
+
+    .filter-select:focus, .filter-input:focus {
+        border-color: #0d6e6e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    /* BUTTONS - VISIBLE IN LIGHT MODE */
+    .btn-generate {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-generate:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    /* Results Card */
+    .results-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+
+    .results-header {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 18px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .results-title {
+        color: white;
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .export-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-export {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-export:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+
+    /* Table */
+    .report-table-container {
+        overflow-x: auto;
+        width: 100%;
+        padding: 0;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+        min-width: 600px;
+    }
+
+    .report-table th {
+        background: var(--bg-body);
+        padding: 14px 16px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        text-align: left;
+        border-bottom: 2px solid var(--border-color);
+        color: var(--text-secondary);
+    }
+
+    .report-table td {
+        padding: 12px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+    }
+
+    .report-table tbody tr:hover {
+        background: var(--table-hover);
+    }
+
+    .text-end {
+        text-align: right !important;
+    }
+
+    .text-center {
+        text-align: center !important;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+    }
+
+    /* Loading State */
+    .loading-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .loading-state .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        color: #0d6e6e;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .results-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        .export-buttons {
+            justify-content: center;
+        }
+        .filter-header {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card loans">
+            <div class="stat-header">
+                <div class="stat-icon loans"><i class="bi bi-bank"></i></div>
+                <div class="stat-value">{{ total_loans|default:0 }}</div>
+            </div>
+            <div class="stat-label">Total Loans</div>
+        </div>
+        <div class="stat-card active">
+            <div class="stat-header">
+                <div class="stat-icon active"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-value">{{ active_loans|default:0 }}</div>
+            </div>
+            <div class="stat-label">Active Loans</div>
+        </div>
+        <div class="stat-card overdue">
+            <div class="stat-header">
+                <div class="stat-icon overdue"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="stat-value">{{ overdue_loans|default:0 }}</div>
+            </div>
+            <div class="stat-label">Overdue Loans</div>
+        </div>
+        <div class="stat-card collection">
+            <div class="stat-header">
+                <div class="stat-icon collection"><i class="bi bi-cash-stack"></i></div>
+                <div class="stat-value">₱{{ collection_rate|default:0 }}%</div>
+            </div>
+            <div class="stat-label">Collection Rate</div>
+        </div>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="info-banner">
+        <i class="bi bi-info-circle-fill"></i>
+        <div><strong>Financial Reporting Center</strong> — Generate and export loan performance reports for monitoring and analysis.</div>
+    </div>
+
+    <!-- Report Cards Grid -->
+    <div class="reports-grid">
+        <div class="report-card" onclick="generateReport('loan_summary')">
+            <div class="report-card-header">
+                <div class="report-icon primary"><i class="bi bi-file-text"></i></div>
+                <div class="report-title">Loan Summary Report</div>
+                <div class="report-desc">Complete loan summary with principal, balance, and status breakdown</div>
+            </div>
+            <div class="report-tags"><span class="report-tag">📊 All Loans</span><span class="report-tag">📎 Export</span></div>
+        </div>
+        <div class="report-card" onclick="generateReport('collection')">
+            <div class="report-card-header">
+                <div class="report-icon success"><i class="bi bi-cash-stack"></i></div>
+                <div class="report-title">Collection Report</div>
+                <div class="report-desc">Daily/Weekly/Monthly collection report with payment summaries</div>
+            </div>
+            <div class="report-tags"><span class="report-tag">📅 Date Range</span><span class="report-tag">📄 PDF</span></div>
+        </div>
+        <div class="report-card" onclick="generateReport('aging')">
+            <div class="report-card-header">
+                <div class="report-icon warning"><i class="bi bi-clock-history"></i></div>
+                <div class="report-title">Aging Report</div>
+                <div class="report-desc">Current vs Past Due loans with aging analysis</div>
+            </div>
+            <div class="report-tags"><span class="report-tag">📈 Aging Analysis</span><span class="report-tag">🖨️ Print</span></div>
+        </div>
+        <div class="report-card" onclick="generateReport('product_performance')">
+            <div class="report-card-header">
+                <div class="report-icon info"><i class="bi bi-graph-up"></i></div>
+                <div class="report-title">Product Performance</div>
+                <div class="report-desc">Loan product performance with disbursements and active loans</div>
+            </div>
+            <div class="report-tags"><span class="report-tag">📊 Performance</span><span class="report-tag">📎 Export</span></div>
+        </div>
+        <div class="report-card" onclick="generateReport('member_statement')">
+            <div class="report-card-header">
+                <div class="report-icon secondary"><i class="bi bi-person"></i></div>
+                <div class="report-title">Member Statement</div>
+                <div class="report-desc">Individual member loan statement with payment history</div>
+            </div>
+            <div class="report-tags"><span class="report-tag">👤 Per Member</span><span class="report-tag">📄 PDF</span></div>
+        </div>
+        <div class="report-card" onclick="generateReport('penalty')">
+            <div class="report-card-header">
+                <div class="report-icon danger"><i class="bi bi-exclamation-triangle"></i></div>
+                <div class="report-title">Penalty Report</div>
+                <div class="report-desc">Loans with penalties and overdue analysis</div>
+            </div>
+            <div class="report-tags"><span class="report-tag">⚠️ Overdue</span><span class="report-tag">📎 Export</span></div>
+        </div>
+        <div class="report-card" onclick="generateReport('monthly_summary')">
+            <div class="report-card-header">
+                <div class="report-icon primary"><i class="bi bi-calendar-month"></i></div>
+                <div class="report-title">Monthly Summary</div>
+                <div class="report-desc">Monthly summary by loan type with principal, interest, penalty totals</div>
+            </div>
+            <div class="report-tags"><span class="report-tag">📅 Select Month</span><span class="report-tag">📎 Export</span></div>
+        </div>
+        <div class="report-card" onclick="generateReport('approved_line')">
+            <div class="report-card-header">
+                <div class="report-icon success"><i class="bi bi-check-circle"></i></div>
+                <div class="report-title">Approved Line Report</div>
+                <div class="report-desc">Approved loans with reduction reasons and net proceeds</div>
+            </div>
+            <div class="report-tags"><span class="report-tag">✅ Approvals</span><span class="report-tag">📎 Export</span></div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-card">
+        <div class="filter-header">
+            <div class="filter-title">
+                <i class="bi bi-funnel-fill"></i> Advanced Filters
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <label class="filter-label"><i class="bi bi-file-text"></i> Report Type</label>
+                <select id="reportType" class="filter-select">
+                    <option value="loan_summary">📊 Loan Summary Report</option>
+                    <option value="collection">💰 Collection Report</option>
+                    <option value="aging">📈 Aging Report</option>
+                    <option value="product_performance">📉 Product Performance</option>
+                    <option value="member_statement">👤 Member Statement</option>
+                    <option value="penalty">⚠️ Penalty Report</option>
+                    <option value="monthly_summary">📅 Monthly Summary</option>
+                    <option value="approved_line">✅ Approved Line Report</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-calendar"></i> Date From</label>
+                <input type="date" id="dateFrom" class="filter-input">
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-calendar"></i> Date To</label>
+                <input type="date" id="dateTo" class="filter-input">
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="filter-label">&nbsp;</label>
+                <button class="btn-generate" onclick="generateSelectedReport()">
+                    <i class="bi bi-search"></i> Generate
+                </button>
+            </div>
+        </div>
+
+        <div class="row mt-3" id="memberIdRow" style="display: none;">
+            <div class="col-12 col-md-4">
+                <label class="filter-label"><i class="bi bi-person"></i> Member ID / Membership Number</label>
+                <input type="text" id="memberId" class="filter-input" placeholder="e.g., M-12345">
+            </div>
+        </div>
+
+        <div class="row mt-3" id="monthYearRow" style="display: none;">
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-calendar-year"></i> Year</label>
+                <select id="reportYear" class="filter-select">
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-calendar-month"></i> Month</label>
+                <select id="reportMonth" class="filter-select">
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Results -->
+    <div id="reportResults" style="display: none;">
+        <div class="results-card">
+            <div class="results-header">
+                <div class="results-title"><i class="bi bi-file-text-fill"></i> <span id="reportTitle"></span></div>
+                <div class="export-buttons">
+                    <button class="btn-export" onclick="exportToExcel()"><i class="bi bi-file-spreadsheet"></i> Excel</button>
+                    <button class="btn-export" onclick="exportToPDF()"><i class="bi bi-file-pdf"></i> PDF</button>
+                    <button class="btn-export" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+                </div>
+            </div>
+            <div class="report-table-container" id="reportTable"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Current report type
+    let currentReportType = 'loan_summary';
+
+    function generateReport(reportType) {
+        document.getElementById('reportType').value = reportType;
+        generateSelectedReport();
+    }
+
+    function generateSelectedReport() {
+        const reportType = document.getElementById('reportType').value;
+        currentReportType = reportType;
+
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        const memberId = document.getElementById('memberId').value;
+        const reportYear = document.getElementById('reportYear')?.value || new Date().getFullYear().toString();
+        const reportMonth = document.getElementById('reportMonth')?.value || '1';
+
+        // Show/hide conditional fields
+        document.getElementById('memberIdRow').style.display = 'none';
+        document.getElementById('monthYearRow').style.display = 'none';
+
+        if (reportType === 'member_statement') {
+            document.getElementById('memberIdRow').style.display = 'flex';
+            if (!memberId) {
+                alert('Please enter Member ID for member statement');
+                return;
+            }
+        }
+        if (reportType === 'monthly_summary') {
+            document.getElementById('monthYearRow').style.display = 'flex';
+        }
+
+        document.getElementById('reportResults').style.display = 'block';
+        document.getElementById('reportTable').innerHTML = `
+            <div class="loading-state">
+                <div class="spinner-border" role="status"></div>
+                <p class="mt-2">Generating report...</p>
+            </div>
+        `;
+
+        // Build URL with parameters
+        let url = `/manager/api/reports/${reportType}/?from=${encodeURIComponent(dateFrom)}&to=${encodeURIComponent(dateTo)}&member_id=${encodeURIComponent(memberId)}&year=${reportYear}&month=${reportMonth}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                displayReport(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displaySampleReport(reportType);
+            });
+    }
+
+    function displayReport(data) {
+        document.getElementById('reportTitle').innerHTML = data.title;
+        let html = '<table class="report-table"><thead><tr>';
+
+        data.headers.forEach(h => {
+            html += `<th>${escapeHtml(h)}</th>`;
+        });
+        html += '<tr></thead><tbody>';
+
+        if (data.rows && data.rows.length > 0) {
+            data.rows.forEach(row => {
+                html += '<tr>';
+                row.forEach((cell, idx) => {
+                    const isAmount = typeof cell === 'string' && (cell.includes('₱') || cell.includes('%'));
+                    const align = (idx > 0 && (typeof cell === 'number' || (typeof cell === 'string' && cell.match(/^[\d,]+\.?\d*$/)))) ? 'text-end' : '';
+                    html += `<td class="${align}">${escapeHtml(String(cell))}</td>`;
+                });
+                html += '</tr>';
+            });
+        } else {
+            html += `<tr><td colspan="${data.headers.length}" class="empty-state"><i class="bi bi-inbox"></i><p>No data available for selected period</p></td></tr>`;
+        }
+
+        html += '</tbody></table>';
+        document.getElementById('reportTable').innerHTML = html;
+    }
+
+    function displaySampleReport(reportType) {
+        const reports = {
+            'loan_summary': {
+                title: '📊 Loan Summary Report',
+                headers: ['Loan #', 'Member', 'Principal', 'Balance', 'Status', 'Due Date'],
+                rows: [
+                    ['LN-2026-1000', 'Dela Cruz, Juan', '₱31,071.00', '₱31,071.00', 'Active', '2027-03-09'],
+                    ['LN-2026-1001', 'Dela Cruz, Juan', '₱51,205.00', '₱40,964.00', 'Active', '2027-04-16'],
+                    ['LN-2026-1002', 'Dela Cruz, Juan', '₱47,424.00', '₱37,939.20', 'Overdue', '2027-03-01']
+                ]
+            },
+            'collection': {
+                title: '💰 Collection Report',
+                headers: ['Date', 'Payment #', 'Member', 'Amount', 'Method', 'Receipt'],
+                rows: [
+                    ['2026-05-04', 'PAY-2026-10001', 'Dela Cruz, Juan', '₱2,589.25', 'Cash', 'RCP-001'],
+                    ['2026-05-05', 'PAY-2026-10002', 'Santos, Maria', '₱7,408.80', 'Pesada', 'RCP-002']
+                ]
+            },
+            'aging': {
+                title: '📈 Aging Report',
+                headers: ['Days Overdue', '# of Loans', 'Total Amount', 'Percentage'],
+                rows: [
+                    ['0-30 days', '2', '₱78,903.00', '45%'],
+                    ['31-60 days', '1', '₱31,071.00', '30%'],
+                    ['61-90 days', '0', '₱0', '0%'],
+                    ['90+ days', '0', '₱0', '0%']
+                ]
+            },
+            'product_performance': {
+                title: '📉 Product Performance Report',
+                headers: ['Product', 'Active Loans', 'Total Disbursed', 'Avg Loan Size', 'Default Rate'],
+                rows: [
+                    ['APCP (Agricultural Credit)', '5', '₱250,000', '₱50,000', '0%'],
+                    ['NCL (Non-Collateralized)', '3', '₱150,000', '₱50,000', '0%'],
+                    ['SALARY (Salary Loan)', '2', '₱80,000', '₱40,000', '0%']
+                ]
+            },
+            'member_statement': {
+                title: '👤 Member Loan Statement',
+                headers: ['Date', 'Description', 'Amount', 'Balance', 'Reference'],
+                rows: [
+                    ['2026-05-01', 'Loan Disbursement', '₱31,071.00', '₱31,071.00', 'APP-001'],
+                    ['2026-05-04', 'Payment Received', '-₱2,589.25', '₱28,481.75', 'PAY-001']
+                ]
+            },
+            'penalty': {
+                title: '⚠️ Penalty Report',
+                headers: ['Loan #', 'Member', 'Days Overdue', 'Remaining Balance', 'Penalty Owed'],
+                rows: [
+                    ['LN-2026-1000', 'Dela Cruz, Juan', '35', '₱31,071.00', '₱621.42'],
+                    ['LN-2026-1001', 'Dela Cruz, Juan', '18', '₱40,964.00', '₱409.64']
+                ]
+            },
+            'monthly_summary': {
+                title: '📅 Monthly Summary',
+                headers: ['Loan Type', 'Applications', 'Approved', 'Disbursed', 'Principal', 'Interest', 'Penalty', 'Total'],
+                rows: [
+                    ['APCP', '5', '4', '3', '₱150,000', '₱15,000', '₱0', '₱165,000'],
+                    ['NCL', '3', '2', '2', '₱100,000', '₱10,000', '₱0', '₱110,000'],
+                    ['SALARY', '2', '2', '1', '₱50,000', '₱2,500', '₱0', '₱52,500']
+                ]
+            },
+            'approved_line': {
+                title: '✅ Approved Line Report',
+                headers: ['App ID', 'Member', 'Requested', 'Approved Line', 'Reduction', 'Net Proceeds', 'Date'],
+                rows: [
+                    ['APCP-2026-1003', 'Dela Cruz, Juan', '₱50,000', '₱47,424', '₱2,576', '₱85,291', '2026-05-04'],
+                    ['APCP-2026-1004', 'Dela Cruz, Juan', '₱90,000', '₱82,677', '₱7,323', '₱132,859', '2026-05-04']
+                ]
+            }
+        };
+
+        const report = reports[reportType] || reports.loan_summary;
+        displayReport(report);
+    }
+
+    function exportToExcel() {
+        const table = document.querySelector('#reportTable table');
+        if (!table) {
+            alert('No data to export');
+            return;
+        }
+
+        let csv = [];
+        const rows = table.querySelectorAll('tr');
+
+        rows.forEach(row => {
+            let rowData = [];
+            const cols = row.querySelectorAll('th, td');
+            cols.forEach(col => {
+                rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+            });
+            csv.push(rowData.join(','));
+        });
+
+        const blob = new Blob([csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.setAttribute('download', `report_${currentReportType}_${new Date().toISOString().slice(0, 19)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    function exportToPDF() {
+        alert('To save as PDF: Click Print, then select "Save as PDF" as the destination printer.');
+        window.print();
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,932 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}My Profile - TOMPuCo{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Main Container */
+    .profile-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Profile Header */
+    .profile-header {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        border-radius: 24px;
+        padding: 30px;
+        margin-bottom: 30px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    /* Profile Avatar */
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto;
+        border: 4px solid white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        background: rgba(255,255,255,0.2);
+        cursor: pointer;
+        transition: transform 0.3s;
+        position: relative;
+    }
+
+    .profile-avatar:hover {
+        transform: scale(1.02);
+    }
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .profile-avatar .placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.2);
+    }
+
+    .profile-avatar .placeholder i {
+        font-size: 60px;
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+        }
+        .profile-avatar .placeholder i {
+            font-size: 50px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+        }
+        .profile-avatar .placeholder i {
+            font-size: 40px;
+        }
+    }
+
+    /* QR Code Card */
+    .qrcode-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        margin-bottom: 25px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    .qrcode-header {
+        background: var(--bg-body);
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .qrcode-header h5 {
+        margin: 0;
+        color: var(--text-primary);
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .qrcode-header h5 i {
+        color: #0d6e6e;
+    }
+
+    .qrcode-body {
+        padding: 24px;
+        text-align: center;
+    }
+
+    .qr-code-display {
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        display: inline-block;
+        margin-bottom: 15px;
+        box-shadow: var(--shadow);
+    }
+
+    .qr-code-display img {
+        width: 150px;
+        height: 150px;
+    }
+
+    .qr-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+
+    .btn-qr {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 8px 20px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-qr:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Profile Sections */
+    .profile-section {
+        background: var(--bg-card);
+        border-radius: 20px;
+        margin-bottom: 25px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    .profile-section-header {
+        background: var(--bg-body);
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .profile-section-header h5 {
+        margin: 0;
+        color: var(--text-primary);
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .profile-section-header h5 i {
+        color: #0d6e6e;
+    }
+
+    .profile-section-body {
+        padding: 24px;
+    }
+
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-label {
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+    }
+
+    .info-value {
+        font-weight: 500;
+        color: var(--text-primary);
+        text-align: right;
+    }
+
+    @media (max-width: 768px) {
+        .info-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .info-value {
+            text-align: left;
+        }
+    }
+
+    /* Profile Completeness Card */
+    .completeness-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 20px 24px;
+        color: white;
+        margin-bottom: 25px;
+    }
+
+    .completeness-card h5 {
+        margin: 0 0 8px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .progress {
+        height: 10px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.3);
+    }
+
+    .progress-bar {
+        background: white;
+        border-radius: 10px;
+        transition: width 0.3s ease;
+    }
+
+    /* 2FA Card */
+    .twofa-card {
+        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        border-radius: 20px;
+        padding: 20px 24px;
+        margin-bottom: 25px;
+        color: white;
+    }
+
+    .twofa-card h5 {
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .twofa-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .twofa-enabled {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+    }
+
+    .twofa-disabled {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fecaca;
+    }
+
+    .btn-2fa {
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.4);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-2fa:hover {
+        background: rgba(255,255,255,0.3);
+        transform: translateY(-2px);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-2fa-danger {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-2fa-danger:hover {
+        background: #ef4444;
+    }
+
+    /* BUTTONS */
+    .btn-edit {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 10px 28px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-edit:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    .btn-back {
+        background: #ffffff;
+        border: 2px solid #6c757d;
+        color: #6c757d;
+        padding: 10px 28px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-back:hover {
+        background: #6c757d;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    .btn-complete {
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.4);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-complete:hover {
+        background: rgba(255,255,255,0.3);
+        transform: translateY(-2px);
+        text-decoration: none;
+        color: white;
+    }
+
+    .badge-complete {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    [data-theme="dark"] .btn-edit,
+    [data-theme="dark"] .btn-back {
+        background: transparent;
+    }
+
+    /* Action Buttons Container */
+    .action-buttons-container {
+        display: flex;
+        gap: 15px;
+        justify-content: flex-end;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+        .action-buttons-container {
+            justify-content: center;
+        }
+        .btn-edit, .btn-back {
+            flex: 1;
+            justify-content: center;
+        }
+        .profile-header {
+            text-align: center;
+        }
+        .profile-section-body {
+            padding: 16px;
+        }
+        .twofa-card .row {
+            text-align: center;
+        }
+        .twofa-card .text-md-end {
+            text-align: center !important;
+            margin-top: 15px;
+        }
+        .qr-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+
+    .member-since {
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+
+    .info-value.empty {
+        color: var(--text-muted);
+        font-style: italic;
+    }
+
+    .modal-content-custom {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-cancel {
+        background: #ffffff;
+        border: 2px solid #6c757d;
+        color: #6c757d;
+        padding: 8px 20px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .btn-cancel:hover {
+        background: #6c757d;
+        color: white;
+    }
+
+    [data-theme="dark"] .btn-cancel {
+        background: transparent;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="row align-items-center">
+            <div class="col-md-2 text-center text-md-start">
+                <div class="profile-avatar" onclick="document.getElementById('avatarUpload')?.click()">
+                    {% if member.profile_picture %}
+                        <img src="{{ member.profile_picture.url }}" alt="{{ member.first_name }}">
+                    {% else %}
+                        <div class="placeholder">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <form method="post" action="{% url 'main:upload_avatar' %}" enctype="multipart/form-data" id="avatarForm" style="display: none;">
+                    {% csrf_token %}
+                    <input type="file" name="avatar" id="avatarUpload" accept="image/*" onchange="document.getElementById('avatarForm').submit()">
+                </form>
+            </div>
+            <div class="col-md-7 text-center text-md-start">
+                <h2 class="mb-2">{{ member.first_name }} {% if member.middle_initial %}{{ member.middle_initial }}.{% endif %} {{ member.last_name }}</h2>
+                <p class="mb-1">
+                    <i class="bi bi-person-badge me-2"></i> Member ID: {{ member.membership_number }}
+                </p>
+                <p class="member-since mb-0">
+                    <i class="bi bi-calendar me-2"></i> Member since: {{ member.created_at|date:"F d, Y" }}
+                </p>
+            </div>
+            <div class="col-md-3 text-center text-md-end mt-3 mt-md-0">
+                <a href="{% url 'main:edit_profile' %}" class="btn-edit">
+                    <i class="bi bi-pencil-square"></i> Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Completeness -->
+    <div class="completeness-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5><i class="bi bi-pie-chart"></i> Profile Completeness</h5>
+                <p class="mb-2 small opacity-75">Complete your profile to increase loan approval chances</p>
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: {{ profile_completeness }}%">
+                        {{ profile_completeness }}%
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                {% if profile_completeness < 100 %}
+                    <a href="{% url 'main:edit_profile' %}" class="btn-complete">
+                        Complete Now <i class="bi bi-arrow-right"></i>
+                    </a>
+                {% else %}
+                    <span class="badge-complete">
+                        <i class="bi bi-check-circle-fill"></i> Complete
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- QR CODE SECTION - NEW -->
+    <div class="qrcode-card">
+        <div class="qrcode-header">
+            <h5><i class="bi bi-upc-scan"></i> My Payment QR Code</h5>
+        </div>
+        <div class="qrcode-body">
+            <div class="qr-code-display">
+                <img src="data:image/png;base64,{{ qr_image }}" alt="Payment QR Code">
+            </div>
+            <p class="small text-muted mb-3">Show this QR code to the cashier for faster payment processing</p>
+            <div class="qr-actions">
+                <a href="{% url 'main:member_qr' %}" class="btn-qr">
+                    <i class="bi bi-upc-scan"></i> View Full Size
+                </a>
+                <button class="btn-qr" id="downloadQrBtn">
+                    <i class="bi bi-download"></i> Download QR Code
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2FA AUTHENTICATOR SECTION -->
+    <div class="twofa-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5><i class="bi bi-shield-lock"></i> Two-Factor Authentication (2FA)</h5>
+                <p class="mb-1 small opacity-75">Add an extra layer of security to your account</p>
+                <p class="small opacity-75 mb-0">
+                    <i class="bi bi-info-circle"></i> 2FA protects your account even if someone steals your password
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                {% if member.otp_enabled %}
+                    <div class="mb-2">
+                        <span class="twofa-status twofa-enabled">
+                            <i class="bi bi-shield-check-fill"></i> Enabled
+                        </span>
+                    </div>
+                    <button type="button" class="btn-2fa btn-2fa-danger" onclick="showDisable2FAModal()">
+                        <i class="bi bi-x-circle"></i> Disable 2FA
+                    </button>
+                    <button type="button" class="btn-2fa mt-2" onclick="showBackupCodes()">
+                        <i class="bi bi-file-lock"></i> View Backup Codes
+                    </button>
+                {% else %}
+                    <div class="mb-2">
+                        <span class="twofa-status twofa-disabled">
+                            <i class="bi bi-shield-exclamation"></i> Disabled
+                        </span>
+                    </div>
+                    <a href="{% url 'main:setup_2fa' %}" class="btn-2fa">
+                        <i class="bi bi-shield-lock"></i> Enable 2FA
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Personal Information -->
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <h5><i class="bi bi-person"></i> Personal Information</h5>
+        </div>
+        <div class="profile-section-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Full Name:</span>
+                    <span class="info-value">{{ member.last_name }}, {{ member.first_name }} {% if member.middle_initial %}{{ member.middle_initial }}.{% endif %}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Nickname:</span>
+                    <span class="info-value {% if not member.nickname %}empty{% endif %}">{{ member.nickname|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Nationality:</span>
+                    <span class="info-value">{{ member.nationality|default:"Filipino" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Birthdate:</span>
+                    <span class="info-value {% if not member.birthdate %}empty{% endif %}">{{ member.birthdate|date:"F d, Y"|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Age:</span>
+                    <span class="info-value {% if not member.age %}empty{% endif %}">{{ member.age|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Gender:</span>
+                    <span class="info-value {% if not member.gender %}empty{% endif %}">{{ member.get_gender_display|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Contact Number:</span>
+                    <span class="info-value {% if not member.contact_number %}empty{% endif %}">{{ member.contact_number|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Residence Address:</span>
+                    <span class="info-value {% if not member.residence_address %}empty{% endif %}">{{ member.residence_address|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Spouse Name:</span>
+                    <span class="info-value {% if not member.spouse_name %}empty{% endif %}">{{ member.spouse_name|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Number of Dependents:</span>
+                    <span class="info-value">{{ member.num_dependents|default:"0" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employment & Income -->
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <h5><i class="bi bi-briefcase"></i> Employment & Income</h5>
+        </div>
+        <div class="profile-section-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Employer/Business:</span>
+                    <span class="info-value {% if not member.employer_name %}empty{% endif %}">{{ member.employer_name|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Position:</span>
+                    <span class="info-value {% if not member.position %}empty{% endif %}">{{ member.position|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Monthly Income:</span>
+                    <span class="info-value">₱{{ member.monthly_income|floatformat:2|default:"0" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Years with Employer:</span>
+                    <span class="info-value {% if not member.years_with_employer %}empty{% endif %}">{{ member.years_with_employer|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Other Income Sources:</span>
+                    <span class="info-value {% if not member.other_income_sources %}empty{% endif %}">{{ member.other_income_sources|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Bank Name:</span>
+                    <span class="info-value {% if not member.bank_name %}empty{% endif %}">{{ member.bank_name|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Bank Account Type:</span>
+                    <span class="info-value {% if not member.bank_account_type %}empty{% endif %}">{{ member.bank_account_type|default:"—" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Farm Information -->
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <h5><i class="bi bi-tree"></i> Farm Information</h5>
+        </div>
+        <div class="profile-section-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Farm Location:</span>
+                    <span class="info-value {% if not member.farm_location %}empty{% endif %}">{{ member.farm_location|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Owned (hectares):</span>
+                    <span class="info-value">{{ member.farm_owned_hectares|default:"0" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Leased (hectares):</span>
+                    <span class="info-value">{{ member.farm_leased_hectares|default:"0" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Area Planted:</span>
+                    <span class="info-value">{{ member.area_planted|default:"0" }} hectares</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">New Plant:</span>
+                    <span class="info-value">{{ member.new_plant|default:"0" }} has.</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Ratoon Crops:</span>
+                    <span class="info-value">{{ member.ratoon_crops|default:"0" }} has.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loan History -->
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <h5><i class="bi bi-bank"></i> Loan History</h5>
+        </div>
+        <div class="profile-section-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Loans from other coops/banks:</span>
+                    <span class="info-value {% if not member.other_loans %}empty{% endif %}">{{ member.other_loans|default:"None" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Other Loans Details:</span>
+                    <span class="info-value {% if not member.other_loans_details %}empty{% endif %}">{{ member.other_loans_details|default:"—" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Co-maker Information -->
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <h5><i class="bi bi-people"></i> Co-maker Information</h5>
+        </div>
+        <div class="profile-section-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Years in this address:</span>
+                    <span class="info-value {% if not member.years_in_address %}empty{% endif %}">{{ member.years_in_address|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Years in community:</span>
+                    <span class="info-value {% if not member.years_in_community %}empty{% endif %}">{{ member.years_in_community|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Years known applicant:</span>
+                    <span class="info-value {% if not member.years_known_applicant %}empty{% endif %}">{{ member.years_known_applicant|default:"—" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Related to applicant:</span>
+                    <span class="info-value">{% if member.is_related_to_applicant %}Yes ({{ member.relationship_type }}){% else %}No{% endif %}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Ever been a borrower:</span>
+                    <span class="info-value">{% if member.has_been_borrower %}Yes{% else %}No{% endif %}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Ever been a co-maker:</span>
+                    <span class="info-value">{% if member.has_been_comaker %}Yes{% else %}No{% endif %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons-container">
+        <a href="{% url 'main:edit_profile' %}" class="btn-edit">
+            <i class="bi bi-pencil-square"></i> Edit Profile
+        </a>
+        <a href="{% url 'main:dashboard' %}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Disable 2FA Confirmation Modal -->
+<div class="modal fade" id="disable2FAModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-custom">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
+                <h5 class="modal-title"><i class="bi bi-shield-exclamation"></i> Disable Two-Factor Authentication</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to disable Two-Factor Authentication?</p>
+                <p class="text-muted small">This will make your account less secure. You will no longer need to enter a verification code when logging in.</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Warning:</strong> Your account will be more vulnerable to unauthorized access.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'main:disable_2fa' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-2fa btn-2fa-danger">
+                        <i class="bi bi-check-circle"></i> Yes, Disable 2FA
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Codes Modal -->
+<div class="modal fade" id="backupCodesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-custom">
+            <div class="modal-header" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white;">
+                <h5 class="modal-title"><i class="bi bi-file-lock"></i> Backup Codes</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Save these backup codes in a secure place. Each code can only be used once.</p>
+                <div class="row" id="backupCodesList">
+                    {% for code in member.otp_backup_codes %}
+                        <div class="col-md-6 mb-2">
+                            <code class="p-2 bg-dark text-light d-block text-center rounded">{{ code }}</code>
+                        </div>
+                    {% empty %}
+                        <div class="col-12 text-center py-3">
+                            <p class="text-muted">No backup codes generated yet.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i>
+                    <small>Keep these codes safe. You'll need them if you lose access to your authenticator app.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn-2fa" onclick="generateNewBackupCodes()">
+                    <i class="bi bi-arrow-repeat"></i> Generate New Codes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // QR Code Download
+    document.getElementById('downloadQrBtn')?.addEventListener('click', function() {
+        const qrImage = document.querySelector('.qr-code-display img');
+        if (qrImage) {
+            const link = document.createElement('a');
+            link.download = 'tompuco_qrcode_{{ member.membership_number }}.png';
+            link.href = qrImage.src;
+            link.click();
+        }
+    });
+
+    // 2FA Functions
+    function showDisable2FAModal() {
+        const modal = new bootstrap.Modal(document.getElementById('disable2FAModal'));
+        modal.show();
+    }
+
+    function showBackupCodes() {
+        const modal = new bootstrap.Modal(document.getElementById('backupCodesModal'));
+        modal.show();
+    }
+
+    function generateNewBackupCodes() {
+        if (confirm('Generating new backup codes will invalidate your old codes. Continue?')) {
+            fetch('{% url "main:generate_backup_codes" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error generating new backup codes. Please try again.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('Error generating new backup codes.');
+            });
+        }
+    }
+</script>
+{% endblock %}

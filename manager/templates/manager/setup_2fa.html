@@ -1,0 +1,116 @@
+{% extends 'manager/base_manager.html' %}
+{% load static %}
+
+{% block title %}Verify 2FA - Manager{% endblock %}
+{% block page_title %}Two-Factor Authentication{% endblock %}
+
+{% block extra_css %}
+<style>
+    .verify-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 60vh;
+    }
+
+    .verify-card {
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        max-width: 450px;
+        width: 100%;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+
+    .verify-header {
+        background: var(--brand-gradient);
+        padding: 28px;
+        text-align: center;
+        color: white;
+    }
+
+    .verify-header i {
+        font-size: 3rem;
+        margin-bottom: 12px;
+    }
+
+    .verify-body {
+        padding: 32px;
+    }
+
+    .code-input {
+        font-size: 1.8rem;
+        letter-spacing: 10px;
+        text-align: center;
+        font-family: monospace;
+        padding: 16px;
+        border-radius: 12px;
+        border: 2px solid var(--border-color);
+        width: 100%;
+    }
+
+    .code-input:focus {
+        border-color: var(--brand-primary);
+        outline: none;
+    }
+
+    .help-text {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-align: center;
+        margin-top: 16px;
+    }
+
+    .use-backup {
+        text-align: center;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="verify-container">
+    <div class="verify-card">
+        <div class="verify-header">
+            <i class="bi bi-shield-lock-fill"></i>
+            <h3>Two-Factor Authentication</h3>
+            <p>Enter verification code</p>
+        </div>
+
+        <div class="verify-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <input type="text" name="otp_code" class="code-input" placeholder="000000" maxlength="6" required autofocus>
+                </div>
+                {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endif %}
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    <i class="bi bi-shield-check"></i> Verify
+                </button>
+            </form>
+
+            <div class="help-text">
+                <i class="bi bi-info-circle"></i>
+                Open your authenticator app to get the 6-digit code
+            </div>
+
+            <div class="use-backup">
+                <a href="?use_backup=1" class="btn btn-link">Use backup code instead</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-submit when 6 digits are entered
+    document.querySelector('input[name="otp_code"]')?.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+        if (this.value.length === 6) {
+            this.form.submit();
+        }
+    });
+</script>
+{% endblock %}

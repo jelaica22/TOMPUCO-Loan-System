@@ -1,0 +1,1103 @@
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+
+{% block title %}My Profile - Staff{% endblock %}
+{% block page_title %}Staff Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== CSS Variables for Light/Dark Mode ===== */
+    :root {
+        --primary-dark: #1e3c72;
+        --primary-light: #2a5298;
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+        --purple: #8b5cf6;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-600: #6b7280;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+    }
+
+    /* ===== Profile Container ===== */
+    .profile-container {
+        padding-top: 10px;
+    }
+
+    /* Row & Grid System - Organized */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: -12px;
+    }
+
+    .col-lg-4, .col-lg-8, .col-md-6 {
+        padding: 12px;
+    }
+
+    .col-lg-4 { flex: 0 0 33.333%; max-width: 33.333%; }
+    .col-lg-8 { flex: 0 0 66.666%; max-width: 66.666%; }
+    .col-md-6 { flex: 0 0 50%; max-width: 50%; }
+
+    @media (max-width: 992px) {
+        .col-lg-4, .col-lg-8 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+
+    /* ===== Profile Cards ===== */
+    .profile-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
+    }
+
+    .profile-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    /* Profile Header */
+    .profile-header {
+        background: var(--brand-gradient);
+        padding: 32px 24px;
+        color: white;
+        text-align: center;
+        position: relative;
+    }
+
+    /* Avatar Section */
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: white;
+        margin: 0 auto 16px;
+        overflow: hidden;
+        border: 4px solid white;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .profile-avatar:hover {
+        transform: scale(1.02);
+    }
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .profile-avatar .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: bold;
+        color: white;
+    }
+
+    .avatar-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 8px;
+        text-align: center;
+        font-size: 0.7rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .profile-avatar:hover .avatar-overlay {
+        opacity: 1;
+    }
+
+    .profile-name {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .profile-role {
+        font-size: 0.85rem;
+        opacity: 0.95;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .badge-role {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 12px;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    /* Profile Stats */
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        padding: 20px;
+        background: var(--bg-body);
+        border-top: 1px solid var(--border-light);
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--brand-primary);
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.8px;
+        font-weight: 600;
+    }
+
+    /* Info Sections */
+    .info-section {
+        padding: 24px;
+    }
+
+    .info-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .info-title i {
+        color: var(--brand-primary);
+        font-size: 1.2rem;
+    }
+
+    /* Info Rows - Organized Alignment */
+    .info-row {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        width: 140px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-label i {
+        width: 20px;
+        color: var(--brand-primary);
+    }
+
+    .info-value {
+        flex: 1;
+        color: var(--text-primary);
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 576px) {
+        .info-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+        .info-label {
+            width: 100%;
+        }
+    }
+
+    /* Buttons - Clearly Visible in Light Mode */
+    .edit-btn {
+        background: var(--brand-gradient);
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s;
+        font-size: 0.8rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-left: auto;
+    }
+
+    .edit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.4);
+        color: white;
+    }
+
+    .btn-primary {
+        background: var(--brand-gradient);
+        border: none;
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.4);
+    }
+
+    .btn-secondary {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-secondary:hover {
+        border-color: var(--brand-primary);
+        color: var(--brand-primary);
+        transform: translateY(-2px);
+    }
+
+    .btn-warning {
+        background: var(--warning);
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-warning:hover {
+        background: #d97706;
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-danger {
+        background: transparent;
+        border: 1.5px solid var(--danger);
+        color: var(--danger);
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-outline-danger:hover {
+        background: var(--danger);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-primary {
+        background: transparent;
+        border: 1.5px solid var(--brand-primary);
+        color: var(--brand-primary);
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--brand-primary);
+        color: white;
+        transform: translateX(5px);
+        text-decoration: none;
+    }
+
+    .btn-outline-success {
+        background: transparent;
+        border: 1.5px solid var(--success);
+        color: var(--success);
+    }
+
+    .btn-outline-success:hover {
+        background: var(--success);
+        color: white;
+        transform: translateX(5px);
+    }
+
+    .btn-outline-info {
+        background: transparent;
+        border: 1.5px solid var(--info);
+        color: var(--info);
+    }
+
+    .btn-outline-info:hover {
+        background: var(--info);
+        color: white;
+        transform: translateX(5px);
+    }
+
+    .btn-outline-warning {
+        background: transparent;
+        border: 1.5px solid var(--warning);
+        color: var(--warning);
+    }
+
+    .btn-outline-warning:hover {
+        background: var(--warning);
+        color: white;
+        transform: translateX(5px);
+    }
+
+    .btn-sm {
+        padding: 6px 14px;
+        font-size: 0.75rem;
+    }
+
+    /* Quick Actions - Organized */
+    .d-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .quick-action-btn {
+        text-align: left;
+        padding: 14px 18px;
+        margin-bottom: 0;
+        border-radius: 14px;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .quick-action-btn i {
+        width: 24px;
+        font-size: 1.1rem;
+    }
+
+    .quick-action-btn:hover {
+        transform: translateX(6px);
+        text-decoration: none;
+    }
+
+    /* Form Elements */
+    .form-control, .form-select {
+        background: var(--input-bg);
+        border: 1.5px solid var(--border-color);
+        border-radius: 12px;
+        padding: 10px 14px;
+        color: var(--text-primary);
+        transition: all 0.3s;
+        width: 100%;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--brand-primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.15);
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+    }
+
+    /* Badges */
+    .badge-success {
+        background: var(--success-bg);
+        color: var(--success-text);
+        padding: 5px 12px;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .badge-secondary {
+        background: var(--gray-200);
+        color: var(--gray-700);
+        padding: 5px 12px;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .badge-action {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 700;
+    }
+
+    /* Code Styling */
+    code {
+        background: var(--bg-body);
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        color: var(--brand-primary);
+        font-family: monospace;
+    }
+
+    /* Backup Codes Grid */
+    .code-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .code-item {
+        font-family: monospace;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-align: center;
+        padding: 10px;
+        background: var(--bg-body);
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        letter-spacing: 1px;
+    }
+
+    .backup-codes {
+        background: var(--warning-bg);
+        border: 1px solid var(--warning-text);
+        border-radius: 16px;
+        padding: 20px;
+        margin: 16px 0;
+    }
+
+    /* Alert Styles */
+    .alert {
+        border-radius: 14px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.85rem;
+    }
+
+    .alert-info {
+        background: var(--info-bg);
+        border: 1px solid var(--info-text);
+        color: var(--info-text);
+    }
+
+    .alert-warning {
+        background: var(--warning-bg);
+        border: 1px solid var(--warning-text);
+        color: var(--warning-text);
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--border-color);
+        padding: 18px 24px;
+    }
+
+    .modal-header.bg-warning {
+        background: var(--warning);
+        color: #1a2a3a;
+    }
+
+    .modal-header.bg-danger {
+        background: var(--danger);
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--border-color);
+        padding: 16px 24px;
+        gap: 12px;
+    }
+
+    /* Table Styles */
+    .table {
+        color: var(--text-primary);
+        margin-bottom: 0;
+    }
+
+    .table th {
+        background: var(--bg-body);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border-color);
+        padding: 12px;
+    }
+
+    .table td {
+        padding: 10px 12px;
+        vertical-align: middle;
+        border-bottom-color: var(--border-light);
+    }
+
+    .table-hover tbody tr:hover {
+        background: var(--table-hover);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .info-section {
+            padding: 18px;
+        }
+
+        .profile-stats {
+            gap: 10px;
+            padding: 16px;
+        }
+
+        .stat-number {
+            font-size: 1.3rem;
+        }
+
+        .d-flex {
+            flex-wrap: wrap;
+        }
+
+        .code-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Text Utilities */
+    .text-center { text-align: center; }
+    .text-muted { color: var(--text-muted); }
+    .small { font-size: 0.75rem; }
+    .mt-2 { margin-top: 8px; }
+    .mt-3 { margin-top: 16px; }
+    .mb-3 { margin-bottom: 16px; }
+    .me-2 { margin-right: 8px; }
+    .ms-2 { margin-left: 8px; }
+    .py-4 { padding-top: 24px; padding-bottom: 24px; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 16px; }
+    .d-inline { display: inline; }
+    .flex-wrap { flex-wrap: wrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="row g-4">
+        <!-- Left Column - Profile Card & Quick Actions -->
+        <div class="col-lg-4">
+            <!-- Profile Card -->
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar" onclick="document.getElementById('avatarUpload').click()">
+                        {% if staff_profile and staff_profile.profile_picture %}
+                            <img src="{{ staff_profile.profile_picture.url }}" alt="Profile Picture">
+                        {% else %}
+                            <div class="avatar-placeholder">
+                                {{ staff_profile.user.first_name|first|default:staff_profile.user.username|first|upper }}{{ staff_profile.user.last_name|first|default:''|upper }}
+                            </div>
+                        {% endif %}
+                        <div class="avatar-overlay">
+                            <i class="bi bi-camera"></i> Change Photo
+                        </div>
+                    </div>
+                    <form method="post" action="{% url 'staff:upload_avatar' %}" enctype="multipart/form-data" id="avatarForm">
+                        {% csrf_token %}
+                        <input type="file" name="avatar" id="avatarUpload" accept="image/*" style="display: none;" onchange="document.getElementById('avatarForm').submit()">
+                    </form>
+                    <div class="profile-name">{{ staff_profile.user.get_full_name|default:staff_profile.user.username }}</div>
+                    <div class="profile-role">
+                        <i class="bi bi-person-badge"></i>
+                        <span>{{ staff_profile.get_position_display|default:"Staff" }}</span>
+                        <span class="badge-role">{{ staff_profile.department|default:"Loans Department" }}</span>
+                    </div>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ applications_reviewed|default:0 }}</div>
+                        <div class="stat-label">Applications</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ loans_processed|default:0 }}</div>
+                        <div class="stat-label">Loans Processed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ payments_processed|default:0 }}</div>
+                        <div class="stat-label">Payments</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="profile-card">
+                <div class="info-section">
+                    <div class="info-title">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                        <span>Quick Actions</span>
+                    </div>
+                    <div class="d-grid">
+                        <a href="{% url 'staff:staff_applications' %}" class="btn-outline-primary quick-action-btn">
+                            <i class="bi bi-file-text"></i> Review Loan Applications
+                        </a>
+                        <a href="{% url 'staff:issue_payment_instruction' %}" class="btn-outline-success quick-action-btn">
+                            <i class="bi bi-receipt"></i> Issue Payment Instruction
+                        </a>
+                        <a href="{% url 'staff:staff_reports' %}" class="btn-outline-info quick-action-btn">
+                            <i class="bi bi-graph-up"></i> Generate Reports
+                        </a>
+                        <a href="{% url 'staff:restructuring_list' %}" class="btn-outline-warning quick-action-btn">
+                            <i class="bi bi-arrow-repeat"></i> Process Restructuring
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Information Card -->
+            <div class="profile-card">
+                <div class="info-section">
+                    <div class="info-title">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span>System Information</span>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label"><i class="bi bi-qr-code"></i> Staff ID:</div>
+                        <div class="info-value"><code>{{ staff_profile.staff_id|default:"Not assigned" }}</code></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label"><i class="bi bi-building"></i> Department:</div>
+                        <div class="info-value">{{ staff_profile.department|default:"Not set" }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label"><i class="bi bi-briefcase"></i> Position:</div>
+                        <div class="info-value">{{ staff_profile.get_position_display|default:"Not set" }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label"><i class="bi bi-calendar-check"></i> Hire Date:</div>
+                        <div class="info-value">{{ staff_profile.hire_date|date:"F d, Y"|default:"Not set" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-8">
+            <!-- Personal Information Card -->
+            <div class="profile-card">
+                <div class="info-section">
+                    <div class="info-title">
+                        <i class="bi bi-person-circle"></i>
+                        <span>Personal Information</span>
+                        <button class="edit-btn" onclick="toggleEdit()">
+                            <i class="bi bi-pencil-square"></i> Edit Profile
+                        </button>
+                    </div>
+
+                    <!-- View Mode -->
+                    <div id="viewMode">
+                        <div class="info-row">
+                            <div class="info-label"><i class="bi bi-person"></i> Full Name:</div>
+                            <div class="info-value">{{ staff_profile.user.get_full_name|default:"Not set" }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label"><i class="bi bi-envelope"></i> Email Address:</div>
+                            <div class="info-value">{{ staff_profile.user.email|default:"Not set" }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label"><i class="bi bi-person-badge"></i> Username:</div>
+                            <div class="info-value">{{ staff_profile.user.username }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label"><i class="bi bi-telephone"></i> Contact Number:</div>
+                            <div class="info-value">{{ staff_profile.contact_number|default:"Not set" }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label"><i class="bi bi-calendar"></i> Member Since:</div>
+                            <div class="info-value">{{ staff_profile.user.date_joined|date:"F d, Y" }}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label"><i class="bi bi-clock-history"></i> Last Login:</div>
+                            <div class="info-value">{{ staff_profile.user.last_login|date:"F d, Y H:i"|default:"Never" }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <form method="post" action="{% url 'staff:update_profile' %}" id="editForm" style="display: none;">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-person"></i> First Name</label>
+                                <input type="text" name="first_name" class="form-control" value="{{ staff_profile.user.first_name }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-person"></i> Last Name</label>
+                                <input type="text" name="last_name" class="form-control" value="{{ staff_profile.user.last_name }}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-envelope"></i> Email Address</label>
+                            <input type="email" name="email" class="form-control" value="{{ staff_profile.user.email }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-person-badge"></i> Username</label>
+                            <input type="text" name="username" class="form-control" value="{{ staff_profile.user.username }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><i class="bi bi-telephone"></i> Contact Number</label>
+                            <input type="text" name="contact_number" class="form-control" value="{{ staff_profile.contact_number|default:'' }}" placeholder="e.g., 09123456789">
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> Save Changes
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="toggleEdit()">
+                                <i class="bi bi-x-lg"></i> Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Security Settings Card -->
+            <div class="profile-card">
+                <div class="info-section">
+                    <div class="info-title">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        <span>Security Settings</span>
+                    </div>
+
+                    <!-- 2FA Status -->
+                    <div class="info-row">
+                        <div class="info-label"><i class="bi bi-shield-check"></i> Two-Factor Auth:</div>
+                        <div class="info-value">
+                            {% if staff_profile.otp_enabled %}
+                                <span class="badge-success">
+                                    <i class="bi bi-check-circle-fill"></i> Enabled
+                                </span>
+                                <button class="btn btn-sm btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#disable2FAModal">
+                                    <i class="bi bi-x-circle"></i> Disable
+                                </button>
+                            {% else %}
+                                <span class="badge-secondary">
+                                    <i class="bi bi-shield-exclamation"></i> Disabled
+                                </span>
+                                <a href="{% url 'staff:setup_2fa' %}" class="btn btn-sm btn-primary ms-2">
+                                    <i class="bi bi-shield-plus"></i> Enable 2FA
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Backup Codes -->
+                    {% if staff_profile.otp_enabled and staff_profile.otp_backup_codes %}
+                    <div class="info-row">
+                        <div class="info-label"><i class="bi bi-key"></i> Backup Codes:</div>
+                        <div class="info-value">
+                            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#backupCodesModal">
+                                <i class="bi bi-eye"></i> View / Generate Backup Codes
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-3 flex-wrap mt-3">
+                        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                            <i class="bi bi-key-fill"></i> Change Password
+                        </button>
+                        <form method="post" action="{% url 'staff:logout_all_devices' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="bi bi-box-arrow-right"></i> Logout All Devices
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Info Alert -->
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span>Two-factor authentication adds an extra layer of security to your account. We recommend enabling it for better protection.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Card -->
+            <div class="profile-card">
+                <div class="info-section">
+                    <div class="info-title">
+                        <i class="bi bi-activity"></i>
+                        <span>Recent Activity</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th><i class="bi bi-record-circle"></i> Action</th>
+                                    <th><i class="bi bi-folder"></i> Entity</th>
+                                    <th><i class="bi bi-hdd-network"></i> IP Address</th>
+                                    <th><i class="bi bi-clock"></i> Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_activities %}
+                                <tr>
+                                    <td>
+                                        <span class="badge-action badge-{% if 'VIEW' in log.action %}secondary{% elif 'CREATE' in log.action %}success{% elif 'UPDATE' in log.action or 'EDIT' in log.action %}info{% elif 'DELETE' in log.action %}danger{% else %}primary{% endif %}">
+                                            {{ log.action }}
+                                        </span>
+                                    </td>
+                                    <td>{{ log.entity_type|title }}</td>
+                                    <td><code>{{ log.ip_address|default:"—" }}</code></td>
+                                    <td>{{ log.created_at|date:"H:i, M d" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
+                                        <p class="mt-2 mb-0">No recent activity recorded</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--warning); color: #1a2a3a;">
+                <h5 class="modal-title">
+                    <i class="bi bi-key-fill me-2"></i>Change Password
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'staff:change_password' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-lock"></i> Current Password</label>
+                        <input type="password" name="current_password" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-key"></i> New Password</label>
+                        <input type="password" name="new_password" class="form-control" required>
+                        <small class="text-muted">Minimum 8 characters with letters and numbers</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-check-circle"></i> Confirm New Password</label>
+                        <input type="password" name="confirm_password" class="form-control" required>
+                    </div>
+                    <div class="alert alert-warning small">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>After changing your password, you will be logged out from all devices.</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-check-lg"></i> Update Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Codes Modal -->
+<div class="modal fade" id="backupCodesModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning" style="color: #1a2a3a;">
+                <h5 class="modal-title">
+                    <i class="bi bi-key-fill me-2"></i>Backup Codes
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="bi bi-shield-check" style="font-size: 3rem; color: var(--warning);"></i>
+                <p class="mt-3"><strong>Save these backup codes in a safe place.</strong></p>
+                <p class="text-muted small">Each code can only be used once.</p>
+                <div class="backup-codes">
+                    <div class="code-grid">
+                        {% for code in staff_profile.otp_backup_codes %}
+                            <div class="code-item">{{ code }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="alert alert-warning mt-3 small text-start">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>Keep these codes secure. They can be used to access your account if you lose your device.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-warning" onclick="copyBackupCodes()">
+                    <i class="bi bi-clipboard"></i> Copy Codes
+                </button>
+                <form method="post" action="{% url 'staff:generate_backup_codes' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-warning">
+                        <i class="bi bi-arrow-repeat"></i> Generate New
+                    </button>
+                </form>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Disable 2FA Modal -->
+<div class="modal fade" id="disable2FAModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Disable Two-Factor Authentication
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="bi bi-shield-exclamation" style="font-size: 3rem; color: var(--danger);"></i>
+                <p class="mt-3 fw-bold">Are you sure you want to disable Two-Factor Authentication?</p>
+                <p class="text-muted">This will make your account less secure. We strongly recommend keeping 2FA enabled.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i> Cancel
+                </button>
+                <form method="post" action="{% url 'staff:disable_2fa' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-shield-slash"></i> Yes, Disable 2FA
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toggle Edit Mode
+    function toggleEdit() {
+        const viewMode = document.getElementById('viewMode');
+        const editMode = document.getElementById('editForm');
+        if (viewMode.style.display === 'none') {
+            viewMode.style.display = 'block';
+            editMode.style.display = 'none';
+        } else {
+            viewMode.style.display = 'none';
+            editMode.style.display = 'block';
+        }
+    }
+
+    // Copy Backup Codes to Clipboard
+    function copyBackupCodes() {
+        const codes = document.querySelectorAll('.code-item');
+        let text = '';
+        codes.forEach(code => {
+            text += code.innerText + '\n';
+        });
+        navigator.clipboard.writeText(text).then(() => {
+            // Show temporary success feedback
+            const btn = event.target.closest('button');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+            }, 2000);
+        }).catch(() => {
+            alert('Failed to copy. Please select and copy manually.');
+        });
+    }
+
+    // Auto-hide alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert:not(.modal .alert)');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                alert.style.transition = 'opacity 0.3s';
+                alert.style.opacity = '0';
+                setTimeout(function() {
+                    if (alert.parentNode) alert.remove();
+                }, 300);
+            }, 5000);
+        });
+    });
+</script>
+{% endblock %}

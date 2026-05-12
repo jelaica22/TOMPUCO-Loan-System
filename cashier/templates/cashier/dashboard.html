@@ -1,0 +1,966 @@
+﻿{% extends 'cashier/base_cashier.html' %}
+{% load static %}
+
+{% block title %}Cashier Dashboard - TOMPuCO Analytics{% endblock %}
+{% block page_title %}Analytics Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== Modern Dashboard Styles ===== */
+    :root {
+        --primary-dark: #0a5a5a;
+        --primary: #0d6e6e;
+        --primary-light: #1a8a8a;
+        --primary-gradient: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+        --gray-50: #f8fafc;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-600: #6b7280;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+    }
+
+    [data-theme="dark"] {
+        --primary-dark: #0a3d3d;
+        --primary: #0a5a5a;
+        --primary-light: #1a6e6e;
+        --gray-50: #1a2332;
+        --gray-100: #1e2a3a;
+        --gray-200: #2a3548;
+        --gray-600: #9aaebf;
+        --gray-700: #b0c4d4;
+        --gray-800: #c8dae8;
+        --gray-900: #e8edf2;
+    }
+
+    /* Welcome Section */
+    .welcome-section {
+        background: var(--primary-gradient);
+        border-radius: 20px;
+        padding: 28px 32px;
+        margin-bottom: 30px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-section::before, .welcome-section::after {
+        content: '';
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .welcome-section::before {
+        top: -50%;
+        right: -10%;
+    }
+
+    .welcome-section::after {
+        bottom: -30%;
+        left: -5%;
+    }
+
+    @media (max-width: 768px) {
+        .welcome-section {
+            padding: 20px;
+            text-align: center;
+        }
+        .date-time {
+            text-align: center !important;
+            margin-top: 10px;
+        }
+    }
+
+    .welcome-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-subtitle {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    .date-time {
+        text-align: right;
+        font-size: 0.85rem;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    }
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 576px) {
+        .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 22px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-card.today::before { background: var(--primary-gradient); }
+    .stat-card.monthly::before { background: linear-gradient(90deg, var(--success), #34d399); }
+    .stat-card.weekly::before { background: linear-gradient(90deg, var(--info), #60a5fa); }
+    .stat-card.pending::before { background: linear-gradient(90deg, var(--warning), #fbbf24); }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+
+    .stat-icon.today { background: rgba(13, 110, 110, 0.1); color: var(--primary); }
+    .stat-icon.monthly { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .stat-icon.weekly { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+    .stat-icon.pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-top: 8px;
+    }
+
+    .stat-trend {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    /* Quick Actions */
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 992px) {
+        .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 576px) {
+        .quick-actions-grid { grid-template-columns: 1fr; }
+    }
+
+    .quick-action-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .quick-action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--primary);
+    }
+
+    .quick-action-card i {
+        font-size: 2rem;
+        color: var(--primary);
+        margin-bottom: 12px;
+    }
+
+    .quick-action-card h6 {
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: var(--text-primary);
+    }
+
+    .quick-action-card small {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    /* Analytics Charts */
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 992px) {
+        .analytics-grid { grid-template-columns: 1fr; }
+    }
+
+    .chart-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    .chart-header {
+        padding: 16px 20px;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .chart-header h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+
+    .chart-body {
+        padding: 20px;
+        height: 300px;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 24px;
+    }
+
+    @media (max-width: 992px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+    }
+
+    .dashboard-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .card-header-custom {
+        padding: 16px 20px;
+        background: var(--gray-50);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .card-header-custom h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+
+    .refresh-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .refresh-btn:hover {
+        background: var(--gray-100);
+        color: var(--primary);
+    }
+
+    /* Table Styles */
+    .table-responsive-custom {
+        overflow-x: auto;
+    }
+
+    .custom-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 700px;
+    }
+
+    .custom-table thead th {
+        padding: 14px 16px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-card);
+    }
+
+    .custom-table tbody td {
+        padding: 14px 16px;
+        font-size: 0.85rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .custom-table tbody tr:hover {
+        background: var(--gray-50);
+    }
+
+    /* Badge Styles */
+    .badge-cash { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-pesada { background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-quedan { background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+
+    [data-theme="dark"] .badge-cash { background: #064e3b; color: #a7f3d0; }
+    [data-theme="dark"] .badge-pesada { background: #1e3a8a; color: #bfdbfe; }
+    [data-theme="dark"] .badge-quedan { background: #451a03; color: #fde68a; }
+
+    .receipt-link {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .receipt-link:hover {
+        text-decoration: underline;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 0;
+    }
+
+    /* Activity Item */
+    .activity-item {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .activity-item:hover {
+        transform: translateX(5px);
+    }
+
+    .activity-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(13, 110, 110, 0.1);
+        color: var(--primary);
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    @media (max-width: 992px) {
+        .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 576px) {
+        .kpi-grid { grid-template-columns: 1fr; }
+    }
+
+    .kpi-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 5px;
+    }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    /* Loading State */
+    .loading-state {
+        text-align: center;
+        padding: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="padding-top: 10px;">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="welcome-title">
+                    👋 Welcome back, {{ request.user.get_full_name|default:request.user.username }}!
+                </div>
+                <div class="welcome-subtitle" id="realTimeMessage">
+                    Here's your daily collection and payment performance overview.
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="date-time">
+                    <i class="bi bi-calendar3"></i> {% now "l, F j, Y" %}<br>
+                    <i class="bi bi-clock"></i> <span id="liveClock">{% now "g:i A" %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card today" onclick="location.href='{% url 'cashier:today_collection' %}'">
+            <div class="stat-header">
+                <div class="stat-icon today"><i class="bi bi-cash-stack"></i></div>
+                <div class="stat-value" id="todayCollection">₱{{ today_collection|floatformat:2|default:"0" }}</div>
+            </div>
+            <div class="stat-label">Today's Collection</div>
+            <div class="stat-trend"><i class="bi bi-calendar-day"></i> {{ today_count|default:0 }} transactions</div>
+        </div>
+
+        <div class="stat-card monthly" onclick="location.href='{% url 'cashier:end_of_day' %}'">
+            <div class="stat-header">
+                <div class="stat-icon monthly"><i class="bi bi-calendar-month"></i></div>
+                <div class="stat-value" id="monthlyCollection">₱{{ monthly_collection|floatformat:2|default:"0" }}</div>
+            </div>
+            <div class="stat-label">Monthly Collection</div>
+            <div class="stat-trend"><i class="bi bi-graph-up"></i> This month</div>
+        </div>
+
+        <div class="stat-card weekly">
+            <div class="stat-header">
+                <div class="stat-icon weekly"><i class="bi bi-calendar-week"></i></div>
+                <div class="stat-value" id="weeklyAvg">₱{{ weekly_avg|floatformat:2|default:"0" }}</div>
+            </div>
+            <div class="stat-label">Daily Avg (7 Days)</div>
+            <div class="stat-trend"><i class="bi bi-arrow-up"></i> Rolling average</div>
+        </div>
+
+        <div class="stat-card pending">
+            <div class="stat-header">
+                <div class="stat-icon pending"><i class="bi bi-clock-history"></i></div>
+                <div class="stat-value" id="pendingCount">{{ pending_count|default:0 }}</div>
+            </div>
+            <div class="stat-label">Pending Posts</div>
+            <div class="stat-trend"><i class="bi bi-stopwatch"></i> Awaiting processing</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-grid">
+        <div class="quick-action-card" onclick="location.href='{% url 'cashier:post_payment' %}'">
+            <i class="bi bi-cash-stack"></i>
+            <h6>Post Payment</h6>
+            <small>Record new payment</small>
+        </div>
+        <div class="quick-action-card" onclick="location.href='{% url 'cashier:today_collection' %}'">
+            <i class="bi bi-calendar-day"></i>
+            <h6>Today's Collection</h6>
+            <small>View daily report</small>
+        </div>
+        <div class="quick-action-card" onclick="location.href='{% url 'cashier:end_of_day' %}'">
+            <i class="bi bi-clock-history"></i>
+            <h6>End of Day</h6>
+            <small>Generate report</small>
+        </div>
+        <div class="quick-action-card" onclick="location.href='{% url 'cashier:profile' %}'">
+            <i class="bi bi-person-circle"></i>
+            <h6>My Profile</h6>
+            <small>Update settings</small>
+        </div>
+    </div>
+
+    <!-- Analytics Charts -->
+    <div class="analytics-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h6><i class="bi bi-graph-up"></i> Collection Trend (Last 7 Days)</h6>
+            </div>
+            <div class="chart-body">
+                <canvas id="collectionTrendChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header">
+                <h6><i class="bi bi-pie-chart"></i> Payment Methods Distribution</h6>
+            </div>
+            <div class="chart-body">
+                <canvas id="paymentMethodChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="analytics-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h6><i class="bi bi-bar-chart-steps"></i> Hourly Collection Distribution</h6>
+            </div>
+            <div class="chart-body">
+                <canvas id="hourlyChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-header">
+                <h6><i class="bi bi-activity"></i> Payment Performance</h6>
+            </div>
+            <div class="chart-body">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Section -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-value" id="totalPayments">{{ total_payments|default:0 }}</div>
+            <div class="kpi-label">Total Payments</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="cashCount">{{ cash_count|default:0 }}</div>
+            <div class="kpi-label">Cash Payments</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="pesadaCount">{{ pesada_count|default:0 }}</div>
+            <div class="kpi-label">Pesada Payments</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" id="quedanCount">{{ quedan_count|default:0 }}</div>
+            <div class="kpi-label">Quedan Payments</div>
+        </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+        <!-- Left Column - Today's Transactions -->
+        <div class="dashboard-card">
+            <div class="card-header-custom">
+                <h6><i class="bi bi-calendar-today"></i> Today's Transactions</h6>
+                <a href="{% url 'cashier:today_collection' %}" class="text-decoration-none small">View All <i class="bi bi-chevron-right"></i></a>
+            </div>
+            <div class="table-responsive-custom">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Receipt #</th>
+                            <th>Member</th>
+                            <th>Loan #</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="todayPaymentsTable">
+                        {% for payment in today_payments %}
+                        <tr>
+                            <td>{{ payment.payment_date|time:"H:i" }}</div>
+                            <td><code class="fw-bold">{{ payment.payment_number }}</code></div>
+                            <td>
+                                <div class="fw-semibold">{{ payment.member.last_name }}, {{ payment.member.first_name }}</div>
+                                <small class="text-muted">{{ payment.member.membership_number|default:"" }}</small>
+                            </div>
+                            <td><code>{{ payment.loan.loan_number }}</code></div>
+                            <td class="fw-bold text-success">₱{{ payment.amount|floatformat:2 }}</div>
+                            <td>
+                                {% if payment.payment_method == 'cash' %}
+                                    <span class="badge-cash"><i class="bi bi-cash"></i> Cash</span>
+                                {% elif payment.payment_method == 'pesada' %}
+                                    <span class="badge-pesada"><i class="bi bi-truck"></i> Pesada</span>
+                                {% else %}
+                                    <span class="badge-quedan"><i class="bi bi-file-text"></i> Quedan</span>
+                                {% endif %}
+                            </div>
+                            <td>
+                                <a href="{% url 'main:download_receipt' payment.id %}" target="_blank" class="receipt-link">
+                                    <i class="bi bi-download"></i> PDF
+                                </a>
+                            </div>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>No transactions today</p>
+                                </div>
+                            </div>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right Column - Payment Summary & Quick Info -->
+        <div>
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-cash-stack"></i> Payment Summary</h6>
+                    <button class="refresh-btn" onclick="refreshDashboard()" title="Refresh">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                </div>
+                <div class="p-3">
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span class="text-muted">Today's Collection</span>
+                        <span class="fw-bold text-success" id="summaryToday">₱{{ today_collection|floatformat:2|default:"0" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
+                        <span class="text-muted">Month-to-Date</span>
+                        <span class="fw-bold text-primary" id="summaryMonthly">₱{{ monthly_collection|floatformat:2|default:"0" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Pending Posts</span>
+                        <span class="fw-bold text-warning" id="summaryPending">{{ pending_count|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header-custom">
+                    <h6><i class="bi bi-activity"></i> Recent Activity</h6>
+                    <button class="refresh-btn" onclick="loadRecentActivity()" title="Refresh">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                </div>
+                <div class="p-3" id="activityList">
+                    <div class="loading-state">
+                        <div class="d-flex justify-content-center py-3">
+                            <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+                            <span class="ms-2 text-muted small">Loading activity...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let collectionChart = null;
+    let methodChart = null;
+    let hourlyChart = null;
+    let performanceChart = null;
+    let refreshInterval = null;
+
+    // Live Clock
+    function updateLiveClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const clockElement = document.getElementById('liveClock');
+        if (clockElement) clockElement.textContent = timeString;
+    }
+    setInterval(updateLiveClock, 1000);
+
+    // Random welcome messages
+    const welcomeMessages = [
+        "Here's your daily collection and payment performance overview.",
+        "Track all cashier transactions in real-time.",
+        "Process payments quickly and accurately.",
+        "Monitor today's collection progress.",
+        "Stay on top of your cashier duties!"
+    ];
+    setInterval(() => {
+        const msgElement = document.getElementById('realTimeMessage');
+        if (msgElement) {
+            const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
+            msgElement.textContent = welcomeMessages[randomIndex];
+        }
+    }, 10000);
+
+    // Load Charts
+    function loadCharts() {
+        const collectionCtx = document.getElementById('collectionTrendChart');
+        if (collectionCtx && window.collectionData) {
+            if (collectionChart) collectionChart.destroy();
+            collectionChart = new Chart(collectionCtx, {
+                type: 'line',
+                data: window.collectionData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => '₱' + v.toLocaleString() } } }
+                }
+            });
+        }
+
+        const methodCtx = document.getElementById('paymentMethodChart');
+        if (methodCtx && window.methodData) {
+            if (methodChart) methodChart.destroy();
+            methodChart = new Chart(methodCtx, {
+                type: 'doughnut',
+                data: window.methodData,
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '60%' }
+            });
+        }
+
+        const hourlyCtx = document.getElementById('hourlyChart');
+        if (hourlyCtx && window.hourlyData) {
+            if (hourlyChart) hourlyChart.destroy();
+            hourlyChart = new Chart(hourlyCtx, {
+                type: 'bar',
+                data: window.hourlyData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => '₱' + v.toLocaleString() } } }
+                }
+            });
+        }
+
+        const performanceCtx = document.getElementById('performanceChart');
+        if (performanceCtx && window.performanceData) {
+            if (performanceChart) performanceChart.destroy();
+            performanceChart = new Chart(performanceCtx, {
+                type: 'line',
+                data: window.performanceData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => '₱' + v.toLocaleString() } } }
+                }
+            });
+        }
+    }
+
+    // Load Recent Activity - FIXED WORKING VERSION
+    function loadRecentActivity() {
+        const activityList = document.getElementById('activityList');
+
+        fetch('/cashier/activity/api/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.activities && data.activities.length > 0) {
+                    activityList.innerHTML = data.activities.map(a => `
+                        <div class="activity-item" onclick="window.location.href='${a.link}'">
+                            <div class="activity-icon"><i class="bi ${a.type === 'payment' ? 'bi-cash-stack' : 'bi-bell'}"></i></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold small">${escapeHtml(a.title)}</div>
+                                <div class="text-muted small">${escapeHtml(a.message.substring(0, 60))}${a.message.length > 60 ? '...' : ''}</div>
+                                <div class="text-muted" style="font-size: 0.65rem;">${formatRelativeTime(a.created_at)}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    activityList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <p>No recent activity</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading activity:', error);
+                activityList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Unable to load activity. Click refresh to try again.</p>
+                    </div>
+                `;
+            });
+    }
+
+    function formatRelativeTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} min ago`;
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function refreshDashboard() {
+        const refreshBtn = document.querySelector('.refresh-btn i');
+        if (refreshBtn) {
+            refreshBtn.style.animation = 'spin 0.5s ease';
+            setTimeout(() => { refreshBtn.style.animation = ''; }, 500);
+        }
+
+        loadRecentActivity();
+
+        fetch('/cashier/dashboard-stats/')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('todayCollection').innerHTML = '₱' + (data.today_collection || 0).toLocaleString();
+                document.getElementById('monthlyCollection').innerHTML = '₱' + (data.monthly_collection || 0).toLocaleString();
+                document.getElementById('weeklyAvg').innerHTML = '₱' + (data.weekly_avg || 0).toLocaleString();
+                document.getElementById('pendingCount').innerHTML = data.pending_count || 0;
+                document.getElementById('totalPayments').innerHTML = data.total_payments || 0;
+                document.getElementById('cashCount').innerHTML = data.cash_count || 0;
+                document.getElementById('pesadaCount').innerHTML = data.pesada_count || 0;
+                document.getElementById('quedanCount').innerHTML = data.quedan_count || 0;
+                document.getElementById('summaryToday').innerHTML = '₱' + (data.today_collection || 0).toLocaleString();
+                document.getElementById('summaryMonthly').innerHTML = '₱' + (data.monthly_collection || 0).toLocaleString();
+                document.getElementById('summaryPending').innerHTML = data.pending_count || 0;
+            })
+            .catch(error => console.error('Error refreshing stats:', error));
+    }
+
+    // Initialize chart data from Django template
+    window.collectionData = {
+        labels: {{ trend_labels|safe|default:'["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]' }},
+        datasets: [{
+            label: 'Daily Collection (₱)',
+            data: {{ trend_data|safe|default:'[0,0,0,0,0,0,0]' }},
+            borderColor: '#0d6e6e',
+            backgroundColor: 'rgba(13, 110, 110, 0.05)',
+            fill: true,
+            tension: 0.4
+        }]
+    };
+
+    window.methodData = {
+        labels: {{ method_labels|safe|default:'["Cash","Pesada","Quedan"]' }},
+        datasets: [{
+            data: {{ method_data|safe|default:'[0,0,0]' }},
+            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b']
+        }]
+    };
+
+    window.hourlyData = {
+        labels: {{ hourly_labels|safe|default:'["9AM","10AM","11AM","12PM","1PM","2PM","3PM","4PM","5PM"]' }},
+        datasets: [{
+            label: 'Collection (₱)',
+            data: {{ hourly_data|safe|default:'[0,0,0,0,0,0,0,0,0]' }},
+            backgroundColor: '#0d6e6e'
+        }]
+    };
+
+    window.performanceData = {
+        labels: {{ performance_labels|safe|default:'["Week 1","Week 2","Week 3","Week 4"]' }},
+        datasets: [{
+            label: 'Collection (₱)',
+            data: {{ performance_data|safe|default:'[0,0,0,0]' }},
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16,185,129,0.05)',
+            fill: true,
+            tension: 0.4
+        }]
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCharts();
+        loadRecentActivity();
+
+        refreshInterval = setInterval(() => {
+            loadRecentActivity();
+        }, 30000);
+    });
+
+    window.addEventListener('beforeunload', function() {
+        if (refreshInterval) clearInterval(refreshInterval);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .login {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .login #container {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        max-width: 400px;
+        width: 100%;
+        margin: 0 auto;
+    }
+    
+    .login .form-row {
+        margin-bottom: 15px;
+    }
+    
+    .login label {
+        font-weight: 600;
+        color: #1e3c72;
+        margin-bottom: 5px;
+        display: block;
+    }
+    
+    .login input[type="text"],
+    .login input[type="password"] {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    
+    .login input[type="text"]:focus,
+    .login input[type="password"]:focus {
+        border-color: #1e3c72;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(30,60,114,0.2);
+    }
+    
+    .login .submit-row {
+        margin: 0;
+        padding: 0;
+    }
+    
+    .login .submit-row input {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        border: none;
+        padding: 12px;
+        width: 100%;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .login .submit-row input:hover {
+        transform: translateY(-2px);
+    }
+    
+    .login .branding {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .login .branding i {
+        font-size: 3rem;
+        color: #1e3c72;
+        margin-bottom: 10px;
+    }
+    
+    .login .branding h1 {
+        font-size: 1.5rem;
+        color: #1e3c72;
+        margin: 0;
+    }
+    
+    .login .branding span {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block usertools %}{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block nav-sidebar %}{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="branding">
+        <i class="bi bi-bank"></i>
+        <h1>ToMPuCo Cooperative</h1>
+        <span>Administration Portal</span>
+    </div>
+    
+    {% if form.errors and not form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% blocktranslate count counter=form.errors.items|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
+        </div>
+    {% endif %}
+    
+    {% if form.non_field_errors %}
+        {% for error in form.non_field_errors %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <form action="{{ app_path }}" method="post" id="login-form">
+        {% csrf_token %}
+        <div class="form-row">
+            {{ form.username.errors }}
+            <label for="{{ form.username.id_for_label }}">{% translate 'Username' %}</label>
+            {{ form.username }}
+        </div>
+        <div class="form-row">
+            {{ form.password.errors }}
+            <label for="{{ form.password.id_for_label }}">{% translate 'Password' %}</label>
+            {{ form.password }}
+            <input type="hidden" name="next" value="{{ next }}">
+        </div>
+        {% url 'admin_password_reset' as password_reset_url %}
+        {% if password_reset_url %}
+            <div class="password-reset-link">
+                <a href="{{ password_reset_url }}">{% translate 'Forgotten your password or username?' %}</a>
+            </div>
+        {% endif %}
+        <div class="submit-row">
+            <input type="submit" value="{% translate 'Log in' %}">
+        </div>
+    </form>
+    
+    <div class="text-center mt-3">
+        <small class="text-muted">ToMPuCo Cooperative | CDA Reg. No. 9520-0700431</small>
+    </div>
+</div>
+{% endblock %}

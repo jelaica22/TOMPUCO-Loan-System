@@ -1,0 +1,26 @@
+﻿{% extends 'admin_panel/base.html' %}
+
+{% block title %}Loan Application Details{% endblock %}
+{% block page_title %}Application: {{ app.application_id }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Application ID:</strong> {{ app.application_id }}</p>
+                <p><strong>Member:</strong> {{ app.member.first_name }} {{ app.member.last_name }}</p>
+                <p><strong>Requested Amount:</strong> ₱{{ app.requested_amount|floatformat:2 }}</p>
+                <p><strong>Status:</strong> <span class="badge bg-info">{{ app.status }}</span></p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Loan Product:</strong> {{ app.loan_product.name }}</p>
+                <p><strong>Purpose:</strong> {{ app.purpose|default:"-" }}</p>
+                <p><strong>Date Applied:</strong> {{ app.created_at|date:"Y-m-d H:i" }}</p>
+            </div>
+        </div>
+        <hr>
+        <a href="{% url 'admin_panel:loan_applications_list' %}" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+{% endblock %}

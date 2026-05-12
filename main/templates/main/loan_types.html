@@ -1,0 +1,731 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Loan Products - TOMPuCO{% endblock %}
+
+{% block page_title %}Loan Products{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== Loan Types Page Styles - Light Mode First ===== */
+
+    /* Page Header */
+    .loan-types-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    [data-theme="dark"] .page-header {
+        border-bottom-color: #2a3548;
+    }
+
+    .page-header h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 8px;
+    }
+
+    [data-theme="dark"] .page-header h4 {
+        color: #e8edf2;
+    }
+
+    .page-header h4 i {
+        color: #0d6e6e;
+    }
+
+    [data-theme="dark"] .page-header h4 i {
+        color: #4ade80;
+    }
+
+    .page-header p {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    [data-theme="dark"] .page-header p {
+        color: #9aaebf;
+    }
+
+    /* Info Notice */
+    .info-notice {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        border-radius: 12px;
+        padding: 14px 20px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    [data-theme="dark"] .info-notice {
+        background: #1e3a5f;
+        border-left-color: #60a5fa;
+    }
+
+    .info-notice i {
+        font-size: 1.2rem;
+        color: #3b82f6;
+        margin-top: 2px;
+    }
+
+    [data-theme="dark"] .info-notice i {
+        color: #60a5fa;
+    }
+
+    .info-notice .content {
+        flex: 1;
+        font-size: 0.85rem;
+        color: #1e40af;
+    }
+
+    [data-theme="dark"] .info-notice .content {
+        color: #bfdbfe;
+    }
+
+    .info-notice .content strong {
+        font-weight: 600;
+    }
+
+    /* Loan Grid */
+    .loan-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+
+    @media (max-width: 1200px) {
+        .loan-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .loan-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Loan Card */
+    .loan-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    [data-theme="dark"] .loan-card {
+        background: #1a2332;
+        border-color: #2a3548;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .loan-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme="dark"] .loan-card:hover {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Card Header Gradients - Teal Theme */
+    .loan-card-header {
+        padding: 24px 20px;
+        color: white;
+        position: relative;
+    }
+
+    .loan-card-header.ncl { background: linear-gradient(135deg, #0d6e6e, #0a5a5a); }
+    .loan-card-header.apcp { background: linear-gradient(135deg, #0f766e, #0d6e6e); }
+    .loan-card-header.salary { background: linear-gradient(135deg, #0d6e6e, #1a6e6e); }
+    .loan-card-header.collateral { background: linear-gradient(135deg, #0a5a5a, #0d6e6e); }
+    .loan-card-header.providential { background: linear-gradient(135deg, #1a6e6e, #0d6e6e); }
+    .loan-card-header.b2b { background: linear-gradient(135deg, #0a5a5a, #1a6e6e); }
+    .loan-card-header.trade { background: linear-gradient(135deg, #0d6e6e, #0a5a5a); }
+
+    .loan-icon {
+        font-size: 2rem;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .loan-name {
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .loan-subtitle {
+        font-size: 0.7rem;
+        opacity: 0.85;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .amount-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(4px);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    /* Card Body */
+    .loan-card-body {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Rate Section */
+    .rate-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    [data-theme="dark"] .rate-section {
+        border-bottom-color: #2a3548;
+    }
+
+    .rate-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #0d6e6e;
+    }
+
+    [data-theme="dark"] .rate-value {
+        color: #4ade80;
+    }
+
+    .rate-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    [data-theme="dark"] .rate-label {
+        color: #9aaebf;
+    }
+
+    /* Details */
+    .loan-details {
+        margin-bottom: 16px;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    [data-theme="dark"] .detail-row {
+        border-bottom-color: #2a3548;
+    }
+
+    .detail-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    [data-theme="dark"] .detail-label {
+        color: #9aaebf;
+    }
+
+    .detail-label i {
+        font-size: 0.85rem;
+        width: 20px;
+        color: #0d6e6e;
+    }
+
+    [data-theme="dark"] .detail-label i {
+        color: #4ade80;
+    }
+
+    .detail-value {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    [data-theme="dark"] .detail-value {
+        color: #e8edf2;
+    }
+
+    .detail-value.required {
+        color: #dc2626;
+    }
+
+    [data-theme="dark"] .detail-value.required {
+        color: #f87171;
+    }
+
+    .detail-value.optional {
+        color: #10b981;
+    }
+
+    [data-theme="dark"] .detail-value.optional {
+        color: #34d399;
+    }
+
+    /* Requirements Section */
+    .requirements-section {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 14px;
+        margin: 12px 0 16px;
+    }
+
+    [data-theme="dark"] .requirements-section {
+        background: #1e2a3a;
+    }
+
+    .requirements-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #6b7280;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+    }
+
+    [data-theme="dark"] .requirements-title {
+        color: #9aaebf;
+    }
+
+    .requirements-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .requirements-list li {
+        font-size: 0.75rem;
+        color: #4b5563;
+        padding: 5px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    [data-theme="dark"] .requirements-list li {
+        color: #c8dae8;
+    }
+
+    .requirements-list li i {
+        font-size: 0.7rem;
+        color: #10b981;
+    }
+
+    [data-theme="dark"] .requirements-list li i {
+        color: #34d399;
+    }
+
+    /* Apply Button */
+    .btn-apply {
+        width: 100%;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        color: white;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: auto;
+    }
+
+    .btn-apply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    .btn-apply.disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .btn-apply.disabled:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    [data-theme="dark"] .btn-apply.disabled {
+        background: #6b7280;
+    }
+
+    .employee-badge {
+        display: inline-block;
+        background: #10b981;
+        color: white;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        margin-left: 8px;
+        position: absolute;
+        top: 20px;
+        left: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="loan-types-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h4><i class="bi bi-grid-3x3-gap-fill me-2"></i>Choose Your Loan Product</h4>
+        <p>Select the loan type that best fits your needs. Click "Apply Now" to start your application.</p>
+    </div>
+
+    <!-- Info Notice -->
+    <div class="info-notice">
+        <i class="bi bi-info-circle-fill"></i>
+        <div class="content">
+            <strong>Note:</strong> Salary Loan is only available for TOMPuCO employees.
+            {% if not member.is_employee %}
+                You are not eligible for Salary Loan.
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Loan Products Grid -->
+    <div class="loan-grid">
+
+        <!-- NCL -->
+        <div class="loan-card">
+            <div class="loan-card-header ncl">
+                <span class="loan-icon">🌾</span>
+                <div class="loan-name">NCL</div>
+                <div class="loan-subtitle">National Commodity Loan</div>
+                <span class="amount-badge">₱5K - ₱500K</span>
+            </div>
+            <div class="loan-card-body">
+                <div class="rate-section">
+                    <span class="rate-value">20%</span>
+                    <span class="rate-label">per annum</span>
+                </div>
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-calendar"></i> Term</span>
+                        <span class="detail-value">360 days</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-building"></i> Collateral</span>
+                        <span class="detail-value">Sugarcane Production</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-people"></i> Co-maker</span>
+                        <span class="detail-value required">Required</span>
+                    </div>
+                </div>
+                <div class="requirements-section">
+                    <div class="requirements-title"><i class="bi bi-check-circle me-1"></i> Requirements</div>
+                    <ul class="requirements-list">
+                        <li><i class="bi bi-check-circle-fill"></i> Sugarcane production proof</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Valid ID</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Active member status</li>
+                    </ul>
+                </div>
+                <button class="btn-apply" onclick="applyForLoan('NCL')">
+                    <i class="bi bi-file-text"></i> Apply Now
+                </button>
+            </div>
+        </div>
+
+        <!-- APCP -->
+        <div class="loan-card">
+            <div class="loan-card-header apcp">
+                <span class="loan-icon">🌱</span>
+                <div class="loan-name">APCP</div>
+                <div class="loan-subtitle">Agricultural Production Credit</div>
+                <span class="amount-badge">₱10K - ₱1M</span>
+            </div>
+            <div class="loan-card-body">
+                <div class="rate-section">
+                    <span class="rate-value">15%</span>
+                    <span class="rate-label">per annum</span>
+                </div>
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-calendar"></i> Term</span>
+                        <span class="detail-value">360 days</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-building"></i> Collateral</span>
+                        <span class="detail-value">Sugar/CLOA Title</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-people"></i> Co-maker</span>
+                        <span class="detail-value required">Required</span>
+                    </div>
+                </div>
+                <div class="requirements-section">
+                    <div class="requirements-title"><i class="bi bi-check-circle me-1"></i> Requirements</div>
+                    <ul class="requirements-list">
+                        <li><i class="bi bi-check-circle-fill"></i> Sugar/CLOA Title</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Farm location proof</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Valid ID</li>
+                    </ul>
+                </div>
+                <button class="btn-apply" onclick="applyForLoan('APCP')">
+                    <i class="bi bi-file-text"></i> Apply Now
+                </button>
+            </div>
+        </div>
+
+        <!-- SALARY -->
+        <div class="loan-card">
+            <div class="loan-card-header salary">
+                <span class="loan-icon">💼</span>
+                <div class="loan-name">SALARY</div>
+                <div class="loan-subtitle">Salary Loan</div>
+                <span class="amount-badge">₱5K - ₱500K</span>
+                {% if member.is_employee %}
+                    <span class="employee-badge">✓ Eligible</span>
+                {% endif %}
+            </div>
+            <div class="loan-card-body">
+                <div class="rate-section">
+                    <span class="rate-value">8%</span>
+                    <span class="rate-label">per annum</span>
+                </div>
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-calendar"></i> Term</span>
+                        <span class="detail-value">360 days</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-building"></i> Collateral</span>
+                        <span class="detail-value">Salary</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-people"></i> Co-maker</span>
+                        <span class="detail-value optional">Optional</span>
+                    </div>
+                </div>
+                <div class="requirements-section">
+                    <div class="requirements-title"><i class="bi bi-check-circle me-1"></i> Requirements</div>
+                    <ul class="requirements-list">
+                        <li><i class="bi bi-check-circle-fill"></i> TOMPuCO Employee</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Valid ID</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Latest payslip</li>
+                    </ul>
+                </div>
+                {% if member.is_employee %}
+                    <button class="btn-apply" onclick="applyForLoan('SALARY')">
+                        <i class="bi bi-file-text"></i> Apply Now
+                    </button>
+                {% else %}
+                    <button class="btn-apply disabled" disabled>
+                        <i class="bi bi-lock"></i> Not Available
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- COLLATERAL -->
+        <div class="loan-card">
+            <div class="loan-card-header collateral">
+                <span class="loan-icon">🏠</span>
+                <div class="loan-name">COLLATERAL</div>
+                <div class="loan-subtitle">Secured Loan</div>
+                <span class="amount-badge">₱20K - ₱2M</span>
+            </div>
+            <div class="loan-card-body">
+                <div class="rate-section">
+                    <span class="rate-value">20%</span>
+                    <span class="rate-label">per annum</span>
+                </div>
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-calendar"></i> Term</span>
+                        <span class="detail-value">360 days</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-building"></i> Collateral</span>
+                        <span class="detail-value">Land/Vehicle/Equipment</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-people"></i> Co-maker</span>
+                        <span class="detail-value required">Required</span>
+                    </div>
+                </div>
+                <div class="requirements-section">
+                    <div class="requirements-title"><i class="bi bi-check-circle me-1"></i> Requirements</div>
+                    <ul class="requirements-list">
+                        <li><i class="bi bi-check-circle-fill"></i> Land Title / Vehicle OR/CR</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Collateral valuation</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Valid ID</li>
+                    </ul>
+                </div>
+                <button class="btn-apply" onclick="applyForLoan('COLLATERAL')">
+                    <i class="bi bi-file-text"></i> Apply Now
+                </button>
+            </div>
+        </div>
+
+        <!-- PROVIDENTIAL -->
+        <div class="loan-card">
+            <div class="loan-card-header providential">
+                <span class="loan-icon">🛡️</span>
+                <div class="loan-name">PROVIDENTIAL</div>
+                <div class="loan-subtitle">Providential Loan</div>
+                <span class="amount-badge">₱10K - ₱1M</span>
+            </div>
+            <div class="loan-card-body">
+                <div class="rate-section">
+                    <span class="rate-value">16%</span>
+                    <span class="rate-label">per annum</span>
+                </div>
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-calendar"></i> Term</span>
+                        <span class="detail-value">360 days</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-building"></i> Collateral</span>
+                        <span class="detail-value">CBU/Any Collateral</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-people"></i> Co-maker</span>
+                        <span class="detail-value required">Required</span>
+                    </div>
+                </div>
+                <div class="requirements-section">
+                    <div class="requirements-title"><i class="bi bi-check-circle me-1"></i> Requirements</div>
+                    <ul class="requirements-list">
+                        <li><i class="bi bi-check-circle-fill"></i> Valid collateral</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Active member with savings</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Valid ID</li>
+                    </ul>
+                </div>
+                <button class="btn-apply" onclick="applyForLoan('PROVIDENTIAL')">
+                    <i class="bi bi-file-text"></i> Apply Now
+                </button>
+            </div>
+        </div>
+
+        <!-- B2B -->
+        <div class="loan-card">
+            <div class="loan-card-header b2b">
+                <span class="loan-icon">🔄</span>
+                <div class="loan-name">B2B</div>
+                <div class="loan-subtitle">Back to Back Loan</div>
+                <span class="amount-badge">₱50K - ₱5M</span>
+            </div>
+            <div class="loan-card-body">
+                <div class="rate-section">
+                    <span class="rate-value">20%</span>
+                    <span class="rate-label">per annum</span>
+                </div>
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-calendar"></i> Term</span>
+                        <span class="detail-value">360 days</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-building"></i> Collateral</span>
+                        <span class="detail-value">CBU Deposit</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-people"></i> Co-maker</span>
+                        <span class="detail-value required">Required</span>
+                    </div>
+                </div>
+                <div class="requirements-section">
+                    <div class="requirements-title"><i class="bi bi-check-circle me-1"></i> Requirements</div>
+                    <ul class="requirements-list">
+                        <li><i class="bi bi-check-circle-fill"></i> CBU Savings/Time Deposit</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Business registration</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Valid ID</li>
+                    </ul>
+                </div>
+                <button class="btn-apply" onclick="applyForLoan('B2B')">
+                    <i class="bi bi-file-text"></i> Apply Now
+                </button>
+            </div>
+        </div>
+
+        <!-- TRADE -->
+        <div class="loan-card">
+            <div class="loan-card-header trade">
+                <span class="loan-icon">📦</span>
+                <div class="loan-name">TRADE</div>
+                <div class="loan-subtitle">Trade Loan</div>
+                <span class="amount-badge">₱10K - ₱500K</span>
+            </div>
+            <div class="loan-card-body">
+                <div class="rate-section">
+                    <span class="rate-value">18%</span>
+                    <span class="rate-label">per annum</span>
+                </div>
+                <div class="loan-details">
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-calendar"></i> Term</span>
+                        <span class="detail-value">30 days</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-building"></i> Collateral</span>
+                        <span class="detail-value">Receivables</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><i class="bi bi-people"></i> Co-maker</span>
+                        <span class="detail-value required">Required</span>
+                    </div>
+                </div>
+                <div class="requirements-section">
+                    <div class="requirements-title"><i class="bi bi-check-circle me-1"></i> Requirements</div>
+                    <ul class="requirements-list">
+                        <li><i class="bi bi-check-circle-fill"></i> Business/Trade permit</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Receivables documentation</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Valid ID</li>
+                    </ul>
+                </div>
+                <button class="btn-apply" onclick="applyForLoan('TRADE')">
+                    <i class="bi bi-file-text"></i> Apply Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function applyForLoan(loanType) {
+        localStorage.setItem('selected_loan_type', loanType);
+        window.location.href = "{% url 'main:apply_loan' %}";
+    }
+</script>
+{% endblock %}

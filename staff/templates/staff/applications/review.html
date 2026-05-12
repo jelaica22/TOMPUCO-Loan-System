@@ -1,0 +1,805 @@
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+
+{% block title %}Review Application - Staff{% endblock %}
+{% block page_title %}Review Loan Application{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Review Container */
+    .review-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Main Card */
+    .review-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 20px 24px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .card-header-custom h5 {
+        color: white;
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-body-custom {
+        padding: 24px;
+    }
+
+    /* Status Banner */
+    .status-banner {
+        background: var(--bg-body);
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin-bottom: 24px;
+        border-left: 4px solid;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .status-banner.pending { border-left-color: #f59e0b; }
+    .status-banner.committee { border-left-color: #3b82f6; }
+    .status-banner.approved { border-left-color: #10b981; }
+    .status-banner.rejected { border-left-color: #ef4444; }
+    .status-banner.disbursed { border-left-color: #0d6e6e; }
+
+    .status-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 4px;
+    }
+
+    .status-value {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    /* Status Badge */
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .status-badge-large.pending { background: #fef3c7; color: #92400e; }
+    .status-badge-large.committee { background: #dbeafe; color: #1e40af; }
+    .status-badge-large.line { background: #ede9fe; color: #5b21b6; }
+    .status-badge-large.manager { background: #d1fae5; color: #065f46; }
+    .status-badge-large.ready { background: #dbeafe; color: #1e40af; }
+    .status-badge-large.disbursed { background: #d1fae5; color: #065f46; }
+    .status-badge-large.rejected { background: #fee2e2; color: #991b1b; }
+    .status-badge-large.revision { background: #ffedd5; color: #9a3412; }
+
+    [data-theme="dark"] .status-badge-large.pending { background: #451a03; color: #fde68a; }
+    [data-theme="dark"] .status-badge-large.committee { background: #1e3a8a; color: #bfdbfe; }
+    [data-theme="dark"] .status-badge-large.line { background: #4c1d95; color: #ddd6fe; }
+    [data-theme="dark"] .status-badge-large.manager { background: #064e3b; color: #a7f3d0; }
+    [data-theme="dark"] .status-badge-large.ready { background: #1e3a8a; color: #bfdbfe; }
+    [data-theme="dark"] .status-badge-large.disbursed { background: #064e3b; color: #a7f3d0; }
+    [data-theme="dark"] .status-badge-large.rejected { background: #7f1d1d; color: #fecaca; }
+    [data-theme="dark"] .status-badge-large.revision { background: #78350f; color: #fde68a; }
+
+    /* Section Styles */
+    .info-section {
+        margin-bottom: 28px;
+    }
+
+    .section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-title i {
+        color: #0d6e6e;
+        font-size: 1.1rem;
+    }
+
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-item {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .info-value.amount {
+        font-weight: 700;
+        font-family: monospace;
+        font-size: 1.1rem;
+    }
+
+    .info-value.amount-positive {
+        color: #10b981;
+    }
+
+    /* Applicant Status Cards */
+    .status-card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    @media (max-width: 768px) {
+        .status-card-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .status-check-card {
+        background: var(--bg-body);
+        border-radius: 16px;
+        padding: 16px;
+        border: 1px solid var(--border-color);
+    }
+
+    .status-check-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .status-check-item:last-child {
+        border-bottom: none;
+    }
+
+    .status-check-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .status-check-icon.warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .status-check-icon.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .status-check-icon.info { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .status-check-icon.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+    .status-check-text {
+        flex: 1;
+    }
+
+    .status-check-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+    }
+
+    .status-check-desc {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    /* Alert Messages */
+    .alert-custom {
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .alert-custom i {
+        font-size: 1.2rem;
+        margin-top: 2px;
+    }
+
+    .alert-custom-success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .alert-custom-info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+    }
+
+    .alert-custom-warning {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .alert-custom-secondary {
+        background: var(--bg-body);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+    }
+
+    [data-theme="dark"] .alert-custom-success {
+        background: #064e3b;
+        color: #a7f3d0;
+    }
+
+    [data-theme="dark"] .alert-custom-info {
+        background: #1e3a8a;
+        color: #bfdbfe;
+    }
+
+    [data-theme="dark"] .alert-custom-warning {
+        background: #451a03;
+        color: #fde68a;
+    }
+
+    /* ACTION BUTTONS - VISIBLE IN LIGHT MODE */
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+        flex-wrap: wrap;
+    }
+
+    .btn-forward {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-forward:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    .btn-revision {
+        background: #f59e0b;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-revision:hover {
+        background: #d97706;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-reject {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-reject:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-back {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-back:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Modal Styles */
+    .modal-content-custom {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+    }
+
+    .modal-header-custom {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-header-custom h5 {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .modal-footer-custom {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-container">
+    <!-- Main Review Card -->
+    <div class="review-card">
+        <div class="card-header-custom">
+            <h5>
+                <i class="bi bi-file-text-fill"></i>
+                Application #: {{ application.application_id }}
+            </h5>
+        </div>
+        <div class="card-body-custom">
+
+            <!-- Current Status Banner -->
+            <div class="status-banner {% if application.status == 'pending_staff_review' %}pending{% elif application.status == 'with_committee' %}committee{% elif application.status == 'manager_approved' %}approved{% elif application.status == 'rejected' %}rejected{% elif application.status == 'disbursed' %}disbursed{% endif %}">
+                <div>
+                    <div class="status-label">Current Status</div>
+                    <div class="status-value">
+                        {% if application.status == 'pending_staff_review' %}
+                            <span class="status-badge-large pending"><i class="bi bi-clock"></i> Pending Staff Review</span>
+                        {% elif application.status == 'needs_revision' %}
+                            <span class="status-badge-large revision"><i class="bi bi-pencil"></i> Needs Revision</span>
+                        {% elif application.status == 'with_committee' %}
+                            <span class="status-badge-large committee"><i class="bi bi-people"></i> With Committee</span>
+                        {% elif application.status == 'line_approved' %}
+                            <span class="status-badge-large line"><i class="bi bi-check-lg"></i> Line Approved</span>
+                        {% elif application.status == 'manager_approved' %}
+                            <span class="status-badge-large manager"><i class="bi bi-check-circle"></i> Manager Approved</span>
+                        {% elif application.status == 'ready_for_disbursement' %}
+                            <span class="status-badge-large ready"><i class="bi bi-cash"></i> Ready for Disbursement</span>
+                        {% elif application.status == 'disbursed' %}
+                            <span class="status-badge-large disbursed"><i class="bi bi-bank"></i> Disbursed</span>
+                        {% elif application.status == 'rejected' %}
+                            <span class="status-badge-large rejected"><i class="bi bi-x-circle"></i> Rejected</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <small class="text-muted">Application Date: {{ application.date_applied|date:"F d, Y" }}</small>
+                </div>
+            </div>
+
+            <!-- Applicant Status Grid -->
+            <div class="status-card-grid">
+                <div class="status-check-card">
+                    <div class="status-check-item">
+                        <div class="status-check-icon {% if applicant_status.is_new %}success{% else %}warning{% endif %}">
+                            <i class="bi bi-{% if applicant_status.is_new %}person-plus{% else %}person{% endif %}"></i>
+                        </div>
+                        <div class="status-check-text">
+                            <div class="status-check-title">New Applicant</div>
+                            <div class="status-check-desc">First time borrower</div>
+                        </div>
+                        {% if applicant_status.is_new %}
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle-fill text-muted"></i>
+                        {% endif %}
+                    </div>
+                    <div class="status-check-item">
+                        <div class="status-check-icon {% if applicant_status.has_active %}info{% else %}success{% endif %}">
+                            <i class="bi bi-{% if applicant_status.has_active %}bank{% else %}check-lg{% endif %}"></i>
+                        </div>
+                        <div class="status-check-text">
+                            <div class="status-check-title">Existing Borrower</div>
+                            <div class="status-check-desc">Has active loan records</div>
+                        </div>
+                        {% if applicant_status.has_active %}
+                            <i class="bi bi-check-circle-fill text-info"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle-fill text-muted"></i>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="status-check-card">
+                    <div class="status-check-item">
+                        <div class="status-check-icon {% if applicant_status.has_overdue %}danger{% else %}success{% endif %}">
+                            <i class="bi bi-{% if applicant_status.has_overdue %}exclamation-triangle{% else %}check-lg{% endif %}"></i>
+                        </div>
+                        <div class="status-check-text">
+                            <div class="status-check-title">Overdue Balance</div>
+                            <div class="status-check-desc">Has unpaid overdue payments</div>
+                        </div>
+                        {% if applicant_status.has_overdue %}
+                            <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                        {% else %}
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                        {% endif %}
+                    </div>
+                    <div class="status-check-item">
+                        <div class="status-check-icon {% if applicant_status.has_restructured %}warning{% else %}success{% endif %}">
+                            <i class="bi bi-{% if applicant_status.has_restructured %}arrow-repeat{% else %}check-lg{% endif %}"></i>
+                        </div>
+                        <div class="status-check-text">
+                            <div class="status-check-title">Previously Restructured</div>
+                            <div class="status-check-desc">Has restructured loans in the past</div>
+                        </div>
+                        {% if applicant_status.has_restructured %}
+                            <i class="bi bi-check-circle-fill text-warning"></i>
+                        {% else %}
+                            <i class="bi bi-x-circle-fill text-muted"></i>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member Information -->
+            <div class="info-section">
+                <div class="section-title">
+                    <i class="bi bi-person-badge"></i>
+                    Member Information
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Full Name</div>
+                        <div class="info-value">{{ application.member.last_name }}, {{ application.member.first_name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Membership Number</div>
+                        <div class="info-value"><code>{{ application.member.membership_number }}</code></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Contact Number</div>
+                        <div class="info-value">{{ application.member.contact_number|default:"—" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Email Address</div>
+                        <div class="info-value">{{ application.member.email|default:"—" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Residence Address</div>
+                        <div class="info-value">{{ application.member.residence_address|default:"—" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Employment Status</div>
+                        <div class="info-value">{% if application.member.is_employee %}Employee{% else %}Regular Member{% endif %}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loan Details -->
+            <div class="info-section">
+                <div class="section-title">
+                    <i class="bi bi-file-text"></i>
+                    Loan Details
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Loan Type</div>
+                        <div class="info-value">{{ application.loan_product.name|default:"—" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Requested Amount</div>
+                        <div class="info-value amount amount-positive">₱{{ application.requested_amount|floatformat:2 }}</div>
+                    </div>
+                    {% if application.approved_line %}
+                    <div class="info-item">
+                        <div class="info-label">Approved Line</div>
+                        <div class="info-value amount amount-positive">₱{{ application.approved_line|floatformat:2 }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="info-item">
+                        <div class="info-label">Loan Purpose</div>
+                        <div class="info-value">{{ application.purpose|default:"—" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Collateral Offered</div>
+                        <div class="info-value">{{ application.collateral_offered|default:"—" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Mode of Payment</div>
+                        <div class="info-value">{{ application.mode_of_payment|title|default:"Monthly" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff Remarks (if any) -->
+            {% if application.staff_remarks %}
+            <div class="info-section">
+                <div class="section-title">
+                    <i class="bi bi-chat-text"></i>
+                    Staff Remarks
+                </div>
+                <div class="alert-custom alert-custom-info">
+                    <i class="bi bi-chat-dots"></i>
+                    <div>{{ application.staff_remarks }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ACTION BUTTONS - Based on Status -->
+            <div class="action-buttons">
+
+                <!-- CASE 1: Pending Staff Review - Show Review Actions -->
+                {% if application.status == 'pending_staff_review' %}
+                    <button type="button" class="btn-forward" data-bs-toggle="modal" data-bs-target="#forwardModal">
+                        <i class="bi bi-send"></i> Forward to Committee
+                    </button>
+                    <button type="button" class="btn-revision" data-bs-toggle="modal" data-bs-target="#revisionModal">
+                        <i class="bi bi-pencil"></i> Request Revision
+                    </button>
+                    <button type="button" class="btn-reject" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                        <i class="bi bi-x-circle"></i> Reject Application
+                    </button>
+                    <a href="{% url 'staff:staff_applications' %}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+
+                <!-- CASE 2: Manager Approved - Show "Add Charges" button -->
+                {% elif application.status == 'manager_approved' %}
+                    <div class="alert-custom alert-custom-success w-100">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <div>
+                            <strong>Application is approved by manager.</strong><br>
+                            Please go back to the <strong>Loan Applications List</strong> and click
+                            <strong>"Add Charges"</strong> to continue with loan processing.
+                        </div>
+                    </div>
+                    <a href="{% url 'staff:staff_applications' %}" class="btn-primary-custom">
+                        <i class="bi bi-arrow-left"></i> Back to Applications List
+                    </a>
+
+                <!-- CASE 3: Ready for Disbursement - Show "Create Loan" button -->
+                {% elif application.status == 'ready_for_disbursement' %}
+                    <div class="alert-custom alert-custom-info w-100">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <div>
+                            <strong>Charges have been added.</strong><br>
+                            Please go back to the <strong>Loan Applications List</strong> and click
+                            <strong>"Create Loan"</strong> to disburse the loan.
+                        </div>
+                    </div>
+                    <a href="{% url 'staff:staff_applications' %}" class="btn-primary-custom">
+                        <i class="bi bi-arrow-left"></i> Back to Applications List
+                    </a>
+
+                <!-- CASE 4: Disbursed - Loan already created -->
+                {% elif application.status == 'disbursed' %}
+                    <div class="alert-custom alert-custom-success w-100">
+                        <i class="bi bi-bank"></i>
+                        <div>
+                            <strong>Loan has been disbursed!</strong><br>
+                            The member has received the net proceeds of ₱{{ application.net_proceeds|floatformat:2|default:"0.00" }}.
+                        </div>
+                    </div>
+                    <a href="{% url 'staff:staff_loans' %}" class="btn-primary-custom">
+                        <i class="bi bi-bank"></i> View Loan Register
+                    </a>
+                    <a href="{% url 'staff:staff_applications' %}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+
+                <!-- CASE 5: Needs Revision -->
+                {% elif application.status == 'needs_revision' %}
+                    <div class="alert-custom alert-custom-warning w-100">
+                        <i class="bi bi-pencil-fill"></i>
+                        <div>
+                            <strong>Revision requested.</strong><br>
+                            The applicant has been asked to provide additional information.
+                        </div>
+                    </div>
+                    <a href="{% url 'staff:staff_applications' %}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i> Back to Applications List
+                    </a>
+
+                <!-- CASE 6: Rejected -->
+                {% elif application.status == 'rejected' %}
+                    <div class="alert-custom alert-custom-warning w-100">
+                        <i class="bi bi-x-circle-fill"></i>
+                        <div>
+                            <strong>Application has been rejected.</strong><br>
+                            {% if application.staff_remarks %}Reason: {{ application.staff_remarks }}{% endif %}
+                        </div>
+                    </div>
+                    <a href="{% url 'staff:staff_applications' %}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i> Back to Applications List
+                    </a>
+
+                <!-- CASE 7: Other Statuses - View Only -->
+                {% else %}
+                    <div class="alert-custom alert-custom-secondary w-100">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <div>
+                            This application is currently <strong>{{ application.get_status_display }}</strong>.
+                            No action required at this time.
+                        </div>
+                    </div>
+                    <a href="{% url 'staff:staff_applications' %}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i> Back to Applications List
+                    </a>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forward to Committee Modal -->
+<div class="modal fade" id="forwardModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%); color: white; border-radius: 20px 20px 0 0;">
+                <h5 class="modal-title"><i class="bi bi-send"></i> Forward to Committee</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body" style="padding: 24px;">
+                    <p>Are you sure you want to forward this application to the committee for evaluation?</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Remarks (Optional)</label>
+                        <textarea name="remarks" class="form-control" rows="3" style="border-radius: 12px; border: 1.5px solid var(--border-color);"></textarea>
+                    </div>
+                    <input type="hidden" name="action" value="forward_to_committee">
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn-reset" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-forward">Yes, Forward</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Revision Modal -->
+<div class="modal fade" id="revisionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px;">
+            <div class="modal-header" style="background: #f59e0b; color: white; border-radius: 20px 20px 0 0;">
+                <h5 class="modal-title"><i class="bi bi-pencil"></i> Request Revision</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body" style="padding: 24px;">
+                    <p>Please provide the reason for requesting revision:</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Revision Reason <span class="text-danger">*</span></label>
+                        <textarea name="revision_reason" class="form-control" rows="4" required style="border-radius: 12px; border: 1.5px solid var(--border-color);"></textarea>
+                    </div>
+                    <input type="hidden" name="action" value="request_revision">
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn-reset" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-revision">Send Revision Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px;">
+            <div class="modal-header" style="background: #ef4444; color: white; border-radius: 20px 20px 0 0;">
+                <h5 class="modal-title"><i class="bi bi-x-circle"></i> Reject Application</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body" style="padding: 24px;">
+                    <p>Please provide the reason for rejection:</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Rejection Reason <span class="text-danger">*</span></label>
+                        <textarea name="reject_reason" class="form-control" rows="4" required style="border-radius: 12px; border: 1.5px solid var(--border-color);"></textarea>
+                    </div>
+                    <input type="hidden" name="action" value="reject">
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn-reset" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-reject">Reject Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

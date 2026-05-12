@@ -1,0 +1,566 @@
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+
+{% block title %}Setup Two-Factor Authentication{% endblock %}
+{% block page_title %}Security Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Main Container */
+    .setup-container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Setup Card */
+    .setup-card {
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .setup-header {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 28px 30px;
+        color: white;
+        text-align: center;
+    }
+
+    .setup-header h3 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.5rem;
+    }
+
+    .setup-header p {
+        margin: 8px 0 0;
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+
+    /* Step Container */
+    .step-container {
+        padding: 30px;
+    }
+
+    .step {
+        margin-bottom: 35px;
+        position: relative;
+    }
+
+    .step:last-child {
+        margin-bottom: 0;
+    }
+
+    .step-number {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 12px;
+    }
+
+    .step-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: inline-block;
+    }
+
+    .step-content {
+        margin-top: 20px;
+        margin-left: 48px;
+    }
+
+    /* QR Container */
+    .qr-container {
+        background: var(--bg-body);
+        padding: 25px;
+        border-radius: 20px;
+        text-align: center;
+        border: 2px dashed var(--border-color);
+    }
+
+    .qr-code {
+        display: inline-block;
+        padding: 15px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+    }
+
+    .qr-code img {
+        width: 200px;
+        height: 200px;
+    }
+
+    /* Secret Key Container */
+    .secret-key-container {
+        background: var(--bg-body);
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .secret-key-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .secret-key {
+        font-family: monospace;
+        font-size: 1rem;
+        letter-spacing: 2px;
+        background: var(--bg-card);
+        padding: 14px;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+        word-break: break-all;
+        color: var(--text-primary);
+    }
+
+    .secret-key code {
+        background: transparent;
+        color: var(--brand-primary);
+        font-weight: 700;
+    }
+
+    /* BUTTONS - VISIBLE IN LIGHT MODE */
+    .btn-copy {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 12px;
+    }
+
+    .btn-copy:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-verify {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-verify:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    .btn-back-link {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .btn-back-link:hover {
+        color: var(--brand-primary);
+        text-decoration: none;
+    }
+
+    /* OTP Input */
+    .otp-input {
+        text-align: center;
+        font-size: 2rem;
+        letter-spacing: 10px;
+        font-family: monospace;
+        font-weight: bold;
+        padding: 15px;
+        max-width: 280px;
+        margin: 0 auto;
+        background: var(--input-bg);
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        color: var(--text-primary);
+    }
+
+    .otp-input:focus {
+        border-color: #0d6e6e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    /* App Links */
+    .app-links {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+
+    .app-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: var(--bg-body);
+        border-radius: 30px;
+        text-decoration: none;
+        color: var(--text-primary);
+        font-size: 0.8rem;
+        transition: all 0.2s;
+        border: 1px solid var(--border-color);
+    }
+
+    .app-link:hover {
+        background: var(--brand-primary);
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    /* Backup Codes */
+    .backup-codes {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    [data-theme="dark"] .backup-codes {
+        background: linear-gradient(135deg, #451a03, #78350f);
+    }
+
+    .backup-title {
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #92400e;
+        margin-bottom: 12px;
+    }
+
+    [data-theme="dark"] .backup-title {
+        color: #fde68a;
+    }
+
+    .code-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .code-item {
+        font-family: monospace;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-align: center;
+        padding: 10px;
+        background: white;
+        border-radius: 10px;
+        border: 1px solid #fde68a;
+        letter-spacing: 1px;
+        color: #92400e;
+    }
+
+    [data-theme="dark"] .code-item {
+        background: #1f2937;
+        color: #fde68a;
+        border-color: #78350f;
+    }
+
+    /* Alert Messages */
+    .alert-custom {
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .alert-custom i {
+        font-size: 1.2rem;
+        margin-top: 2px;
+    }
+
+    .alert-info-custom {
+        background: #dbeafe;
+        border: 1px solid #bfdbfe;
+        color: #1e40af;
+    }
+
+    .alert-warning-custom {
+        background: #fef3c7;
+        border: 1px solid #fde68a;
+        color: #92400e;
+    }
+
+    [data-theme="dark"] .alert-info-custom {
+        background: #1e3a8a;
+        color: #bfdbfe;
+        border-color: #3b82f6;
+    }
+
+    [data-theme="dark"] .alert-warning-custom {
+        background: #451a03;
+        color: #fde68a;
+        border-color: #d97706;
+    }
+
+    /* Text utilities */
+    .text-muted-custom {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .setup-container {
+            padding: 10px;
+        }
+
+        .setup-header {
+            padding: 20px;
+        }
+
+        .step-container {
+            padding: 20px;
+        }
+
+        .step-content {
+            margin-left: 0;
+        }
+
+        .step-number {
+            margin-bottom: 10px;
+        }
+
+        .qr-code img {
+            width: 150px;
+            height: 150px;
+        }
+
+        .otp-input {
+            font-size: 1.5rem;
+            letter-spacing: 5px;
+            max-width: 220px;
+        }
+
+        .code-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .app-links {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .app-link {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="setup-container">
+    <div class="setup-card">
+        <div class="setup-header">
+            <h3><i class="bi bi-shield-lock-fill"></i> Two-Factor Authentication</h3>
+            <p>Enhance your account security with 2FA</p>
+        </div>
+
+        <div class="step-container">
+            <!-- Info Alert -->
+            <div class="alert-custom alert-info-custom">
+                <i class="bi bi-info-circle-fill"></i>
+                <div>
+                    <strong>Why enable 2FA?</strong><br>
+                    Two-factor authentication adds an extra layer of security to your account.
+                    Even if someone steals your password, they won't be able to access your account.
+                </div>
+            </div>
+
+            <!-- Step 1: Install App -->
+            <div class="step">
+                <div>
+                    <span class="step-number">1</span>
+                    <span class="step-title">Install Authenticator App</span>
+                </div>
+                <div class="step-content">
+                    <p class="text-muted-custom">Download one of these authenticator apps on your phone:</p>
+                    <div class="app-links">
+                        <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" class="app-link">
+                            <i class="bi bi-google-play"></i> Google Authenticator
+                        </a>
+                        <a href="https://www.microsoft.com/en-us/security/mobile-authenticator-app" target="_blank" class="app-link">
+                            <i class="bi bi-microsoft"></i> Microsoft Authenticator
+                        </a>
+                        <a href="https://authy.com/download/" target="_blank" class="app-link">
+                            <i class="bi bi-shield-check"></i> Authy
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Scan QR Code -->
+            <div class="step">
+                <div>
+                    <span class="step-number">2</span>
+                    <span class="step-title">Scan QR Code</span>
+                </div>
+                <div class="step-content">
+                    <div class="qr-container">
+                        <div class="qr-code">
+                            <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code">
+                        </div>
+                        <p class="mt-3 mb-0 text-muted-custom">
+                            <i class="bi bi-qr-code"></i> Scan this QR code with your authenticator app
+                        </p>
+                    </div>
+
+                    <div class="secret-key-container">
+                        <div class="secret-key-label">
+                            <i class="bi bi-key"></i> Manual Entry Code
+                        </div>
+                        <div class="secret-key">
+                            <code>{{ secret_key }}</code>
+                        </div>
+                        <button class="btn-copy" onclick="copySecretKey()">
+                            <i class="bi bi-clipboard"></i> Copy Secret Key
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Verify Setup -->
+            <div class="step">
+                <div>
+                    <span class="step-number">3</span>
+                    <span class="step-title">Verify Setup</span>
+                </div>
+                <div class="step-content">
+                    <p class="text-muted-custom">
+                        <i class="bi bi-shield-check"></i> Enter the 6-digit code from your authenticator app to confirm setup:
+                    </p>
+                    <form method="post" action="{% url 'staff:setup_2fa' %}">
+                        {% csrf_token %}
+                        <div class="text-center">
+                            <input type="text" name="otp_code" class="otp-input"
+                                   placeholder="000000" maxlength="6" required autofocus>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn-verify">
+                                <i class="bi bi-check-circle"></i> Verify and Enable 2FA
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Backup Codes Warning -->
+            <div class="alert-custom alert-warning-custom">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div>
+                    <strong>Important!</strong> After enabling 2FA, you will receive backup codes.
+                    Save them in a safe place. You'll need them if you lose access to your authenticator app.
+                </div>
+            </div>
+
+            <!-- Backup Codes Preview (if already enabled) -->
+            {% if backup_codes %}
+            <div class="backup-codes">
+                <div class="backup-title">
+                    <i class="bi bi-file-lock-fill"></i> Your Backup Codes
+                </div>
+                <p class="small" style="color: #92400e; margin-bottom: 12px;">
+                    <i class="bi bi-save"></i> Save these codes in a secure place. Each code can only be used once.
+                </p>
+                <div class="code-grid">
+                    {% for code in backup_codes %}
+                    <div class="code-item">{{ code }}</div>
+                    {% endfor %}
+                </div>
+                <div class="mt-3">
+                    <button class="btn-copy" onclick="copyBackupCodes()">
+                        <i class="bi bi-clipboard"></i> Copy All Codes
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Back Link -->
+            <div class="text-center pt-4">
+                <a href="{% url 'staff:staff_profile' %}" class="btn-back-link">
+                    <i class="bi bi-arrow-left"></i> Back to Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copySecretKey() {
+    const secretKey = document.querySelector('.secret-key code').innerText;
+    navigator.clipboard.writeText(secretKey).then(() => {
+        const btn = document.querySelector('.btn-copy');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+        }, 2000);
+    }).catch(() => {
+        alert('Failed to copy secret key. Please copy it manually.');
+    });
+}
+
+function copyBackupCodes() {
+    const codes = Array.from(document.querySelectorAll('.code-item')).map(el => el.innerText);
+    const codesText = codes.join('\n');
+    navigator.clipboard.writeText(codesText).then(() => {
+        alert('Backup codes copied to clipboard!');
+    }).catch(() => {
+        alert('Failed to copy codes. Please copy them manually.');
+    });
+}
+
+// Auto-format OTP input to only accept numbers
+document.querySelector('.otp-input')?.addEventListener('input', function(e) {
+    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);
+});
+</script>
+{% endblock %}

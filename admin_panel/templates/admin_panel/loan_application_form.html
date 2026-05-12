@@ -1,0 +1,68 @@
+﻿{% extends 'admin_panel/base.html' %}
+
+{% block title %}{{ action }} Loan Application{% endblock %}
+{% block page_title %}{{ action }} Loan Application{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>{{ action }} Loan Application</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Member *</label>
+                    <select name="member_id" class="form-select" {% if action == 'Edit' %}disabled{% endif %} required>
+                        <option value="">Select Member</option>
+                        {% for member in members %}
+                        <option value="{{ member.id }}" {% if app.member.id == member.id %}selected{% endif %}>
+                            {{ member.first_name }} {{ member.last_name }} ({{ member.membership_number }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if action == 'Edit' %}<input type="hidden" name="member_id" value="{{ app.member.id }}">{% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Loan Product *</label>
+                    <select name="product_id" class="form-select" required>
+                        <option value="">Select Product</option>
+                        {% for product in products %}
+                        <option value="{{ product.id }}" {% if app.loan_product.id == product.id %}selected{% endif %}>
+                            {{ product.name }} - {{ product.display_name }} ({{ product.interest_rate }}%)
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Requested Amount (₱) *</label>
+                    <input type="number" name="amount" class="form-control" step="0.01" value="{{ app.requested_amount|default:'' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="pending_staff_review" {% if app.status == 'pending_staff_review' %}selected{% endif %}>Pending Review</option>
+                        <option value="with_committee" {% if app.status == 'with_committee' %}selected{% endif %}>With Committee</option>
+                        <option value="line_approved" {% if app.status == 'line_approved' %}selected{% endif %}>Line Approved</option>
+                        <option value="manager_approved" {% if app.status == 'manager_approved' %}selected{% endif %}>Manager Approved</option>
+                        <option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                    </select>
+                </div>
+                <div class="col-12 mb-3">
+                    <label class="form-label">Purpose *</label>
+                    <textarea name="purpose" class="form-control" rows="2" required>{{ app.purpose|default:'' }}</textarea>
+                </div>
+                <div class="col-12 mb-3">
+                    <label class="form-label">Collateral Offered</label>
+                    <textarea name="collateral" class="form-control" rows="2">{{ app.collateral_offered|default:'' }}</textarea>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{% url 'admin_panel:loan_applications_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Approved Line Report{% endblock %}
+
+{% block page_title %}Approved Line Report{% endblock %}
+
+{% block content %}
+<div class="no-print mb-3">
+    <a href="{% url 'reports:approved_line_report_excel' %}" class="btn btn-success"><i class="bi bi-file-excel"></i> Export Excel</a>
+    <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer"></i> Print</button>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Approved Line Report as of {{ generated_date|date:"F d, Y" }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="alert alert-info">
+                    <h6>Total Applications</h6>
+                    <h3>{{ total_count }}</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="alert alert-warning">
+                    <h6>Total Requested</h6>
+                    <h3>₱{{ total_requested|floatformat:2 }}</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="alert alert-success">
+                    <h6>Total Approved</h6>
+                    <h3>₱{{ total_approved|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-danger">
+            <strong>Total Reduction:</strong> ₱{{ reduction_amount|floatformat:2 }} ({{ reduction_percent|floatformat:1 }}% of requested)
+        </div>
+
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Application ID</th>
+                    <th>Member Name</th>
+                    <th class="text-end">Requested Amount</th>
+                    <th class="text-end">Approved Line</th>
+                    <th class="text-end">Reduction</th>
+                    <th>Reduction Reason</th>
+                    <th>Date Approved</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td>{{ app.application_id }}</td>
+                    <td>{{ app.member.last_name }}, {{ app.member.first_name }}</td>
+                    <td class="text-end">₱{{ app.requested_amount|floatformat:2 }}</td>
+                    <td class="text-end text-success">₱{{ app.approved_line|floatformat:2 }}</td>
+                    <td class="text-end text-danger">-₱{{ app.requested_amount|add:app.approved_line|floatformat:2 }}</td>
+                    <td>{{ app.committee_reduction_reason|default:"—" }}</td>
+                    <td>{{ app.committee_approved_date|date:"Y-m-d" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center">No approved applications found</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

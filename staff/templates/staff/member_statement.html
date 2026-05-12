@@ -1,0 +1,18 @@
+﻿{% extends 'staff/base_staff.html' %}
+{% block page_title %}Member Statement{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">Member Loan Statement</div>
+    <div class="card-body">
+        <p>Select a member to view statement:</p>
+        <ul>
+            {% for member in members %}
+            <li>{{ member.borrower_name }}</li>
+            {% empty %}
+            <li>No members found</li>
+            {% endfor %}
+        </ul>
+        <a href="{% url 'staff:staff_reports' %}" class="btn btn-secondary">Back to Reports</a>
+    </div>
+</div>
+{% endblock %}

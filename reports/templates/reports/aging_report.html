@@ -1,0 +1,63 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Aging Report{% endblock %}
+
+{% block page_title %}Aging Report - Current vs Past Due{% endblock %}
+
+{% block content %}
+<div class="no-print mb-3">
+    <a href="{% url 'reports:aging_report_excel' %}" class="btn btn-success"><i class="bi bi-file-excel"></i> Export Excel</a>
+    <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer"></i> Print</button>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Aging Report as of {{ generated_date|date:"F d, Y" }}</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Loan Type</th>
+                    <th colspan="2" class="text-center">Current</th>
+                    <th colspan="2" class="text-center">Past Due</th>
+                    <th colspan="2" class="text-center">Total</th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th>#</th>
+                    <th>Amount</th>
+                    <th>#</th>
+                    <th>Amount</th>
+                    <th>#</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in aging_data %}
+                <tr>
+                    <td>{{ data.product.display_name }}</td>
+                    <td class="text-end">{{ data.current_count }}</td>
+                    <td class="text-end">₱{{ data.current_amount|floatformat:2 }}</td>
+                    <td class="text-end">{{ data.past_due_count }}</td>
+                    <td class="text-end">₱{{ data.past_due_amount|floatformat:2 }}</td>
+                    <td class="text-end">{{ data.total_count }}</td>
+                    <td class="text-end">₱{{ data.total_amount|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="table-dark">
+                <tr>
+                    <th>TOTAL</th>
+                    <th class="text-end">{{ total_current_count }}</th>
+                    <th class="text-end">₱{{ total_current_amount|floatformat:2 }}</th>
+                    <th class="text-end">{{ total_past_due_count }}</th>
+                    <th class="text-end">₱{{ total_past_due_amount|floatformat:2 }}</th>
+                    <th class="text-end">{{ total_current_count|add:total_past_due_count }}</th>
+                    <th class="text-end">₱{{ total_current_amount|add:total_past_due_amount|floatformat:2 }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}

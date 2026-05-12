@@ -1,0 +1,1320 @@
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+
+{% block title %}Issue Payment Instruction - Staff{% endblock %}
+{% block page_title %}Issue Payment Instruction{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Main Container */
+    .instruction-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Search Section */
+    .search-section {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 28px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-title i {
+        color: #0d6e6e;
+        font-size: 1.1rem;
+    }
+
+    /* Form Controls */
+    .form-label {
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .form-control {
+        background: var(--input-bg);
+        border: 1.5px solid var(--border-color);
+        border-radius: 12px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        border-color: #0d6e6e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    /* Search Row - Fixed Alignment */
+    .search-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .search-input-group {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .search-button-group {
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+        .search-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-input-group {
+            width: 100%;
+        }
+
+        .search-button-group {
+            width: 100%;
+        }
+
+        .search-button-group .btn-primary-custom {
+            width: 100%;
+        }
+    }
+
+    /* Info Cards */
+    .info-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .info-title {
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-title i {
+        color: #0d6e6e;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-item {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .info-value.amount {
+        font-weight: 700;
+        font-family: monospace;
+        font-size: 1.1rem;
+    }
+
+    .info-value.amount-positive {
+        color: #10b981;
+    }
+
+    .info-value.amount-negative {
+        color: #ef4444;
+    }
+
+    /* Loan Selector */
+    .loan-selector {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+    }
+
+    .loan-select {
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        padding: 12px 14px;
+        font-size: 0.9rem;
+        width: 100%;
+        transition: all 0.2s;
+        background: var(--input-bg);
+        color: var(--text-primary);
+        cursor: pointer;
+    }
+
+    .loan-select:focus {
+        border-color: #0d6e6e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    /* Amount Input Section */
+    .amount-input-section {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+    }
+
+    .amount-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .currency-symbol {
+        background: var(--bg-body);
+        border: 1.5px solid var(--border-color);
+        border-radius: 12px;
+        padding: 15px 20px;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .amount-input {
+        font-size: 2rem;
+        font-weight: 800;
+        text-align: center;
+        border: 1.5px solid var(--border-color);
+        border-radius: 12px;
+        padding: 15px;
+        width: 100%;
+        background: var(--input-bg);
+        color: var(--text-primary);
+        flex: 1;
+    }
+
+    .amount-input:focus {
+        border-color: #0d6e6e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    /* Buttons */
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        height: 48px;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(13, 110, 110, 0.3);
+        color: white;
+    }
+
+    .btn-success-custom {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-success-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        color: white;
+    }
+
+    .btn-outline-custom {
+        background: transparent;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        height: 48px;
+    }
+
+    .btn-outline-custom:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom {
+        background: #6c757d;
+        border: none;
+        color: white;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-secondary-custom:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+        color: white;
+    }
+
+    [data-theme="dark"] .btn-outline-custom {
+        border-color: #2a9d8f;
+        color: #2a9d8f;
+    }
+
+    [data-theme="dark"] .btn-outline-custom:hover {
+        background: #0d6e6e;
+        color: white;
+    }
+
+    /* Breakdown Card */
+    .breakdown-card {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    [data-theme="dark"] .breakdown-card {
+        background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+    }
+
+    .breakdown-title {
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: #92400e;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    [data-theme="dark"] .breakdown-title {
+        color: #fde68a;
+    }
+
+    .breakdown-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .breakdown-row:last-child {
+        border-bottom: none;
+    }
+
+    .breakdown-label {
+        font-weight: 600;
+        color: #92400e;
+    }
+
+    [data-theme="dark"] .breakdown-label {
+        color: #fde68a;
+    }
+
+    .breakdown-value {
+        font-weight: 700;
+        font-family: monospace;
+        color: #92400e;
+    }
+
+    [data-theme="dark"] .breakdown-value {
+        color: #fde68a;
+    }
+
+    .breakdown-total {
+        border-top: 2px solid #fbbf24;
+        margin-top: 10px;
+        padding-top: 12px;
+        font-weight: 800;
+        font-size: 1.1rem;
+    }
+
+    /* Instruction Slip */
+    .instruction-slip {
+        background: var(--bg-card);
+        border-radius: 20px;
+        overflow: hidden;
+        border: 2px dashed #0d6e6e;
+        margin-top: 30px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .slip-header {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        padding: 24px;
+        text-align: center;
+    }
+
+    .slip-header h3 {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .slip-body {
+        padding: 24px;
+    }
+
+    .slip-footer {
+        background: var(--bg-body);
+        padding: 16px;
+        text-align: center;
+        border-top: 1px solid var(--border-color);
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .slip-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px dashed var(--border-color);
+    }
+
+    .slip-row:last-child {
+        border-bottom: none;
+    }
+
+    .slip-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .slip-value {
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .slip-amount {
+        font-size: 1.5rem;
+        color: #0d6e6e;
+    }
+
+    .signature-section {
+        margin-top: 30px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .signature-line {
+        text-align: center;
+        width: 45%;
+    }
+
+    .signature-line hr {
+        margin: 30px 0 5px;
+        border-top: 1px solid var(--border-color);
+        width: 100%;
+    }
+
+    @media (max-width: 768px) {
+        .signature-line {
+            width: 100%;
+        }
+    }
+
+    /* Action Buttons Group */
+    .action-buttons-group {
+        display: flex;
+        gap: 15px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    /* Alert Messages */
+    .alert-custom {
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .alert-success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .alert-error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .alert-warning {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .alert-info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+    }
+
+    [data-theme="dark"] .alert-success {
+        background: #064e3b;
+        color: #a7f3d0;
+    }
+
+    [data-theme="dark"] .alert-error {
+        background: #7f1d1d;
+        color: #fecaca;
+    }
+
+    [data-theme="dark"] .alert-warning {
+        background: #451a03;
+        color: #fde68a;
+    }
+
+    [data-theme="dark"] .alert-info {
+        background: #1e3a8a;
+        color: #bfdbfe;
+    }
+
+    /* Loading Spinner */
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 40px;
+    }
+
+    .spinner-border-custom {
+        width: 3rem;
+        height: 3rem;
+        border: 0.25em solid var(--border-color);
+        border-right-color: #0d6e6e;
+        border-radius: 50%;
+        animation: spinner 0.75s linear infinite;
+        display: inline-block;
+    }
+
+    @keyframes spinner {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Badge */
+    .badge-custom {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .badge-active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-overdue {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* Help text */
+    .help-text {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 6px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .instruction-container {
+            padding: 10px;
+        }
+
+        .search-section, .info-card, .loan-selector, .amount-input-section {
+            padding: 20px;
+        }
+
+        .amount-input {
+            font-size: 1.5rem;
+        }
+
+        .action-buttons-group {
+            flex-direction: column;
+        }
+
+        .btn-primary-custom, .btn-success-custom, .btn-outline-custom {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .slip-body {
+            padding: 16px;
+        }
+
+        .amount-input-wrapper {
+            flex-direction: column;
+        }
+
+        .currency-symbol {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="instruction-container">
+    <!-- Search Section -->
+    <div class="search-section">
+        <div class="section-title">
+            <i class="bi bi-person-search"></i> Find Member
+        </div>
+
+        <!-- Fixed Search Row Alignment -->
+        <div class="search-row">
+            <div class="search-input-group">
+                <label class="form-label">Member Search</label>
+                <input type="text" class="form-control" id="memberSearch"
+                       placeholder="Enter Member ID, Name, Membership Number, or Loan Number..."
+                       autocomplete="off">
+                <div class="help-text">
+                    <i class="bi bi-info-circle"></i> Search by: Membership Number, Full Name, or Loan Number
+                </div>
+            </div>
+            <div class="search-button-group">
+                <button class="btn-primary-custom" id="searchMemberBtn">
+                    <i class="bi bi-search"></i> Search Member
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Messages Container -->
+    <div id="alertContainer"></div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner-border-custom"></div>
+        <p class="mt-2 text-muted">Searching for member...</p>
+    </div>
+
+    <!-- Member Information -->
+    <div id="memberInfo" style="display: none;">
+        <div class="info-card">
+            <div class="info-title">
+                <i class="bi bi-person-badge"></i> Member Information
+            </div>
+            <div id="memberInfoContent"></div>
+        </div>
+    </div>
+
+    <!-- Loan Selection -->
+    <div id="loanSelection" style="display: none;">
+        <div class="loan-selector">
+            <div class="section-title">
+                <i class="bi bi-bank"></i> Select Loan
+            </div>
+            <select class="loan-select" id="loanSelect">
+                <option value="">-- Select a loan to process payment --</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Loan Details -->
+    <div id="loanDetails" style="display: none;">
+        <div class="info-card">
+            <div class="info-title">
+                <i class="bi bi-info-circle"></i> Loan Details
+            </div>
+            <div id="loanDetailsContent"></div>
+        </div>
+    </div>
+
+    <!-- Payment Amount Input -->
+    <div id="paymentSection" style="display: none;">
+        <div class="amount-input-section">
+            <div class="section-title">
+                <i class="bi bi-calculator"></i> Payment Amount
+            </div>
+            <div class="amount-input-wrapper">
+                <span class="currency-symbol">₱</span>
+                <input type="number" class="amount-input" id="paymentAmount"
+                       placeholder="0.00" step="0.01" min="0">
+            </div>
+            <div class="help-text mb-3">
+                <i class="bi bi-info-circle"></i> Member can pay any amount - full, partial, or extra payment
+            </div>
+            <div class="action-buttons-group">
+                <button class="btn-outline-custom" id="calculateBtn">
+                    <i class="bi bi-calculator"></i> Calculate Breakdown
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Breakdown -->
+    <div id="breakdownSection" style="display: none;">
+        <div class="breakdown-card">
+            <div class="breakdown-title">
+                <i class="bi bi-pie-chart"></i> Payment Breakdown
+            </div>
+            <div id="breakdownContent"></div>
+        </div>
+    </div>
+
+    <!-- Issue Button -->
+    <div id="issueBtnSection" style="display: none;">
+        <div class="action-buttons-group">
+            <button class="btn-success-custom" id="issueInstructionBtn">
+                <i class="bi bi-printer"></i> Issue Payment Instruction
+            </button>
+        </div>
+    </div>
+
+    <!-- Generated Instruction Slip -->
+    <div id="instructionSlip" style="display: none;">
+        <div class="instruction-slip" id="slipContent"></div>
+        <div class="action-buttons-group mt-3">
+            <button class="btn-primary-custom" id="printSlipBtn">
+                <i class="bi bi-printer"></i> Print Instruction Slip
+            </button>
+            <button class="btn-outline-custom" id="newInstructionBtn">
+                <i class="bi bi-plus-circle"></i> New Instruction
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedMember = null;
+    let selectedLoan = null;
+    let currentCalculation = null;
+    let currentInstruction = null;
+
+    // Search Member
+    document.getElementById('searchMemberBtn').addEventListener('click', function() {
+        const searchTerm = document.getElementById('memberSearch').value.trim();
+        clearAlerts();
+
+        if (!searchTerm) {
+            showAlert('warning', 'Please enter Member ID, Name, or Loan Number to search.');
+            return;
+        }
+
+        showLoading();
+
+        fetch(`/staff/api/member-search/?q=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+
+                if (data.member) {
+                    selectedMember = data.member;
+                    displayMemberInfo(data.member);
+                    document.getElementById('memberInfo').style.display = 'block';
+                    showAlert('success', `Member found: ${data.member.name}`);
+
+                    if (data.loans && data.loans.length > 0) {
+                        displayLoanOptions(data.loans);
+                        document.getElementById('loanSelection').style.display = 'block';
+                    } else {
+                        showAlert('warning', 'This member has no active loans. Cannot process payment instruction.');
+                        document.getElementById('loanSelection').style.display = 'none';
+                        document.getElementById('paymentSection').style.display = 'none';
+                        document.getElementById('loanDetails').style.display = 'none';
+                        document.getElementById('breakdownSection').style.display = 'none';
+                        document.getElementById('issueBtnSection').style.display = 'none';
+                    }
+                } else {
+                    showAlert('error', `No member found matching "${searchTerm}". Please check the spelling or try a different search term.`);
+                    resetForm();
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred while searching. Please try again.');
+                resetForm();
+            });
+    });
+
+    function clearAlerts() {
+        const alertContainer = document.getElementById('alertContainer');
+        if (alertContainer) {
+            alertContainer.innerHTML = '';
+        }
+    }
+
+    function showAlert(type, message) {
+        const alertContainer = document.getElementById('alertContainer');
+        if (!alertContainer) return;
+
+        let alertClass = 'alert-info';
+        let icon = 'bi-info-circle';
+
+        if (type === 'error') {
+            alertClass = 'alert-error';
+            icon = 'bi-exclamation-triangle-fill';
+        } else if (type === 'warning') {
+            alertClass = 'alert-warning';
+            icon = 'bi-exclamation-triangle-fill';
+        } else if (type === 'success') {
+            alertClass = 'alert-success';
+            icon = 'bi-check-circle-fill';
+        }
+
+        const alertHtml = `
+            <div class="alert-custom ${alertClass}">
+                <i class="${icon} fs-5"></i>
+                <div class="flex-grow-1">${message}</div>
+                <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+            </div>
+        `;
+        alertContainer.insertAdjacentHTML('beforeend', alertHtml);
+
+        if (type === 'success') {
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert-success');
+                if (alerts.length > 0) {
+                    alerts[0].remove();
+                }
+            }, 5000);
+        }
+    }
+
+    function showLoading() {
+        const spinner = document.getElementById('loadingSpinner');
+        if (spinner) spinner.style.display = 'block';
+    }
+
+    function hideLoading() {
+        const spinner = document.getElementById('loadingSpinner');
+        if (spinner) spinner.style.display = 'none';
+    }
+
+    function resetForm() {
+        document.getElementById('memberInfo').style.display = 'none';
+        document.getElementById('loanSelection').style.display = 'none';
+        document.getElementById('loanDetails').style.display = 'none';
+        document.getElementById('paymentSection').style.display = 'none';
+        document.getElementById('breakdownSection').style.display = 'none';
+        document.getElementById('issueBtnSection').style.display = 'none';
+        document.getElementById('instructionSlip').style.display = 'none';
+        selectedMember = null;
+        selectedLoan = null;
+        currentCalculation = null;
+        currentInstruction = null;
+        document.getElementById('paymentAmount').value = '';
+    }
+
+    function displayMemberInfo(member) {
+        const html = `
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Full Name</div>
+                    <div class="info-value">${escapeHtml(member.name)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Membership Number</div>
+                    <div class="info-value"><code>${escapeHtml(member.membership_id || 'N/A')}</code></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Contact Number</div>
+                    <div class="info-value">${escapeHtml(member.contact || '—')}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email Address</div>
+                    <div class="info-value">${escapeHtml(member.email || '—')}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Active Loans</div>
+                    <div class="info-value"><span class="badge-custom badge-active">${member.active_loans_count || 0} Active</span></div>
+                </div>
+            </div>
+        `;
+        const memberInfoContent = document.getElementById('memberInfoContent');
+        if (memberInfoContent) memberInfoContent.innerHTML = html;
+    }
+
+    function displayLoanOptions(loans) {
+        const select = document.getElementById('loanSelect');
+        if (!select) return;
+
+        select.innerHTML = '<option value="">-- Select a loan --</option>';
+
+        loans.forEach(loan => {
+            const option = document.createElement('option');
+            option.value = loan.id;
+            const statusText = loan.days_overdue > 0 ? '🔴 Overdue' : '🟢 Active';
+            option.textContent = `${loan.number} - ₱${loan.balance.toLocaleString()} (${statusText})`;
+            select.appendChild(option);
+        });
+    }
+
+    document.getElementById('loanSelect').addEventListener('change', function() {
+        const loanId = this.value;
+        if (loanId) {
+            fetch(`/staff/api/loan-status/${loanId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    selectedLoan = data;
+                    displayLoanDetails(data);
+                    document.getElementById('loanDetails').style.display = 'block';
+                    document.getElementById('paymentSection').style.display = 'block';
+                    document.getElementById('breakdownSection').style.display = 'none';
+                    document.getElementById('issueBtnSection').style.display = 'none';
+                    document.getElementById('instructionSlip').style.display = 'none';
+                    document.getElementById('paymentAmount').value = '';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('error', 'Error loading loan details.');
+                });
+        } else {
+            document.getElementById('loanDetails').style.display = 'none';
+            document.getElementById('paymentSection').style.display = 'none';
+        }
+    });
+
+    function displayLoanDetails(loan) {
+        const statusClass = loan.days_overdue > 0 ? 'badge-overdue' : 'badge-active';
+        const statusText = loan.days_overdue > 0 ? `Overdue (${loan.days_overdue} days)` : 'Active';
+
+        const html = `
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Loan Number</div>
+                    <div class="info-value"><code>${escapeHtml(loan.number)}</code></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Loan Type</div>
+                    <div class="info-value">${escapeHtml(loan.loan_type || 'NCL')}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Original Principal</div>
+                    <div class="info-value amount">₱${(loan.original_principal || 0).toLocaleString()}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Remaining Balance</div>
+                    <div class="info-value amount amount-positive">₱${(loan.remaining_balance || 0).toLocaleString()}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Interest Rate</div>
+                    <div class="info-value">${loan.interest_rate || 20}% per annum</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Monthly Payment</div>
+                    <div class="info-value amount">₱${(loan.monthly_payment || 0).toLocaleString()}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Next Due Date</div>
+                    <div class="info-value">${loan.next_due_date || '—'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Loan Status</div>
+                    <div class="info-value"><span class="badge-custom ${statusClass}">${statusText}</span></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Penalty Amount</div>
+                    <div class="info-value amount amount-negative">₱${(loan.penalty_amount || 0).toLocaleString()}</div>
+                </div>
+            </div>
+        `;
+        const loanDetailsContent = document.getElementById('loanDetailsContent');
+        if (loanDetailsContent) loanDetailsContent.innerHTML = html;
+    }
+
+    document.getElementById('calculateBtn').addEventListener('click', function() {
+        const amount = parseFloat(document.getElementById('paymentAmount').value);
+        if (!selectedLoan || isNaN(amount) || amount <= 0) {
+            showAlert('warning', 'Please enter a valid payment amount greater than zero.');
+            return;
+        }
+
+        if (amount > (selectedLoan.remaining_balance || 0) + (selectedLoan.penalty_amount || 0)) {
+            if (!confirm(`The payment amount of ₱${amount.toLocaleString()} exceeds the total due (Balance: ₱${(selectedLoan.remaining_balance || 0).toLocaleString()} + Penalty: ₱${(selectedLoan.penalty_amount || 0).toLocaleString()}). Do you want to proceed with extra payment?`)) {
+                return;
+            }
+        }
+
+        fetch(`/staff/api/calculate-payment/?amount=${amount}&balance=${selectedLoan.remaining_balance}&penalty=${selectedLoan.penalty_amount || 0}`)
+            .then(response => response.json())
+            .then(data => {
+                currentCalculation = data;
+                displayBreakdown(data, amount);
+                document.getElementById('breakdownSection').style.display = 'block';
+                document.getElementById('issueBtnSection').style.display = 'block';
+                document.getElementById('breakdownSection').scrollIntoView({ behavior: 'smooth' });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'Error calculating payment breakdown.');
+            });
+    });
+
+    function displayBreakdown(data, amount) {
+        const interestRemaining = data.interest_remaining || 0;
+        const html = `
+            <div class="breakdown-row">
+                <span class="breakdown-label"><i class="bi bi-exclamation-triangle"></i> Penalty (if any):</span>
+                <span class="breakdown-value amount-negative">₱${(data.penalty || 0).toLocaleString()}</span>
+            </div>
+            <div class="breakdown-row">
+                <span class="breakdown-label"><i class="bi bi-percent"></i> Interest Paid:</span>
+                <span class="breakdown-value">₱${(data.interest || 0).toLocaleString()}</span>
+            </div>
+            ${interestRemaining > 0 ? `
+            <div class="breakdown-row">
+                <span class="breakdown-label"><i class="bi bi-clock-history"></i> Remaining Interest (Carry Over):</span>
+                <span class="breakdown-value amount-negative">₱${interestRemaining.toLocaleString()}</span>
+            </div>
+            ` : ''}
+            <div class="breakdown-row">
+                <span class="breakdown-label"><i class="bi bi-bank"></i> Principal Paid:</span>
+                <span class="breakdown-value amount-positive">₱${(data.principal || 0).toLocaleString()}</span>
+            </div>
+            <div class="breakdown-row breakdown-total">
+                <span class="breakdown-label"><i class="bi bi-cash-stack"></i> TOTAL PAYMENT:</span>
+                <span class="breakdown-value" style="font-size: 1.2rem;">₱${amount.toLocaleString()}</span>
+            </div>
+            <div class="breakdown-row">
+                <span class="breakdown-label"><i class="bi bi-graph-down"></i> Remaining Balance After Payment:</span>
+                <span class="breakdown-value amount-positive">₱${(data.remaining_balance || 0).toLocaleString()}</span>
+            </div>
+            ${interestRemaining > 0 ? `
+            <div class="alert-warning mt-3 small" style="margin-bottom: 0; padding: 12px; border-radius: 12px;">
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Note:</strong> Payment of ₱${amount.toLocaleString()} was not enough to cover the full interest. The remaining interest of ₱${interestRemaining.toLocaleString()} will be added to your next billing cycle.
+            </div>
+            ` : ''}
+        `;
+        const breakdownContent = document.getElementById('breakdownContent');
+        if (breakdownContent) breakdownContent.innerHTML = html;
+    }
+
+    document.getElementById('issueInstructionBtn').addEventListener('click', function() {
+        if (!selectedMember || !selectedLoan || !currentCalculation) {
+            showAlert('warning', 'Please complete all steps before issuing instruction.');
+            return;
+        }
+
+        const amount = parseFloat(document.getElementById('paymentAmount').value);
+
+        const instructionData = {
+            member_id: selectedMember.id,
+            loan_id: selectedLoan.id,
+            amount: amount,
+            penalty: currentCalculation.penalty || 0,
+            interest: currentCalculation.interest || 0,
+            principal: currentCalculation.principal || 0,
+            remaining_balance: currentCalculation.remaining_balance || 0,
+            interest_remaining: currentCalculation.interest_remaining || 0
+        };
+
+        fetch('/staff/api/issue-instruction/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify(instructionData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentInstruction = data;
+                displayInstructionSlip(data, instructionData);
+                document.getElementById('instructionSlip').style.display = 'block';
+                document.getElementById('issueBtnSection').style.display = 'none';
+                document.getElementById('instructionSlip').scrollIntoView({ behavior: 'smooth' });
+                showAlert('success', `Payment instruction #${data.instruction_number} issued successfully!`);
+            } else {
+                showAlert('error', 'Error: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('error', 'Error issuing payment instruction. Please try again.');
+        });
+    });
+
+    function displayInstructionSlip(data, instructionData) {
+        const now = new Date();
+        const amount = instructionData.amount;
+        const penalty = instructionData.penalty;
+        const interest = instructionData.interest;
+        const principal = instructionData.principal;
+        const remainingBalance = instructionData.remaining_balance;
+        const interestRemaining = instructionData.interest_remaining || 0;
+
+        const html = `
+            <div class="slip-header">
+                <h3><i class="bi bi-bank"></i> TOLONG MULTI-PURPOSE COOPERATIVE</h3>
+                <p>National Highway, Villareal, Bayawan City, Negros Oriental</p>
+                <p>CDA Reg. No. 9520-0700431</p>
+                <h4 class="mt-3">PAYMENT INSTRUCTION SLIP</h4>
+                <p><strong>No: ${data.instruction_number}</strong></p>
+            </div>
+            <div class="slip-body">
+                <div class="slip-row">
+                    <span class="slip-label">TO CASHIER:</span>
+                    <span class="slip-value">Please receive payment from the following:</span>
+                </div>
+                <div class="slip-row">
+                    <span class="slip-label">Member Name:</span>
+                    <span class="slip-value"><strong>${escapeHtml(selectedMember.name)}</strong></span>
+                </div>
+                <div class="slip-row">
+                    <span class="slip-label">Membership #:</span>
+                    <span class="slip-value">${escapeHtml(selectedMember.membership_id)}</span>
+                </div>
+                <div class="slip-row">
+                    <span class="slip-label">Loan Number:</span>
+                    <span class="slip-value">${escapeHtml(selectedLoan.number)}</span>
+                </div>
+                <div class="slip-row">
+                    <span class="slip-label">Loan Type:</span>
+                    <span class="slip-value">${escapeHtml(selectedLoan.loan_type || 'NCL')}</span>
+                </div>
+
+                <div style="background: #d1fae5; padding: 15px; border-radius: 12px; margin: 15px 0;">
+                    <div class="slip-row">
+                        <span class="slip-label">💰 AMOUNT TO COLLECT:</span>
+                        <span class="slip-value slip-amount">₱${amount.toLocaleString()}</span>
+                    </div>
+                </div>
+
+                <div style="margin: 15px 0;">
+                    <div class="slip-row">
+                        <span class="slip-label">Penalty Paid:</span>
+                        <span class="slip-value">₱${penalty.toLocaleString()}</span>
+                    </div>
+                    <div class="slip-row">
+                        <span class="slip-label">Interest Paid:</span>
+                        <span class="slip-value">₱${interest.toLocaleString()}</span>
+                    </div>
+                    ${interestRemaining > 0 ? `
+                    <div class="slip-row" style="background: #fef3c7;">
+                        <span class="slip-label">⚠️ Unpaid Interest (Carry Over):</span>
+                        <span class="slip-value">₱${interestRemaining.toLocaleString()}</span>
+                    </div>
+                    ` : ''}
+                    <div class="slip-row">
+                        <span class="slip-label">Principal Paid:</span>
+                        <span class="slip-value">₱${principal.toLocaleString()}</span>
+                    </div>
+                    <div class="slip-row" style="border-top: 2px solid var(--border-color); margin-top: 10px; padding-top: 10px;">
+                        <span class="slip-label">Remaining Balance After:</span>
+                        <span class="slip-value"><strong>₱${remainingBalance.toLocaleString()}</strong></span>
+                    </div>
+                </div>
+
+                ${interestRemaining > 0 ? `
+                <div class="alert-warning text-center small" style="margin: 15px 0; padding: 12px; border-radius: 12px;">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Note:</strong> The payment did not cover the full interest. The remaining interest of ₱${interestRemaining.toLocaleString()}
+                    will be added to the next billing cycle.
+                </div>
+                ` : ''}
+
+                <div class="signature-section">
+                    <div class="signature-line">
+                        <hr>
+                        <small>Cashier Signature</small>
+                    </div>
+                    <div class="signature-line">
+                        <hr>
+                        <small>Member Signature</small>
+                    </div>
+                </div>
+            </div>
+            <div class="slip-footer">
+                <div class="row">
+                    <div class="col-md-6 text-start">
+                        <small>Issued by: ${escapeHtml(data.issued_by || 'Staff')}</small>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <small>Date: ${now.toLocaleDateString()} | Time: ${now.toLocaleTimeString()}</small>
+                    </div>
+                </div>
+                <hr class="my-2">
+                <small><i class="bi bi-info-circle"></i> This is a system-generated instruction. Please present this slip to the cashier for payment processing.</small>
+            </div>
+        `;
+        const slipContent = document.getElementById('slipContent');
+        if (slipContent) slipContent.innerHTML = html;
+    }
+
+    document.getElementById('printSlipBtn').addEventListener('click', function() {
+        const printContent = document.getElementById('slipContent').innerHTML;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Payment Instruction Slip</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    body { padding: 20px; font-family: 'Inter', sans-serif; }
+                    .instruction-slip { max-width: 800px; margin: 0 auto; border: 2px dashed #0d6e6e; border-radius: 16px; overflow: hidden; }
+                    .slip-header { background: linear-gradient(135deg, #0d6e6e, #0a5a5a); color: white; padding: 20px; text-align: center; }
+                    .slip-body { padding: 25px; }
+                    .slip-footer { background: #f9fafb; padding: 15px; text-align: center; border-top: 1px solid #e5e7eb; }
+                    .slip-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e5e7eb; }
+                    .slip-label { font-weight: 600; }
+                    .slip-value { font-weight: 700; }
+                    .slip-amount { font-size: 1.3rem; color: #0d6e6e; }
+                    .signature-section { display: flex; justify-content: space-between; margin-top: 30px; }
+                    .signature-line { text-align: center; width: 45%; }
+                    .signature-line hr { margin: 30px 0 5px; }
+                    @media print { body { padding: 0; } .instruction-slip { border: 1px solid #ccc; } }
+                </style>
+            </head>
+            <body>
+                <div class="instruction-slip">${printContent}</div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() { window.close(); }, 1000);
+                    };
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    });
+
+    document.getElementById('newInstructionBtn').addEventListener('click', function() {
+        document.getElementById('memberSearch').value = '';
+        resetForm();
+        clearAlerts();
+        document.getElementById('memberSearch').focus();
+    });
+
+    function getCSRFToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith('csrftoken=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Enter key support
+    document.getElementById('memberSearch').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('searchMemberBtn').click();
+        }
+    });
+
+    // Focus on load
+    document.getElementById('memberSearch').focus();
+</script>
+{% endblock %}

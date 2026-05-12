@@ -1,0 +1,23 @@
+﻿{% extends 'staff/base_staff.html' %}
+{% block page_title %}Reports{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">Report Center</div>
+    <div class="card-body">
+        <div class="row">
+            {% for report in reports %}
+            <div class="col-md-3 mb-3">
+                <a href="{% url report.url %}" class="text-decoration-none">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="bi {{ report.icon }} fs-1"></i>
+                            <p class="mt-2">{{ report.name }}</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

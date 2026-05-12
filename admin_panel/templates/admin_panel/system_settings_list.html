@@ -1,0 +1,642 @@
+﻿{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}System Settings - TOMPuCO Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================================
+       PROFESSIONAL SYSTEM SETTINGS MANAGEMENT STYLES
+       EXPLICIT COLORS FOR BOTH LIGHT AND DARK MODES
+    ============================================================ */
+
+    /* Settings Grid */
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin-bottom: 28px;
+    }
+    @media (max-width: 1200px) {
+        .settings-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+        .settings-grid { grid-template-columns: 1fr; }
+    }
+
+    .settings-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    .settings-card:hover {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .settings-header {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 18px 24px;
+        color: white;
+    }
+    .settings-header h5 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .settings-header i {
+        font-size: 1.2rem;
+    }
+
+    .settings-body {
+        padding: 20px;
+    }
+
+    .setting-row {
+        padding: 14px 0;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .setting-row:last-child {
+        border-bottom: none;
+    }
+
+    .setting-label {
+        font-weight: 700;
+        color: #1f2937;
+        min-width: 180px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.85rem;
+    }
+    .setting-label i {
+        color: #0d6e6e;
+        width: 20px;
+    }
+
+    .setting-value {
+        color: #0d6e6e;
+        font-weight: 600;
+        flex: 1;
+        font-size: 0.85rem;
+    }
+
+    .setting-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    /* Action Buttons */
+    .btn-edit-setting {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 6px 14px !important;
+        border-radius: 8px !important;
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: #f59e0b !important;
+        color: #ffffff !important;
+    }
+    .btn-edit-setting:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    /* Toggle Switch */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 52px;
+        height: 26px;
+    }
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cbd5e1;
+        transition: 0.3s;
+        border-radius: 34px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+    }
+    input:checked + .slider {
+        background-color: #10b981;
+    }
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    /* Modal Styles */
+    .modal-custom .modal-content {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        overflow: hidden;
+    }
+    .modal-custom .modal-header {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 20px 24px;
+        border: none;
+    }
+    .modal-custom .modal-header .modal-title {
+        color: white !important;
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+    }
+    .modal-custom .modal-header .btn-close-white {
+        filter: brightness(0) invert(1);
+    }
+    .modal-custom .modal-body {
+        padding: 24px;
+        background: #ffffff;
+    }
+    .modal-custom .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    .modal-custom .btn-secondary {
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        color: #374151;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .modal-custom .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+    .modal-custom .btn-primary {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        border: none;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .modal-custom .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.35);
+    }
+
+    [data-theme="dark"] .modal-custom .modal-content {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+    [data-theme="dark"] .modal-custom .modal-body {
+        background: #1e1e2a;
+    }
+    [data-theme="dark"] .modal-custom .modal-footer {
+        background: #15151f;
+        border-top-color: #2a2a3a;
+    }
+    [data-theme="dark"] .modal-custom .btn-secondary {
+        background: #374151;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+    [data-theme="dark"] .modal-custom .btn-secondary:hover {
+        background: #4b5563;
+    }
+
+    /* Form Styles */
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #374151;
+        font-size: 0.85rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        color: #1f2937;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #0d6e6e;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    [data-theme="dark"] .form-label {
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .form-control {
+        background: #15151f;
+        border-color: #2a2a3a;
+        color: #eef2ff;
+    }
+
+    /* Toast Message */
+    .toast-message {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: #10b981;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 12px;
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Dark mode for settings cards */
+    [data-theme="dark"] .settings-card {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+    [data-theme="dark"] .setting-label {
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .setting-label i {
+        color: #1a8a8a;
+    }
+    [data-theme="dark"] .setting-value {
+        color: #1a8a8a;
+    }
+    [data-theme="dark"] .setting-row {
+        border-bottom-color: #2a2a3a;
+    }
+    [data-theme="dark"] .slider {
+        background-color: #4b5563;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="toastMessage" class="toast-message">
+    <i class="bi bi-check-circle-fill"></i> Setting saved successfully!
+</div>
+
+<div class="settings-grid">
+    <!-- System Configuration Card -->
+    <div class="settings-card">
+        <div class="settings-header">
+            <h5><i class="bi bi-gear-fill"></i> System Configuration</h5>
+        </div>
+        <div class="settings-body">
+            <div class="setting-row" data-key="coop_name" data-type="text">
+                <div class="setting-label"><i class="bi bi-building"></i> Cooperative Name</div>
+                <div class="setting-value" id="val_coop_name">TOMPuCO Cooperative</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('coop_name', 'Cooperative Name', 'TOMPuCO Cooperative')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row" data-key="contact_email" data-type="email">
+                <div class="setting-label"><i class="bi bi-envelope"></i> Contact Email</div>
+                <div class="setting-value" id="val_contact_email">support@tompuco.com</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('contact_email', 'Contact Email', 'support@tompuco.com')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row" data-key="contact_number" data-type="tel">
+                <div class="setting-label"><i class="bi bi-telephone"></i> Contact Number</div>
+                <div class="setting-value" id="val_contact_number">(035) 123-4567</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('contact_number', 'Contact Number', '(035) 123-4567')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <div class="setting-label"><i class="bi bi-bell"></i> Enable Notifications</div>
+                <div class="setting-value">
+                    <label class="switch">
+                        <input type="checkbox" id="enable_notifications" checked onchange="toggleSetting('enable_notifications', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="setting-row">
+                <div class="setting-label"><i class="bi bi-shield-lock"></i> Two-Factor Authentication</div>
+                <div class="setting-value">
+                    <label class="switch">
+                        <input type="checkbox" id="enable_2fa" onchange="toggleSetting('enable_2fa', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="setting-row">
+                <div class="setting-label"><i class="bi bi-database"></i> Auto Backup</div>
+                <div class="setting-value">
+                    <label class="switch">
+                        <input type="checkbox" id="auto_backup" checked onchange="toggleSetting('auto_backup', this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loan Settings Card -->
+    <div class="settings-card">
+        <div class="settings-header">
+            <h5><i class="bi bi-calculator-fill"></i> Loan Settings</h5>
+        </div>
+        <div class="settings-body">
+            <div class="setting-row" data-key="default_interest_rate" data-type="percent">
+                <div class="setting-label"><i class="bi bi-percent"></i> Default Interest Rate</div>
+                <div class="setting-value" id="val_default_interest_rate">15% per annum</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('default_interest_rate', 'Default Interest Rate', '15% per annum')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row" data-key="default_loan_term" data-type="number">
+                <div class="setting-label"><i class="bi bi-calendar"></i> Default Loan Term</div>
+                <div class="setting-value" id="val_default_loan_term">12 months</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('default_loan_term', 'Default Loan Term', '12 months')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row" data-key="penalty_rate" data-type="percent">
+                <div class="setting-label"><i class="bi bi-exclamation-triangle"></i> Penalty Rate</div>
+                <div class="setting-value" id="val_penalty_rate">2% per month</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('penalty_rate', 'Penalty Rate', '2% per month')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row" data-key="grace_period" data-type="number">
+                <div class="setting-label"><i class="bi bi-alarm"></i> Grace Period</div>
+                <div class="setting-value" id="val_grace_period">30 days</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('grace_period', 'Grace Period', '30 days')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row" data-key="service_charge" data-type="percent">
+                <div class="setting-label"><i class="bi bi-cash-stack"></i> Service Charge Rate</div>
+                <div class="setting-value" id="val_service_charge">3%</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('service_charge', 'Service Charge Rate', '3%')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row" data-key="cbu_retention" data-type="percent">
+                <div class="setting-label"><i class="bi bi-bank"></i> CBU Retention Rate</div>
+                <div class="setting-value" id="val_cbu_retention">2%</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('cbu_retention', 'CBU Retention Rate', '2%')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row" data-key="insurance_rate" data-type="percent">
+                <div class="setting-label"><i class="bi bi-shield"></i> Insurance Rate</div>
+                <div class="setting-value" id="val_insurance_rate">1.32%</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('insurance_rate', 'Insurance Rate', '1.32%')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row" data-key="notarial_fee" data-type="currency">
+                <div class="setting-label"><i class="bi bi-file-text"></i> Notarial Fee</div>
+                <div class="setting-value" id="val_notarial_fee">₱200.00</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('notarial_fee', 'Notarial Fee', '₱200.00')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Settings Card -->
+    <div class="settings-card">
+        <div class="settings-header">
+            <h5><i class="bi bi-shield-check-fill"></i> Security Settings</h5>
+        </div>
+        <div class="settings-body">
+            <div class="setting-row" data-key="session_timeout" data-type="number">
+                <div class="setting-label"><i class="bi bi-hourglass-split"></i> Session Timeout</div>
+                <div class="setting-value" id="val_session_timeout">30 minutes</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('session_timeout', 'Session Timeout', '30 minutes')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row" data-key="password_expiry" data-type="number">
+                <div class="setting-label"><i class="bi bi-key"></i> Password Expiry</div>
+                <div class="setting-value" id="val_password_expiry">90 days</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('password_expiry', 'Password Expiry', '90 days')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+            <div class="setting-row" data-key="max_login_attempts" data-type="number">
+                <div class="setting-label"><i class="bi bi-shield-exclamation"></i> Max Login Attempts</div>
+                <div class="setting-value" id="val_max_login_attempts">5 attempts</div>
+                <div class="setting-actions">
+                    <button class="btn-edit-setting" onclick="editSetting('max_login_attempts', 'Max Login Attempts', '5 attempts')">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade modal-custom" id="editSettingModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit <span id="modalSettingName"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editSettingKey">
+                <div class="mb-3">
+                    <label class="form-label" id="editSettingLabel"></label>
+                    <input type="text" class="form-control" id="editSettingValue" placeholder="Enter new value">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn-primary" onclick="saveSetting()">
+                    <i class="bi bi-save me-1"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentSettingKey = '';
+let currentSettingName = '';
+let currentSettingValue = '';
+
+function editSetting(key, name, currentValue) {
+    currentSettingKey = key;
+    currentSettingName = name;
+    currentSettingValue = currentValue;
+
+    document.getElementById('modalSettingName').innerText = name;
+    document.getElementById('editSettingLabel').innerHTML = name;
+    document.getElementById('editSettingValue').value = currentValue;
+
+    new bootstrap.Modal(document.getElementById('editSettingModal')).show();
+}
+
+function saveSetting() {
+    const newValue = document.getElementById('editSettingValue').value;
+    const key = currentSettingKey;
+
+    if (!newValue || newValue.trim() === '') {
+        showToast('Please enter a valid value', 'error');
+        return;
+    }
+
+    // Update the displayed value
+    const valueElement = document.getElementById(`val_${key}`);
+    if (valueElement) {
+        valueElement.innerText = newValue;
+    }
+
+    // Save to localStorage
+    const settings = JSON.parse(localStorage.getItem('system_settings') || '{}');
+    settings[key] = newValue;
+    localStorage.setItem('system_settings', JSON.stringify(settings));
+
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('editSettingModal')).hide();
+
+    // Show success message
+    showToast(`"${currentSettingName}" updated to "${newValue}"`, 'success');
+
+    // In a real app, you would also send this to the server via AJAX
+    // fetch('/superadmin/system-settings/update/', {
+    //     method: 'POST',
+    //     headers: {
+    //         'X-CSRFToken': getCSRFToken(),
+    //         'Content-Type': 'application/json'
+    //     },
+    //     body: JSON.stringify({ key: key, value: newValue })
+    // });
+}
+
+function toggleSetting(key, value) {
+    const settings = JSON.parse(localStorage.getItem('system_settings') || '{}');
+    settings[key] = value;
+    localStorage.setItem('system_settings', JSON.stringify(settings));
+
+    const settingName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    showToast(`${settingName} ${value ? 'enabled' : 'disabled'}`, 'success');
+
+    // In a real app, you would also send this to the server via AJAX
+    // fetch('/superadmin/system-settings/toggle/', {
+    //     method: 'POST',
+    //     headers: {
+    //         'X-CSRFToken': getCSRFToken(),
+    //         'Content-Type': 'application/json'
+    //     },
+    //     body: JSON.stringify({ key: key, value: value })
+    // });
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toastMessage');
+    const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+    toast.innerHTML = `<i class="bi ${icon} me-2"></i> ${message}`;
+    toast.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
+    toast.style.display = 'flex';
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 3000);
+}
+
+function getCSRFToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith('csrftoken=')) {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Load saved settings from localStorage on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedSettings = JSON.parse(localStorage.getItem('system_settings') || '{}');
+
+    for (const [key, value] of Object.entries(savedSettings)) {
+        const element = document.getElementById(`val_${key}`);
+        if (element) {
+            element.innerText = value;
+        }
+        const checkbox = document.getElementById(key);
+        if (checkbox && typeof value === 'boolean') {
+            checkbox.checked = value;
+        }
+    }
+});
+</script>
+{% endblock %}

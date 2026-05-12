@@ -1,0 +1,695 @@
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+
+{% block title %}Restructuring Request Details - Staff{% endblock %}
+{% block page_title %}Restructuring Request Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== Detail Page Styles - Organized & Responsive ===== */
+
+    /* Container spacing */
+    .details-container {
+        padding-top: 10px;
+    }
+
+    /* Detail Cards - Consistent styling */
+    .detail-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
+
+    .detail-card:hover {
+        box-shadow: var(--shadow-hover);
+    }
+
+    /* Section Titles - Clean and organized */
+    .section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        letter-spacing: 0.5px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border-light);
+    }
+
+    .section-title i {
+        font-size: 1.1rem;
+        color: var(--brand-primary);
+    }
+
+    /* Info Rows - Proper alignment */
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        flex: 1;
+    }
+
+    .info-value {
+        font-weight: 700;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        text-align: right;
+        flex: 1;
+    }
+
+    /* Grid layout for two-column sections */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px 24px;
+    }
+
+    .info-grid .info-row {
+        border-bottom: none;
+        padding: 8px 0;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Status Timeline - Improved visual design */
+    .status-timeline {
+        display: flex;
+        justify-content: space-between;
+        margin: 30px 0 20px;
+        position: relative;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .status-timeline::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 50px;
+        right: 50px;
+        height: 2px;
+        background: var(--border-color);
+        z-index: 0;
+    }
+
+    .status-step {
+        text-align: center;
+        flex: 1;
+        position: relative;
+        z-index: 1;
+        background: var(--bg-card);
+        min-width: 80px;
+    }
+
+    .status-step .circle {
+        width: 44px;
+        height: 44px;
+        background: var(--border-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .status-step.completed .circle {
+        background: var(--success);
+        color: white;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .status-step.active .circle {
+        background: var(--brand-gradient);
+        color: white;
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    .status-step .label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+
+    .status-step.completed .label,
+    .status-step.active .label {
+        color: var(--text-primary);
+    }
+
+    @media (max-width: 600px) {
+        .status-timeline::before {
+            display: none;
+        }
+        .status-step {
+            min-width: 70px;
+        }
+        .status-step .circle {
+            width: 36px;
+            height: 36px;
+            font-size: 0.85rem;
+        }
+        .status-step .label {
+            font-size: 0.65rem;
+        }
+    }
+
+    /* Status Badge - Enhanced visibility */
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-pending {
+        background: var(--warning-bg);
+        color: var(--warning-text);
+    }
+    .badge-approved {
+        background: var(--success-bg);
+        color: var(--success-text);
+    }
+    .badge-completed {
+        background: var(--info-bg);
+        color: var(--info-text);
+    }
+    .badge-rejected {
+        background: var(--danger-bg);
+        color: var(--danger-text);
+    }
+
+    /* Calculation Card - Special styling */
+    .calculation-card {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(16, 185, 129, 0.02));
+        border-left: 4px solid var(--success);
+    }
+
+    /* Action Buttons - Clearly visible in light mode */
+    .btn-primary-custom {
+        background: var(--brand-gradient);
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(13, 110, 110, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom:hover {
+        border-color: var(--brand-primary);
+        color: var(--brand-primary);
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    /* Action buttons container */
+    .action-buttons {
+        display: flex;
+        gap: 16px;
+        margin-top: 24px;
+        flex-wrap: wrap;
+    }
+
+    /* Code styling */
+    code {
+        background: var(--bg-body);
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: var(--brand-primary);
+    }
+
+    /* Risk/Info boxes */
+    .info-box {
+        background: var(--info-bg);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-left: 3px solid var(--info);
+    }
+
+    .info-box i {
+        font-size: 1.3rem;
+        color: var(--info-text);
+    }
+
+    .info-box .info-text {
+        color: var(--info-text);
+        font-size: 0.85rem;
+    }
+
+    /* Amount highlighting */
+    .amount-positive {
+        color: var(--success);
+        font-weight: 800;
+    }
+
+    .amount-negative {
+        color: var(--danger);
+        font-weight: 800;
+    }
+
+    .amount-primary {
+        color: var(--brand-primary);
+        font-weight: 800;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .detail-card {
+            padding: 18px;
+        }
+
+        .info-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        .info-value {
+            text-align: left;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .action-buttons .btn-primary-custom,
+        .action-buttons .btn-secondary-custom {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* Print styles */
+    @media print {
+        .top-navbar, .sidebar, .app-footer, .action-buttons {
+            display: none !important;
+        }
+        .main-content {
+            margin-left: 0 !important;
+            padding: 0 !important;
+        }
+        .detail-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+    }
+
+    /* Back navigation */
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .back-link:hover {
+        color: var(--brand-primary);
+        transform: translateX(-3px);
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="details-container">
+    <!-- Back Navigation Link -->
+    <a href="{% url 'staff:restructuring_list' %}" class="back-link">
+        <i class="bi bi-arrow-left-circle"></i> Back to Restructuring List
+    </a>
+
+    <!-- Request Information Card -->
+    <div class="detail-card">
+        <div class="section-title">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>Request Information</span>
+        </div>
+        <div class="info-grid">
+            <div class="info-row">
+                <span class="info-label">Request Number:</span>
+                <span class="info-value"><code>{{ request.request_number }}</code></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status:</span>
+                <span class="info-value">
+                    <span class="badge-status badge-{{ request.status_class }}">
+                        <i class="bi {% if request.status_class == 'pending' %}bi-clock-history{% elif request.status_class == 'approved' %}bi-check-circle{% elif request.status_class == 'completed' %}bi-check2-circle{% else %}bi-x-circle{% endif %}"></i>
+                        {{ request.status_display }}
+                    </span>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date Requested:</span>
+                <span class="info-value">{{ request.created_at|date:"F d, Y H:i" }}</span>
+            </div>
+            {% if request.approved_at %}
+            <div class="info-row">
+                <span class="info-label">Date Approved:</span>
+                <span class="info-value">{{ request.approved_at|date:"F d, Y H:i" }}</span>
+            </div>
+            {% endif %}
+            {% if request.completed_at %}
+            <div class="info-row">
+                <span class="info-label">Date Completed:</span>
+                <span class="info-value">{{ request.completed_at|date:"F d, Y H:i" }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Status Timeline -->
+    <div class="detail-card">
+        <div class="section-title">
+            <i class="bi bi-diagram-3"></i>
+            <span>Request Status Timeline</span>
+        </div>
+        <div class="status-timeline">
+            <div class="status-step {% if request.status_class == 'pending' or request.status_class == 'approved' or request.status_class == 'completed' %}completed{% endif %}">
+                <div class="circle"><i class="bi bi-file-text"></i></div>
+                <div class="label">Submitted</div>
+            </div>
+            <div class="status-step {% if request.status_class == 'approved' or request.status_class == 'completed' %}completed{% endif %} {% if request.status_class == 'pending' %}active{% endif %}">
+                <div class="circle"><i class="bi bi-clock-history"></i></div>
+                <div class="label">Pending Review</div>
+            </div>
+            <div class="status-step {% if request.status_class == 'completed' %}completed{% endif %} {% if request.status_class == 'approved' %}active{% endif %}">
+                <div class="circle"><i class="bi bi-check-circle"></i></div>
+                <div class="label">Approved</div>
+            </div>
+            <div class="status-step {% if request.status_class == 'completed' %}completed active{% endif %}">
+                <div class="circle"><i class="bi bi-arrow-repeat"></i></div>
+                <div class="label">Completed</div>
+            </div>
+        </div>
+
+        {% if request.status_class == 'rejected' %}
+        <div class="info-box mt-3" style="background: var(--danger-bg); border-left-color: var(--danger);">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div class="info-text">
+                <strong>This request has been rejected.</strong>
+                {% if request.rejection_reason %}<br>Reason: {{ request.rejection_reason }}{% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Member Information Card -->
+    <div class="detail-card">
+        <div class="section-title">
+            <i class="bi bi-person-badge-fill"></i>
+            <span>Member Information</span>
+        </div>
+        <div class="info-grid">
+            <div class="info-row">
+                <span class="info-label">Member Name:</span>
+                <span class="info-value"><strong>{{ request.member_name }}</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Membership Number:</span>
+                <span class="info-value">{{ request.membership_number }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Contact Number:</span>
+                <span class="info-value">{{ request.contact|default:"—" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email Address:</span>
+                <span class="info-value">{{ request.email|default:"—" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Original Loan Details Card -->
+    <div class="detail-card">
+        <div class="section-title">
+            <i class="bi bi-bank2"></i>
+            <span>Original Loan Details</span>
+        </div>
+        <div class="info-grid">
+            <div class="info-row">
+                <span class="info-label">Loan Number:</span>
+                <span class="info-value"><code>{{ request.loan_number }}</code></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Original Principal:</span>
+                <span class="info-value amount-primary">₱{{ request.original_principal|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Remaining Balance:</span>
+                <span class="info-value amount-negative">₱{{ request.old_balance|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Unpaid Interest:</span>
+                <span class="info-value">₱{{ request.old_interest|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Accrued Penalty:</span>
+                <span class="info-value amount-negative">₱{{ request.old_penalty|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Days Overdue:</span>
+                <span class="info-value">{{ request.days_overdue|default:"0" }} days</span>
+            </div>
+        </div>
+
+        <!-- Total Payoff Amount -->
+        <div class="info-box mt-3">
+            <i class="bi bi-cash-stack"></i>
+            <div class="info-text">
+                <strong>Total Payoff Amount:</strong> ₱{{ request.total_payoff|floatformat:2 }}
+                <br><small>This is the amount needed to fully settle the original loan including penalty and interest.</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restructured Loan Calculation Card -->
+    <div class="detail-card calculation-card">
+        <div class="section-title">
+            <i class="bi bi-calculator-fill"></i>
+            <span>Restructured Loan Calculation</span>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-row">
+                <span class="info-label">💰 Restructuring Loan Amount (New Principal):</span>
+                <span class="info-value amount-primary fw-bold">₱{{ request.new_principal|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">├─ Used to Pay Off Old Loan:</span>
+                <span class="info-value amount-negative">-₱{{ request.total_payoff|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        <div class="section-title mt-3" style="margin-top: 20px;">
+            <i class="bi bi-receipt"></i>
+            <span>New Charges Applied</span>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-row">
+                <span class="info-label">Service Charge (3%):</span>
+                <span class="info-value">₱{{ request.service_charge|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">CBU Retention (2%):</span>
+                <span class="info-value">₱{{ request.cbu_retention|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Insurance (1.32%):</span>
+                <span class="info-value">₱{{ request.insurance|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Service Fee:</span>
+                <span class="info-value">₱{{ request.service_fee|default:"35.00"|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Notarial Fee:</span>
+                <span class="info-value">₱{{ request.notarial_fee|default:"200.00"|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label fw-bold">Total New Charges:</span>
+                <span class="info-value fw-bold">₱{{ request.total_charges|floatformat:2 }}</span>
+            </div>
+        </div>
+
+        <div class="section-title mt-3" style="margin-top: 20px;">
+            <i class="bi bi-graph-up"></i>
+            <span>Final Restructured Loan Terms</span>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-row">
+                <span class="info-label fw-bold">🎯 FINAL RESTRUCTURED LOAN:</span>
+                <span class="info-value amount-primary fw-bold" style="font-size: 1.1rem;">₱{{ request.final_loan_amount|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Interest Rate:</span>
+                <span class="info-value">{{ request.new_interest_rate }}% per annum</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">New Term:</span>
+                <span class="info-value">12 months</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">New Monthly Payment:</span>
+                <span class="info-value amount-positive fw-bold">₱{{ request.new_monthly_payment|floatformat:2 }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">⚠️ Cash Released to Member:</span>
+                <span class="info-value amount-negative">₱0.00 (NO CASH)</span>
+            </div>
+        </div>
+
+        <div class="info-box mt-3">
+            <i class="bi bi-info-circle-fill"></i>
+            <div class="info-text">
+                <strong>Important Notes:</strong><br>
+                ✅ Penalty on old loan STOPS immediately<br>
+                📈 Interest continues on new principal at {{ request.new_interest_rate }}%<br>
+                🔄 Member will pay the new monthly amortization for 12 months
+            </div>
+        </div>
+    </div>
+
+    <!-- Restructuring Reason Card -->
+    <div class="detail-card">
+        <div class="section-title">
+            <i class="bi bi-chat-text-fill"></i>
+            <span>Restructuring Reason</span>
+        </div>
+        <div class="info-box" style="background: var(--warning-bg); border-left-color: var(--warning);">
+            <i class="bi bi-quote"></i>
+            <div class="info-text" style="color: var(--text-primary);">
+                {{ request.reason|default:"No reason provided." }}
+            </div>
+        </div>
+    </div>
+
+    <!-- New Restructured Loan Information -->
+    {% if request.new_loan_id %}
+    <div class="detail-card">
+        <div class="section-title">
+            <i class="bi bi-bank"></i>
+            <span>New Restructured Loan</span>
+        </div>
+        <div class="info-grid">
+            <div class="info-row">
+                <span class="info-label">New Loan Number:</span>
+                <span class="info-value"><code>{{ request.new_loan_number }}</code></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Loan Status:</span>
+                <span class="info-value"><span class="badge-status badge-approved"><i class="bi bi-check-circle"></i> Active</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date Created:</span>
+                <span class="info-value">{{ request.new_loan_created_at|date:"F d, Y"|default:"—" }}</span>
+            </div>
+        </div>
+        <div class="action-buttons">
+            <a href="{% url 'staff:loan_detail' request.new_loan_id %}" class="btn-primary-custom">
+                <i class="bi bi-eye"></i> View New Loan Details
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons for Pending Requests -->
+    {% if request.status_class == 'pending' and can_approve %}
+    <div class="detail-card">
+        <div class="section-title">
+            <i class="bi bi-gear-fill"></i>
+            <span>Admin Actions</span>
+        </div>
+        <div class="action-buttons">
+            <a href="{% url 'staff:restructuring_approve' request.id %}" class="btn-primary-custom">
+                <i class="bi bi-check-lg"></i> Approve Request
+            </a>
+            <a href="{% url 'staff:restructuring_reject' request.id %}" class="btn-secondary-custom" style="border-color: var(--danger); color: var(--danger);">
+                <i class="bi bi-x-lg"></i> Reject Request
+            </a>
+        </div>
+        <div class="info-box mt-3" style="background: var(--info-bg);">
+            <i class="bi bi-shield-check"></i>
+            <div class="info-text">
+                <strong>Review Checklist:</strong><br>
+                • Verify member's restructuring reason is valid<br>
+                • Confirm the restructured loan amount meets minimum requirement<br>
+                • Ensure member understands that NO CASH will be released<br>
+                • Check that member agrees to new monthly amortization
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Print Button -->
+    <div class="action-buttons" style="margin-bottom: 20px;">
+        <button onclick="window.print()" class="btn-secondary-custom">
+            <i class="bi bi-printer"></i> Print Details
+        </button>
+    </div>
+</div>
+{% endblock %}

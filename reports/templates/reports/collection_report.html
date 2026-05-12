@@ -1,0 +1,87 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Collection Report{% endblock %}
+
+{% block page_title %}Collection Report{% endblock %}
+
+{% block content %}
+<div class="no-print mb-3">
+    <form method="get" class="row g-3">
+        <div class="col-auto">
+            <select name="period" class="form-select">
+                <option value="daily" {% if period == 'daily' %}selected{% endif %}>Daily</option>
+                <option value="weekly" {% if period == 'weekly' %}selected{% endif %}>Weekly</option>
+                <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>Monthly</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" class="form-control">
+        </div>
+        <div class="col-auto"><button type="submit" class="btn btn-primary">Filter</button></div>
+        <div class="col-auto"><a href="{% url 'reports:collection_report_print' %}?period={{ period }}&date={{ selected_date|date:'Y-m-d' }}" class="btn btn-info">Print</a></div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">{{ title }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="summary-card bg-success text-white p-3 rounded">
+                    <h6>Total Collections</h6>
+                    <h3>₱{{ total_amount|floatformat:2 }}</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="summary-card bg-info text-white p-3 rounded">
+                    <h6>Number of Transactions</h6>
+                    <h3>{{ total_count }}</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="summary-card bg-warning text-dark p-3 rounded">
+                    <h6>Average Transaction</h6>
+                    <h3>₱{{ total_amount|divisibleby:total_count|default:0|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <h6>By Payment Method</h6>
+        <table class="table table-bordered mb-4">
+            <thead class="table-light"><tr><th>Method</th><th>Count</th><th>Amount</th></tr></thead>
+            <tbody>
+                {% for method in by_method %}
+                <tr>
+                    <td>{{ method.get_payment_method_display }}</td>
+                    <td class="text-end">{{ method.count }}</td>
+                    <td class="text-end">₱{{ method.total|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h6>Transaction Details</h6>
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr><th>Date</th><th>Member</th><th>Loan #</th><th>Amount</th><th>Method</th><th>Receipt #</th></tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td>{{ payment.payment_date|date:"Y-m-d" }}</td>
+                    <td>{{ payment.member.last_name }}, {{ payment.member.first_name }}</td>
+                    <td>{{ payment.loan.loan_number }}</td>
+                    <td class="text-end">₱{{ payment.amount|floatformat:2 }}</td>
+                    <td>{{ payment.get_payment_method_display }}</td>
+                    <td>{{ payment.payment_number }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center">No transactions found</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

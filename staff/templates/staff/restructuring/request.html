@@ -1,0 +1,571 @@
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+
+{% block title %}New Restructuring Request - Staff{% endblock %}
+{% block page_title %}New Restructuring Request{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Main Container */
+    .restructuring-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Search Section */
+    .search-section {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 28px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+    }
+
+    .section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-title i {
+        color: #0d6e6e;
+        font-size: 1.1rem;
+    }
+
+    /* Info Card */
+    .info-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+    }
+
+    .info-title {
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-title i {
+        color: #0d6e6e;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-item {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .info-value.amount {
+        font-weight: 700;
+        font-family: monospace;
+        font-size: 1.1rem;
+    }
+
+    .info-value.amount-positive {
+        color: #10b981;
+    }
+
+    .info-value.amount-negative {
+        color: #ef4444;
+    }
+
+    /* Calculation Card */
+    .calculation-card {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: none;
+    }
+
+    [data-theme="dark"] .calculation-card {
+        background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+    }
+
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-label.required::after {
+        content: '*';
+        color: #ef4444;
+        margin-left: 4px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        width: 100%;
+        transition: all 0.2s;
+        background: var(--input-bg);
+        color: var(--text-primary);
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6e6e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    /* Calculation Display */
+    .calc-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .calc-row:last-child {
+        border-bottom: none;
+    }
+
+    .calc-label {
+        font-weight: 600;
+        color: #92400e;
+    }
+
+    [data-theme="dark"] .calc-label {
+        color: #fde68a;
+    }
+
+    .calc-value {
+        font-weight: 700;
+        font-family: monospace;
+        font-size: 1rem;
+        color: #92400e;
+    }
+
+    [data-theme="dark"] .calc-value {
+        color: #fde68a;
+    }
+
+    .calc-total {
+        background: rgba(0,0,0,0.05);
+        border-radius: 12px;
+        padding: 12px;
+        margin-top: 12px;
+    }
+
+    .calc-total .calc-label {
+        font-size: 1rem;
+    }
+
+    .calc-total .calc-value {
+        font-size: 1.2rem;
+        font-weight: 800;
+    }
+
+    /* Action Buttons - VISIBLE IN LIGHT MODE */
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-success-custom {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-success-custom:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-secondary-custom {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    /* Dark mode button overrides */
+    [data-theme="dark"] .btn-secondary-custom {
+        background: transparent;
+        border-color: #2a9d8f;
+        color: #2a9d8f;
+    }
+
+    [data-theme="dark"] .btn-secondary-custom:hover {
+        background: #0d6e6e;
+        color: white;
+    }
+
+    /* Alert Styles */
+    .alert-warning-custom {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .alert-warning-custom i {
+        color: #f59e0b;
+        font-size: 1.2rem;
+    }
+
+    [data-theme="dark"] .alert-warning-custom {
+        background: #451a03;
+    }
+
+    [data-theme="dark"] .alert-warning-custom i {
+        color: #fbbf24;
+    }
+
+    /* Loading Spinner */
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 40px;
+    }
+
+    .spinner-border-custom {
+        width: 3rem;
+        height: 3rem;
+        border: 0.25em solid var(--border-color);
+        border-right-color: #0d6e6e;
+        border-radius: 50%;
+        animation: spinner 0.75s linear infinite;
+        display: inline-block;
+    }
+
+    @keyframes spinner {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .restructuring-container {
+            padding: 10px;
+        }
+
+        .search-section, .info-card, .calculation-card {
+            padding: 20px;
+        }
+
+        .action-buttons {
+            justify-content: center;
+        }
+
+        .btn-primary-custom, .btn-success-custom, .btn-secondary-custom {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="restructuring-container">
+    <!-- Search Section -->
+    <div class="search-section">
+        <div class="section-title">
+            <i class="bi bi-person-search"></i> Find Member for Restructuring
+        </div>
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-9">
+                <label class="form-label">Member Search</label>
+                <input type="text" class="form-control form-control-lg" id="memberSearch"
+                       placeholder="Enter Member ID, Name, Membership Number, or Loan Number...">
+                <small class="text-muted d-block mt-1">
+                    <i class="bi bi-info-circle"></i> Search by name, membership number, or loan number
+                </small>
+            </div>
+            <div class="col-12 col-md-3">
+                <button class="btn-primary-custom w-100" id="searchMemberBtn">
+                    <i class="bi bi-search"></i> Search Member
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner-border-custom"></div>
+        <p class="mt-2 text-muted">Searching...</p>
+    </div>
+
+    <!-- Results Container -->
+    <div id="results"></div>
+</div>
+
+<script>
+    const searchBtn = document.getElementById('searchMemberBtn');
+    const memberSearchInput = document.getElementById('memberSearch');
+    const resultsDiv = document.getElementById('results');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+
+    // Search on Enter key
+    memberSearchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchMember();
+        }
+    });
+
+    searchBtn.addEventListener('click', function() {
+        searchMember();
+    });
+
+    function searchMember() {
+        const searchTerm = memberSearchInput.value.trim();
+        if (!searchTerm) {
+            alert('Please enter a member name, ID, or loan number to search.');
+            return;
+        }
+
+        // Show loading spinner
+        loadingSpinner.style.display = 'block';
+        resultsDiv.innerHTML = '';
+
+        // First try to search for the member
+        fetch(`/staff/api/member-search/?q=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                loadingSpinner.style.display = 'none';
+
+                if (data.member) {
+                    // Member found - redirect to restructuring form
+                    window.location.href = `/staff/restructuring/request/${data.member.id}/`;
+                } else if (data.members && data.members.length > 0) {
+                    // Multiple members found - show selection
+                    displayMemberSelection(data.members);
+                } else {
+                    // No member found
+                    resultsDiv.innerHTML = `
+                        <div class="info-card">
+                            <div class="alert-warning-custom">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <div>
+                                    <strong>No member found</strong><br>
+                                    No member matching "${escapeHtml(searchTerm)}" was found. Please check the information and try again.
+                                </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <button class="btn-secondary-custom" onclick="clearSearch()">
+                                    <i class="bi bi-arrow-repeat"></i> Try Again
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                loadingSpinner.style.display = 'none';
+                console.error('Error:', error);
+                resultsDiv.innerHTML = `
+                    <div class="info-card">
+                        <div class="alert-warning-custom">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <div>
+                                <strong>Search Error</strong><br>
+                                An error occurred while searching. Please try again.
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button class="btn-secondary-custom" onclick="searchMember()">
+                                <i class="bi bi-arrow-repeat"></i> Try Again
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+    }
+
+    function displayMemberSelection(members) {
+        let membersHtml = `
+            <div class="info-card">
+                <div class="section-title">
+                    <i class="bi bi-people"></i> Select Member
+                </div>
+                <div class="alert-warning-custom mb-3">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <div>Multiple members found. Please select the correct member to continue.</div>
+                </div>
+                <div class="table-container" style="overflow-x: auto;">
+                    <table class="payments-table" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">Member Name</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">Membership #</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">Contact</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+
+        members.forEach(member => {
+            membersHtml += `
+                <tr style="border-bottom: 1px solid var(--border-light);">
+                    <td style="padding: 12px;"><strong>${escapeHtml(member.name)}</strong></td>
+                    <td style="padding: 12px;"><code>${escapeHtml(member.membership_id || 'N/A')}</code></td>
+                    <td style="padding: 12px;">${escapeHtml(member.contact || '—')}</td>
+                    <td style="padding: 12px;">
+                        <button class="btn-primary-custom" onclick="selectMember(${member.id})" style="padding: 6px 16px; font-size: 0.75rem;">
+                            <i class="bi bi-check-lg"></i> Select
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        membersHtml += `
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <button class="btn-secondary-custom" onclick="clearSearch()">
+                        <i class="bi bi-arrow-left"></i> New Search
+                    </button>
+                </div>
+            </div>
+        `;
+
+        resultsDiv.innerHTML = membersHtml;
+    }
+
+    function selectMember(memberId) {
+        window.location.href = `/staff/restructuring/request/${memberId}/`;
+    }
+
+    function clearSearch() {
+        memberSearchInput.value = '';
+        resultsDiv.innerHTML = '';
+        memberSearchInput.focus();
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Focus on search input on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        memberSearchInput.focus();
+    });
+</script>
+{% endblock %}

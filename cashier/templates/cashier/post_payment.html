@@ -1,0 +1,1022 @@
+﻿{% extends 'cashier/base_cashier.html' %}
+{% load static %}
+
+{% block title %}Post Payment - Cashier{% endblock %}
+{% block page_title %}Post Payment{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ===== Modern Dashboard Styles ===== */
+    :root {
+        --primary-dark: #0a5a5a;
+        --primary: #0d6e6e;
+        --primary-light: #1a8a8a;
+        --primary-gradient: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        --primary-gradient-light: linear-gradient(135deg, #1a8a8a 0%, #0d6e6e 100%);
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --info: #3b82f6;
+        --gray-50: #f8fafc;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-600: #6b7280;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+    }
+
+    [data-theme="dark"] {
+        --primary-dark: #0a3d3d;
+        --primary: #0a5a5a;
+        --primary-light: #1a6e6e;
+        --gray-50: #1a2332;
+        --gray-100: #1e2a3a;
+        --gray-200: #2a3548;
+        --gray-600: #9aaebf;
+        --gray-700: #b0c4d4;
+        --gray-800: #c8dae8;
+        --gray-900: #e8edf2;
+    }
+
+    /* Search Card */
+    .search-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+
+    .search-header {
+        background: var(--primary-gradient);
+        padding: 20px 24px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 150px;
+        height: 150px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .search-header h5 {
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .search-header p {
+        margin: 8px 0 0;
+        opacity: 0.9;
+        font-size: 0.85rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .search-body {
+        padding: 24px;
+    }
+
+    /* QR Section */
+    .qr-section {
+        background: var(--bg-body);
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        border: 2px dashed var(--border-color);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .qr-section:hover {
+        border-color: var(--primary);
+        background: var(--bg-card);
+        transform: translateY(-2px);
+    }
+
+    .qr-icon {
+        width: 60px;
+        height: 60px;
+        background: var(--bg-card);
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        box-shadow: var(--shadow);
+    }
+
+    .qr-icon i {
+        font-size: 2rem;
+        color: var(--primary);
+    }
+
+    /* QR Code Display */
+    .qr-code-display {
+        background: white;
+        padding: 15px;
+        border-radius: 16px;
+        display: inline-block;
+        margin: 10px 0;
+    }
+
+    .qr-code-display img {
+        width: 150px;
+        height: 150px;
+    }
+
+    /* Instruction Card */
+    .instruction-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        display: none;
+        animation: fadeInUp 0.4s ease;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .instruction-header {
+        background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+        padding: 16px 24px;
+        color: white;
+    }
+
+    .instruction-header h5 {
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .instruction-body {
+        padding: 24px;
+    }
+
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-item {
+        padding: 14px 16px;
+        background: var(--gray-50);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        transition: all 0.2s;
+    }
+
+    .info-item:hover {
+        border-color: var(--primary);
+    }
+
+    .info-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        display: block;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .info-value.large {
+        font-size: 1.3rem;
+        color: var(--success);
+        font-weight: 800;
+    }
+
+    /* Amount Input Group */
+    .amount-input-group {
+        background: var(--gray-50);
+        border-radius: 16px;
+        padding: 20px;
+        margin: 20px 0;
+        border: 1px solid var(--border-color);
+    }
+
+    .amount-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+        display: block;
+        letter-spacing: 0.5px;
+    }
+
+    .amount-input {
+        font-size: 1.8rem;
+        font-weight: 800;
+        text-align: center;
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        padding: 15px;
+        width: 100%;
+        background: var(--input-bg);
+        color: var(--text-primary);
+        transition: all 0.2s;
+    }
+
+    .amount-input:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.15);
+    }
+
+    /* Method Buttons */
+    .method-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        letter-spacing: 0.5px;
+    }
+
+    .method-buttons {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .method-btn {
+        flex: 1;
+        padding: 14px 20px;
+        border: 2px solid var(--border-color);
+        background: var(--bg-card);
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+
+    .method-btn i {
+        font-size: 1.2rem;
+        color: var(--text-muted);
+    }
+
+    .method-btn:hover {
+        border-color: var(--primary);
+        background: rgba(13, 110, 110, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .method-btn.active {
+        border-color: var(--primary);
+        background: var(--primary-gradient);
+        color: white;
+    }
+
+    .method-btn.active i {
+        color: white;
+    }
+
+    /* Reference Input */
+    .reference-group {
+        margin: 20px 0;
+        display: none;
+    }
+
+    .reference-group label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: 0.5px;
+    }
+
+    .reference-group input {
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--text-primary);
+        transition: all 0.2s;
+    }
+
+    .reference-group input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    /* Submit Button */
+    .submit-section {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 14px 24px;
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        background: var(--gray-600);
+    }
+
+    /* Loading Spinner */
+    .loading-spinner-small {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-container {
+        text-align: center;
+        padding: 40px;
+        display: none;
+    }
+
+    /* Alert Messages */
+    .alert-custom {
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        display: none;
+        align-items: center;
+        gap: 12px;
+        animation: slideDown 0.3s ease;
+    }
+
+    .alert-custom.show {
+        display: flex;
+    }
+
+    .alert-error {
+        background: #fee2e2;
+        border-left: 4px solid #ef4444;
+        color: #991b1b;
+    }
+
+    .alert-success {
+        background: #d1fae5;
+        border-left: 4px solid #10b981;
+        color: #065f46;
+    }
+
+    [data-theme="dark"] .alert-error {
+        background: #7f1d1d;
+        color: #fecaca;
+    }
+
+    [data-theme="dark"] .alert-success {
+        background: #064e3b;
+        color: #a7f3d0;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Form Control Styling */
+    .form-control-lg-custom {
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+
+    .form-control-lg-custom:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    .btn-primary-custom {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+    }
+
+    /* QR Scanner Modal */
+    .qr-modal .modal-content {
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .qr-reader-container {
+        position: relative;
+        width: 100%;
+        min-height: 300px;
+    }
+
+    #qr-reader {
+        width: 100%;
+        border: none;
+    }
+
+    #qr-reader__scan_region {
+        background: #000;
+        border-radius: 12px;
+        min-height: 300px;
+    }
+
+    .qr-result-box {
+        margin-top: 15px;
+        padding: 12px;
+        background: var(--gray-50);
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: -12px;
+    }
+
+    .col-md-8, .col-md-4 {
+        padding: 12px;
+    }
+
+    .col-md-8 {
+        flex: 0 0 66.666%;
+        max-width: 66.666%;
+    }
+
+    .col-md-4 {
+        flex: 0 0 33.333%;
+        max-width: 33.333%;
+    }
+
+    @media (max-width: 768px) {
+        .col-md-8, .col-md-4 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+
+    .text-muted {
+        color: var(--text-muted);
+    }
+
+    .mt-2 {
+        margin-top: 8px;
+    }
+
+    .mb-3 {
+        margin-bottom: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cashier-post-payment">
+    <!-- Search Section -->
+    <div class="search-card">
+        <div class="search-header">
+            <h5>
+                <i class="bi bi-search"></i>
+                Find Payment Instruction
+            </h5>
+            <p>Enter Member ID or Loan Number to retrieve payment details</p>
+        </div>
+        <div class="search-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <input type="text" class="form-control-lg-custom" id="searchInput"
+                           placeholder="Enter Member ID or Loan Number (e.g., M-12345 or LN-2024-1000)">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn-primary-custom w-100" id="searchBtn">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="qr-section" id="qrSection">
+                        <div class="qr-icon">
+                            <i class="bi bi-upc-scan"></i>
+                        </div>
+                        <h6 class="mb-1 fw-bold">Scan QR Code</h6>
+                        <small class="text-muted">Click to scan member's QR code for quick lookup</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-container" id="loadingIndicator">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Searching for payment instruction...</p>
+    </div>
+
+    <!-- Alert Messages -->
+    <div id="errorAlert" class="alert-custom alert-error"></div>
+    <div id="successAlert" class="alert-custom alert-success"></div>
+
+    <!-- Payment Instruction Card -->
+    <div class="instruction-card" id="instructionCard">
+        <div class="instruction-header">
+            <h5>
+                <i class="bi bi-receipt"></i>
+                Payment Instruction Slip
+            </h5>
+        </div>
+        <div class="instruction-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-person"></i> Member Name</span>
+                    <span class="info-value" id="memberName">—</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-bank"></i> Loan Number</span>
+                    <span class="info-value" id="loanNumber">—</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-calculator"></i> Remaining Balance</span>
+                    <span class="info-value" id="remainingBalance">—</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-person-badge"></i> Issued By</span>
+                    <span class="info-value" id="issuedBy">—</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-calendar"></i> Instruction Date</span>
+                    <span class="info-value" id="instructionDate">—</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-cash-stack"></i> Amount Due</span>
+                    <span class="info-value large" id="amountDue">—</span>
+                </div>
+            </div>
+
+            <!-- Amount Input -->
+            <div class="amount-input-group">
+                <label class="amount-label"><i class="bi bi-currency-dollar"></i> Payment Amount</label>
+                <input type="number" step="0.01" class="amount-input" id="paymentAmount"
+                       placeholder="0.00" value="0.00">
+                <small class="text-muted d-block mt-2">Enter the amount to be paid</small>
+            </div>
+
+            <!-- Payment Method Selection -->
+            <div class="method-title">
+                <i class="bi bi-credit-card"></i> Select Payment Method
+            </div>
+            <div class="method-buttons">
+                <button class="method-btn" data-method="cash" id="cashBtn">
+                    <i class="bi bi-cash-stack"></i> Cash
+                </button>
+                <button class="method-btn" data-method="pesada" id="pesadaBtn">
+                    <i class="bi bi-truck"></i> Pesada
+                </button>
+                <button class="method-btn" data-method="quedan" id="quedanBtn">
+                    <i class="bi bi-file-text"></i> Quedan
+                </button>
+            </div>
+
+            <!-- Reference Number (for non-cash payments) -->
+            <div class="reference-group" id="referenceGroup">
+                <label><i class="bi bi-hash"></i> Reference Number</label>
+                <input type="text" id="referenceNumber" placeholder="Enter reference number (e.g., ticket number)">
+                <small class="text-muted d-block mt-1">Required for Pesada and Quedan payments</small>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="submit-section">
+                <button class="btn-submit" id="submitPaymentBtn" disabled>
+                    <i class="bi bi-check-circle"></i> Process Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QR Scanner Modal -->
+<div class="modal fade qr-modal" id="qrScannerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="modal-header" style="background: var(--primary-gradient); color: white;">
+                <h5 class="modal-title"><i class="bi bi-upc-scan"></i> Scan QR Code</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="qr-reader" style="width: 100%;"></div>
+                <div id="qr-result" class="qr-result-box" style="display: none;">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                    <span id="qr-scanned-value"></span>
+                </div>
+                <div class="text-center mt-3">
+                    <small class="text-muted">Position the QR code within the camera frame</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-custom" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+    let currentLoanId = null;
+    let selectedMethod = null;
+    let maxAmount = 0;
+    let html5QrCode = null;
+
+    // Search payment instruction
+    function searchPaymentInstruction(query) {
+        if (!query) {
+            showError('Please enter Member ID or Loan Number');
+            return;
+        }
+
+        document.getElementById('loadingIndicator').style.display = 'block';
+        document.getElementById('instructionCard').style.display = 'none';
+        hideAlerts();
+
+        fetch(`/cashier/api/search-payment-instruction/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loadingIndicator').style.display = 'none';
+
+                if (data.success) {
+                    currentLoanId = data.payment_id;
+                    maxAmount = parseFloat(data.remaining_balance);
+
+                    document.getElementById('memberName').textContent = data.member_name;
+                    document.getElementById('loanNumber').textContent = data.loan_number;
+                    document.getElementById('remainingBalance').textContent = `₱${parseFloat(data.remaining_balance).toLocaleString()}`;
+                    document.getElementById('issuedBy').textContent = data.issued_by || 'Staff';
+                    document.getElementById('instructionDate').textContent = data.instruction_date;
+                    document.getElementById('amountDue').textContent = `₱${parseFloat(data.amount_due).toLocaleString()}`;
+
+                    document.getElementById('paymentAmount').value = parseFloat(data.amount_due).toFixed(2);
+
+                    document.getElementById('instructionCard').style.display = 'block';
+                    document.getElementById('instructionCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    showError(data.error || 'No payment instruction found for the provided ID');
+                }
+            })
+            .catch(error => {
+                document.getElementById('loadingIndicator').style.display = 'none';
+                showError('An error occurred while searching. Please try again.');
+                console.error('Error:', error);
+            });
+    }
+
+    // Start QR Scanner
+    async function startQRScanner() {
+        const modal = new bootstrap.Modal(document.getElementById('qrScannerModal'));
+
+        // Show modal first
+        modal.show();
+
+        // Initialize QR scanner after modal is shown
+        setTimeout(async () => {
+            try {
+                if (html5QrCode) {
+                    await html5QrCode.stop();
+                }
+
+                html5QrCode = new Html5Qrcode("qr-reader");
+
+                const config = {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                    disableFlip: false
+                };
+
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    (decodedText, decodedResult) => {
+                        // Success callback
+                        console.log(`Code matched = ${decodedText}`);
+                        handleQRCodeResult(decodedText);
+                        html5QrCode.stop();
+                        modal.hide();
+                    },
+                    (errorMessage) => {
+                        // Error callback - ignore scanning errors
+                        console.log(`QR Scan error: ${errorMessage}`);
+                    }
+                ).catch(err => {
+                    console.error("Error starting QR scanner:", err);
+                    showError("Could not start camera. Please check permissions.");
+                    modal.hide();
+                });
+            } catch (err) {
+                console.error("Error initializing QR scanner:", err);
+                showError("Unable to initialize QR scanner. Please check camera permissions.");
+                modal.hide();
+            }
+        }, 500);
+
+        // Clean up when modal is hidden
+        document.getElementById('qrScannerModal').addEventListener('hidden.bs.modal', async () => {
+            if (html5QrCode && html5QrCode.isScanning) {
+                await html5QrCode.stop();
+            }
+        });
+    }
+
+    function handleQRCodeResult(decodedText) {
+        // The QR code should contain Member ID or Loan Number
+        document.getElementById('searchInput').value = decodedText;
+        searchPaymentInstruction(decodedText);
+        showSuccess(`QR Code scanned: ${decodedText}`);
+    }
+
+    // Payment method selection
+    function selectMethod(method) {
+        selectedMethod = method;
+
+        document.querySelectorAll('.method-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        if (method === 'cash') {
+            document.getElementById('cashBtn').classList.add('active');
+            document.getElementById('referenceGroup').style.display = 'none';
+        } else if (method === 'pesada') {
+            document.getElementById('pesadaBtn').classList.add('active');
+            document.getElementById('referenceGroup').style.display = 'block';
+            document.getElementById('referenceNumber').focus();
+        } else if (method === 'quedan') {
+            document.getElementById('quedanBtn').classList.add('active');
+            document.getElementById('referenceGroup').style.display = 'block';
+            document.getElementById('referenceNumber').focus();
+        }
+
+        validateAmount();
+    }
+
+    // Validate payment amount
+    function validateAmount() {
+        const amountInput = document.getElementById('paymentAmount');
+        const amount = parseFloat(amountInput.value);
+        const submitBtn = document.getElementById('submitPaymentBtn');
+        const reference = document.getElementById('referenceNumber').value.trim();
+        const errorDiv = document.getElementById('errorAlert');
+
+        if (isNaN(amount) || amount <= 0) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Enter valid amount';
+            return false;
+        }
+
+        if (amount > maxAmount) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Amount exceeds balance';
+            if (errorDiv) {
+                errorDiv.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i> Amount cannot exceed remaining balance of ₱${maxAmount.toLocaleString()}`;
+            }
+            return false;
+        }
+
+        if (!selectedMethod) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Select payment method';
+            return false;
+        }
+
+        if (selectedMethod !== 'cash' && !reference) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Enter reference number';
+            return false;
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Process Payment';
+        if (errorDiv) errorDiv.classList.remove('show');
+        return true;
+    }
+
+    // Process payment
+    function processPayment() {
+        if (!validateAmount()) return;
+
+        const amount = document.getElementById('paymentAmount').value;
+        const reference = document.getElementById('referenceNumber').value.trim();
+        const paymentMethod = selectedMethod;
+
+        const submitBtn = document.getElementById('submitPaymentBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<div class="loading-spinner-small"></div> Processing...';
+
+        const formData = new FormData();
+        formData.append('payment_id', currentLoanId);
+        formData.append('amount', amount);
+        formData.append('payment_method', paymentMethod);
+        formData.append('reference_number', reference);
+
+        fetch('/cashier/post-payment/submit/', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': getCSRFToken() }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess(data.message);
+                setTimeout(() => {
+                    window.location.href = '/cashier/dashboard/';
+                }, 2000);
+            } else {
+                showError(data.error || 'Payment processing failed');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            showError('An error occurred while processing payment');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            console.error('Error:', error);
+        });
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('errorAlert');
+        const successDiv = document.getElementById('successAlert');
+        successDiv.classList.remove('show');
+        errorDiv.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i> ${message}`;
+        errorDiv.classList.add('show');
+        setTimeout(() => errorDiv.classList.remove('show'), 5000);
+    }
+
+    function showSuccess(message) {
+        const successDiv = document.getElementById('successAlert');
+        const errorDiv = document.getElementById('errorAlert');
+        errorDiv.classList.remove('show');
+        successDiv.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> ${message}`;
+        successDiv.classList.add('show');
+    }
+
+    function hideAlerts() {
+        document.getElementById('errorAlert').classList.remove('show');
+        document.getElementById('successAlert').classList.remove('show');
+    }
+
+    function getCSRFToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith('csrftoken=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Event Listeners
+    const searchBtn = document.getElementById('searchBtn');
+    const searchInput = document.getElementById('searchInput');
+
+    searchBtn.addEventListener('click', () => searchPaymentInstruction(searchInput.value.trim()));
+    searchInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter') searchPaymentInstruction(searchInput.value.trim());
+    });
+
+    document.getElementById('cashBtn').addEventListener('click', () => selectMethod('cash'));
+    document.getElementById('pesadaBtn').addEventListener('click', () => selectMethod('pesada'));
+    document.getElementById('quedanBtn').addEventListener('click', () => selectMethod('quedan'));
+
+    document.getElementById('paymentAmount').addEventListener('input', validateAmount);
+    document.getElementById('referenceNumber').addEventListener('input', validateAmount);
+    document.getElementById('submitPaymentBtn').addEventListener('click', processPayment);
+
+    // QR Scanner click handler
+    document.getElementById('qrSection').addEventListener('click', startQRScanner);
+
+    document.getElementById('referenceNumber').addEventListener('keypress', e => {
+        if (e.key === 'Enter' && !document.getElementById('submitPaymentBtn').disabled) {
+            processPayment();
+        }
+    });
+
+    document.getElementById('paymentAmount').addEventListener('blur', function() {
+        let value = parseFloat(this.value);
+        if (isNaN(value)) value = 0;
+        this.value = value.toFixed(2);
+        validateAmount();
+    });
+</script>
+{% endblock %}

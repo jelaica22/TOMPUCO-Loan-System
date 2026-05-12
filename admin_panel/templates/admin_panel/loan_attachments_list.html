@@ -1,0 +1,941 @@
+﻿{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Loan Attachments - TOMPuCO Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================================
+       PROFESSIONAL LOAN ATTACHMENTS MANAGEMENT STYLES
+       EXPLICIT COLORS FOR BOTH LIGHT AND DARK MODES
+    ============================================================ */
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 28px;
+    }
+    @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+
+    .stat-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 18px 16px;
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border-color: #0d6e6e;
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+    .stat-card.total::before { background: linear-gradient(135deg, #0d6e6e, #0a5a5a); }
+    .stat-card.reused::before { background: #10b981; }
+    .stat-card.new::before { background: #3b82f6; }
+    .stat-card.applications::before { background: #f59e0b; }
+
+    .stat-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #1f2937;
+        line-height: 1.2;
+    }
+
+    [data-theme="dark"] .stat-card {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+    [data-theme="dark"] .stat-value {
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .stat-label {
+        color: #9ca3af;
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid #e5e7eb;
+    }
+    .filter-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #6b7280;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .filter-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        margin-bottom: 8px;
+        display: block;
+    }
+    .filter-select, .filter-input {
+        border-radius: 12px;
+        border: 1.5px solid #e5e7eb;
+        background: #f9fafb;
+        color: #1f2937;
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        width: 100%;
+    }
+    .filter-select option {
+        color: #1f2937;
+        background: #ffffff;
+    }
+    .filter-select:focus, .filter-input:focus {
+        outline: none;
+        border-color: #0d6e6e;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    [data-theme="dark"] .filter-section {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+    [data-theme="dark"] .filter-title,
+    [data-theme="dark"] .filter-label {
+        color: #9ca3af;
+    }
+    [data-theme="dark"] .filter-select,
+    [data-theme="dark"] .filter-input {
+        background: #15151f;
+        border-color: #2a2a3a;
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .filter-select option {
+        background: #15151f;
+        color: #eef2ff;
+    }
+
+    /* Main Table Card */
+    .main-card {
+        background: #ffffff;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+    .card-header-custom {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .card-title {
+        color: white !important;
+        margin: 0 !important;
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .card-stats {
+        display: flex;
+        gap: 15px;
+        color: white !important;
+        font-size: 0.75rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .card-stats span {
+        background: rgba(255, 255, 255, 0.15);
+        padding: 5px 12px;
+        border-radius: 20px;
+    }
+    .btn-add-attachment {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        color: white !important;
+        border: none !important;
+        padding: 8px 16px !important;
+        font-weight: 600 !important;
+        border-radius: 10px !important;
+        font-size: 0.8rem !important;
+        transition: all 0.2s !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        text-decoration: none !important;
+    }
+    .btn-add-attachment:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+        color: white !important;
+    }
+
+    [data-theme="dark"] .main-card {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+
+    /* Professional Table */
+    .table-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+    .attachments-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        min-width: 900px;
+    }
+    .attachments-table th {
+        padding: 16px 16px;
+        font-weight: 700;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #6b7280;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    .attachments-table td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f3f4f6;
+        color: #1f2937;
+    }
+    .attachments-table tbody tr {
+        transition: background 0.2s ease;
+    }
+    .attachments-table tbody tr:hover {
+        background: #f9fafb;
+    }
+
+    [data-theme="dark"] .attachments-table th {
+        background: #15151f;
+        color: #9ca3af;
+        border-bottom-color: #2a2a3a;
+    }
+    [data-theme="dark"] .attachments-table td {
+        color: #eef2ff;
+        border-bottom-color: #252536;
+    }
+    [data-theme="dark"] .attachments-table tbody tr:hover {
+        background: rgba(13, 110, 110, 0.1);
+    }
+
+    .application-code {
+        font-family: monospace;
+        background: #f9fafb;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        display: inline-block;
+        color: #1f2937;
+        border: 1px solid #e5e7eb;
+        font-weight: 600;
+    }
+    [data-theme="dark"] .application-code {
+        background: #15151f;
+        border-color: #2a2a3a;
+        color: #eef2ff;
+    }
+
+    .member-name-att {
+        font-weight: 700;
+        color: #1f2937;
+        font-size: 0.85rem;
+    }
+    [data-theme="dark"] .member-name-att {
+        color: #eef2ff;
+    }
+
+    /* Professional Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+    .badge-reused { background: #d1fae5; color: #065f46; }
+    .badge-new { background: #dbeafe; color: #1e40af; }
+
+    [data-theme="dark"] .badge-reused { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    [data-theme="dark"] .badge-new { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+
+    /* ============================================================
+       ACTION BUTTONS - FULLY VISIBLE IN LIGHT MODE
+    ============================================================ */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+
+    .btn-view-att {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%) !important;
+        color: #ffffff !important;
+    }
+    .btn-view-att:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    .btn-delete-att {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: #ef4444 !important;
+        color: #ffffff !important;
+    }
+    .btn-delete-att:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
+        color: #ffffff !important;
+    }
+
+    /* Form Buttons */
+    .btn-apply, .btn-reset {
+        padding: 10px 20px;
+        font-weight: 600;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .btn-apply {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        color: white;
+        border: none;
+    }
+    .btn-apply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.35);
+    }
+    .btn-reset {
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        color: #374151;
+    }
+    .btn-reset:hover {
+        background: #e5e7eb;
+        transform: translateY(-2px);
+    }
+
+    [data-theme="dark"] .btn-reset {
+        background: #374151;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+    [data-theme="dark"] .btn-reset:hover {
+        background: #4b5563;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    .empty-state i {
+        font-size: 3.5rem;
+        color: #9ca3af;
+        margin-bottom: 15px;
+    }
+    .empty-state p {
+        color: #6b7280;
+        margin-bottom: 20px;
+    }
+
+    [data-theme="dark"] .empty-state i {
+        color: #6b7280;
+    }
+    [data-theme="dark"] .empty-state p {
+        color: #9ca3af;
+    }
+
+    /* Modal Styles */
+    .modal-custom .modal-content {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 24px;
+        overflow: hidden;
+    }
+    .modal-custom .modal-header {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        padding: 20px 24px;
+        border: none;
+    }
+    .modal-custom .modal-header .modal-title {
+        color: white !important;
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+    }
+    .modal-custom .modal-header .btn-close-white {
+        filter: brightness(0) invert(1);
+    }
+    .modal-custom .modal-body {
+        padding: 24px;
+        background: #ffffff;
+    }
+    .modal-custom .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    .modal-custom .btn-secondary {
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        color: #374151;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .modal-custom .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+    .modal-custom .btn-primary {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        border: none;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    .modal-custom .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.35);
+    }
+
+    [data-theme="dark"] .modal-custom .modal-content {
+        background: #1e1e2a;
+        border-color: #2a2a3a;
+    }
+    [data-theme="dark"] .modal-custom .modal-body {
+        background: #1e1e2a;
+    }
+    [data-theme="dark"] .modal-custom .modal-footer {
+        background: #15151f;
+        border-top-color: #2a2a3a;
+    }
+    [data-theme="dark"] .modal-custom .btn-secondary {
+        background: #374151;
+        border-color: #4b5563;
+        color: #e5e7eb;
+    }
+    [data-theme="dark"] .modal-custom .btn-secondary:hover {
+        background: #4b5563;
+    }
+
+    /* Detail Grid for Modal */
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    @media (max-width: 576px) {
+        .detail-grid { grid-template-columns: 1fr; }
+    }
+    .detail-section {
+        margin-bottom: 0;
+    }
+    .detail-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+    .detail-value {
+        font-size: 0.85rem;
+        padding: 8px 0;
+        border-bottom: 1px dashed #e5e7eb;
+        color: #1f2937;
+    }
+    .detail-value strong {
+        color: #0d6e6e;
+        font-weight: 700;
+    }
+    .file-link {
+        color: #0d6e6e;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .file-link:hover {
+        text-decoration: underline;
+    }
+
+    [data-theme="dark"] .detail-label {
+        color: #9ca3af;
+    }
+    [data-theme="dark"] .detail-value {
+        color: #eef2ff;
+        border-bottom-color: #374151;
+    }
+    [data-theme="dark"] .detail-value strong {
+        color: #1a8a8a;
+    }
+    [data-theme="dark"] .file-link {
+        color: #1a8a8a;
+    }
+
+    /* Form Styles */
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #374151;
+        font-size: 0.8rem;
+    }
+    .form-select, .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        background: #f9fafb;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        color: #1f2937;
+        transition: all 0.2s;
+    }
+    .form-select:focus, .form-control:focus {
+        outline: none;
+        border-color: #0d6e6e;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        margin-right: 8px;
+        cursor: pointer;
+    }
+    .form-check-label {
+        font-weight: 600;
+        color: #374151;
+        cursor: pointer;
+    }
+
+    [data-theme="dark"] .form-label {
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .form-select,
+    [data-theme="dark"] .form-control {
+        background: #15151f;
+        border-color: #2a2a3a;
+        color: #eef2ff;
+    }
+    [data-theme="dark"] .form-check-label {
+        color: #eef2ff;
+    }
+
+    .text-muted {
+        color: #6b7280 !important;
+        font-size: 0.7rem;
+    }
+    [data-theme="dark"] .text-muted {
+        color: #9ca3af !important;
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .stat-card, .main-card, .filter-section {
+        animation: fadeIn 0.4s ease forwards;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card total" onclick="filterByStatus('all')">
+        <div class="stat-label">Total Attachments</div>
+        <div class="stat-value">{{ total_attachments|default:attachments|length }}</div>
+    </div>
+    <div class="stat-card reused" onclick="filterByStatus('reused')">
+        <div class="stat-label">Reused Documents</div>
+        <div class="stat-value">{{ reused_count|default:0 }}</div>
+    </div>
+    <div class="stat-card new" onclick="filterByStatus('new')">
+        <div class="stat-label">New Uploads</div>
+        <div class="stat-value">{{ new_count|default:0 }}</div>
+    </div>
+    <div class="stat-card applications">
+        <div class="stat-label">Applications</div>
+        <div class="stat-value">{{ applications_count|default:0 }}</div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-section">
+    <div class="filter-title"><i class="bi bi-funnel-fill"></i> Advanced Filters</div>
+    <form method="get" id="filterForm">
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <label class="filter-label"><i class="bi bi-search"></i> Search</label>
+                <input type="text" name="search" class="filter-input" id="searchInput" placeholder="Application ID, Member Name..." value="{{ request.GET.search|default:'' }}">
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-arrow-repeat"></i> Document Type</label>
+                <select name="reused_status" class="filter-select" id="reusedStatusSelect">
+                    <option value="all" {% if not request.GET.reused_status or request.GET.reused_status == 'all' %}selected{% endif %}>All</option>
+                    <option value="reused" {% if request.GET.reused_status == 'reused' %}selected{% endif %}>Reused Documents</option>
+                    <option value="new" {% if request.GET.reused_status == 'new' %}selected{% endif %}>New Uploads</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label"><i class="bi bi-file-text"></i> Loan Application</label>
+                <select name="application_id" class="filter-select" id="applicationSelect">
+                    <option value="all" {% if not request.GET.application_id or request.GET.application_id == 'all' %}selected{% endif %}>All Applications</option>
+                    {% for app in all_applications %}
+                    <option value="{{ app.id }}" {% if request.GET.application_id|add:"0" == app.id %}selected{% endif %}>{{ app.application_id }} - {{ app.member.last_name }}, {{ app.member.first_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="filter-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn-apply w-100"><i class="bi bi-search"></i> Apply</button>
+                    <button type="button" class="btn-reset" id="resetFiltersBtn"><i class="bi bi-arrow-repeat"></i> Reset</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Main Table -->
+<div class="main-card">
+    <div class="card-header-custom">
+        <div class="card-title"><i class="bi bi-paperclip-fill"></i> Loan Attachments</div>
+        <div class="card-stats">
+            <span><i class="bi bi-paperclip"></i> Showing {{ attachments|length }} attachments</span>
+            <span><i class="bi bi-calendar3"></i> {% now "Y-m-d H:i" %}</span>
+            <button class="btn-add-attachment" data-bs-toggle="modal" data-bs-target="#addAttachmentModal">
+                <i class="bi bi-plus-circle"></i> Add Attachment
+            </button>
+        </div>
+    </div>
+    <div class="table-container">
+        <table class="attachments-table">
+            <thead>
+                <tr>
+                    <th width="50">ID</th>
+                    <th>Loan Application</th>
+                    <th>Member</th>
+                    <th>Document</th>
+                    <th width="100">Status</th>
+                    <th width="100">Attached Date</th>
+                    <th width="180">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for att in attachments %}
+                <tr>
+                    <td><strong class="text-primary">{{ att.id }}</strong></td>
+                    <td><span class="application-code">{{ att.loan_application.application_id }}</span></td>
+                    <td>
+                        <div class="member-name-att">{{ att.loan_application.member.last_name }}, {{ att.loan_application.member.first_name }}</div>
+                        <div class="text-muted small">{{ att.loan_application.member.membership_number|default:"" }}</div>
+                    </div>
+                    <td>
+                        <div><i class="bi bi-file-earmark-text"></i> {{ att.document.get_document_type_display|default:att.document.document_type }}</div>
+                        <div class="text-muted small">{{ att.document.document_number|default:"No number" }}</div>
+                    </div>
+                    <td>
+                        {% if att.is_reused %}
+                            <span class="status-badge badge-reused"><i class="bi bi-arrow-repeat"></i> Reused</span>
+                        {% else %}
+                            <span class="status-badge badge-new"><i class="bi bi-cloud-upload"></i> New Upload</span>
+                        {% endif %}
+                    </div>
+                    <td>{{ att.attached_at|date:"Y-m-d" }}</div>
+                    <td class="action-buttons">
+                        <button class="btn-view-att" onclick="viewAttachment({{ att.id }})"><i class="bi bi-eye"></i> View</button>
+                        <button class="btn-delete-att" onclick="deleteAttachment({{ att.id }})"><i class="bi bi-trash"></i> Delete</button>
+                    </div>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <p>No attachments found matching your criteria</p>
+                            <button class="btn-add-attachment" data-bs-toggle="modal" data-bs-target="#addAttachmentModal">
+                                <i class="bi bi-plus-circle"></i> Add Your First Attachment
+                            </button>
+                        </div>
+                    </div>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Attachment Modal -->
+<div class="modal fade modal-custom" id="addAttachmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-paperclip me-2"></i>Add Loan Attachment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'admin_panel:loan_attachment_create' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Loan Application *</label>
+                            <select name="application_id" class="form-select" required>
+                                <option value="">Select Application</option>
+                                {% for app in all_applications %}
+                                <option value="{{ app.id }}">{{ app.application_id }} - {{ app.member.last_name }}, {{ app.member.first_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Document Type *</label>
+                            <select name="document_id" class="form-select" required>
+                                <option value="">Select Document</option>
+                                {% for doc in all_documents %}
+                                <option value="{{ doc.id }}">{{ doc.get_document_type_display }} - {{ doc.document_number|default:"No number" }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_reused" class="form-check-input" id="isReused">
+                                <label class="form-check-label" for="isReused">Mark as Reused Document</label>
+                                <small class="text-muted d-block">Check if this document was previously uploaded from member's document storage</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Cancel</button>
+                    <button type="submit" class="btn-primary"><i class="bi bi-paperclip me-1"></i> Add Attachment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Attachment Modal -->
+<div class="modal fade modal-custom" id="viewAttachmentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-paperclip me-2"></i>Attachment Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewAttachmentContent">
+                <div class="loading-state">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p>Loading attachment details...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal"><i class="bi bi-x-circle me-1"></i> Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade modal-custom" id="deleteAttachmentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4" id="deleteAttachmentContent"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-delete-att" id="confirmDeleteBtn">Yes, Delete Attachment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentDeleteId = null;
+
+function filterByStatus(status) {
+    const reusedStatusSelect = document.getElementById('reusedStatusSelect');
+    if (reusedStatusSelect) {
+        if (status === 'reused') reusedStatusSelect.value = 'reused';
+        else if (status === 'new') reusedStatusSelect.value = 'new';
+        else reusedStatusSelect.value = 'all';
+        document.getElementById('filterForm').submit();
+    }
+}
+
+// View Attachment
+function viewAttachment(attId) {
+    const modal = new bootstrap.Modal(document.getElementById('viewAttachmentModal'));
+    const modalBody = document.getElementById('viewAttachmentContent');
+
+    modalBody.innerHTML = `
+        <div class="loading-state">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Loading attachment details...</p>
+        </div>
+    `;
+
+    modal.show();
+
+    fetch(`/superadmin/loan-attachments/${attId}/`)
+        .then(response => response.json())
+        .then(data => {
+            modalBody.innerHTML = `
+                <div class="detail-grid">
+                    <div class="detail-section">
+                        <div class="detail-label"><i class="bi bi-file-text me-1"></i> Application Information</div>
+                        <div class="detail-value"><strong>Application ID:</strong> <span class="application-code">${escapeHtml(data.application_id)}</span></div>
+                        <div class="detail-value"><strong>Member:</strong> ${escapeHtml(data.member_name)}</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-label"><i class="bi bi-file-earmark me-1"></i> Document Information</div>
+                        <div class="detail-value"><strong>Document Type:</strong> ${data.document_type}</div>
+                        <div class="detail-value"><strong>Document #:</strong> ${data.document_number || '-'}</div>
+                        <div class="detail-value"><strong>Status:</strong> ${data.is_reused ? '<span class="status-badge badge-reused">Reused Document</span>' : '<span class="status-badge badge-new">New Upload</span>'}</div>
+                        <div class="detail-value"><strong>Attached Date:</strong> ${data.attached_at}</div>
+                    </div>
+                </div>
+                ${data.file_url ? `
+                <div class="detail-section mt-3">
+                    <div class="detail-label"><i class="bi bi-download me-1"></i> File</div>
+                    <div class="detail-value">
+                        <a href="${data.file_url}" target="_blank" class="file-link">
+                            <i class="bi bi-eye"></i> View/Download Document
+                        </a>
+                    </div>
+                </div>
+                ` : ''}
+            `;
+        })
+        .catch(error => {
+            modalBody.innerHTML = '<div class="text-center py-4"><i class="bi bi-exclamation-triangle fs-1"></i><p class="mt-3">Error loading attachment details</p></div>';
+        });
+}
+
+// Delete Attachment
+function deleteAttachment(attId) {
+    currentDeleteId = attId;
+    document.getElementById('deleteAttachmentContent').innerHTML = `
+        <div class="mb-3">
+            <div class="empty-icon" style="margin:0 auto;width:70px;height:70px;background:rgba(239,68,68,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-trash" style="font-size:2rem;color:#ef4444;"></i>
+            </div>
+        </div>
+        <h5 class="mb-2">Delete Attachment?</h5>
+        <p>Are you sure you want to delete this loan attachment?</p>
+        <p class="text-danger small">⚠️ This action cannot be undone!</p>
+    `;
+    new bootstrap.Modal(document.getElementById('deleteAttachmentModal')).show();
+}
+
+document.getElementById('confirmDeleteBtn')?.addEventListener('click', function() {
+    if(currentDeleteId) {
+        fetch(`/superadmin/loan-attachments/${currentDeleteId}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCSRFToken() }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) location.reload();
+            else alert('Error deleting attachment: ' + (data.error || 'Unknown error'));
+        })
+        .catch(error => alert('Error deleting attachment'));
+    }
+});
+
+// Reset Filters
+document.getElementById('resetFiltersBtn')?.addEventListener('click', function() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('reusedStatusSelect').value = 'all';
+    document.getElementById('applicationSelect').value = 'all';
+    document.getElementById('filterForm').submit();
+});
+
+// Utility Functions
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function getCSRFToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith('csrftoken=')) {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
