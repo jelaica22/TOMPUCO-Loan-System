@@ -2,14 +2,9 @@
 Django settings for tompuco project.
 """
 
-"""
-Django settings for tompuco project.
-"""
-
 from pathlib import Path
 import os
-import pymysql
-pymysql.install_as_MySQLdb()
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -82,14 +77,16 @@ TEMPLATES = [
 WSGI_APPLICATION = 'tompuco.wsgi.application'
 
 # ============================================
-# DATABASE - MYSQL CONFIGURATION
+# DATABASE - POSTGRESQL FOR RENDER
 # ============================================
 
+# Check if running on Render (has DATABASE_URL)
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+    }
 # Check if running on PythonAnywhere
-ON_PYTHONANYWHERE = 'PYTHONANYWHERE_DOMAIN' in os.environ
-
-if ON_PYTHONANYWHERE:
-    # Production on PythonAnywhere
+elif 'PYTHONANYWHERE_DOMAIN' in os.environ:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -101,15 +98,11 @@ if ON_PYTHONANYWHERE:
         }
     }
 else:
-    # Local development with MySQL
+    # Local development with SQLite (simple and works everywhere)
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'tompuco_db',
-            'USER': 'tompuco',
-            'PASSWORD': 'Databasedb123',
-            'HOST': 'localhost',
-            'PORT': '3306',
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 
