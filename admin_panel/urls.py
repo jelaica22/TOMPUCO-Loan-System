@@ -7,6 +7,7 @@ urlpatterns = [
     # Dashboard
     path('', views.dashboard, name='dashboard'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('api/activity/', views.api_activity_feed, name='api_activity_feed'),
 
     # Profile
     path('profile/', views.profile, name='profile'),

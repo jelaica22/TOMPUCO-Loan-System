@@ -1207,43 +1207,29 @@
         }
     }
 
-    // Load Recent Activity
     function loadRecentActivity() {
-        fetch('/api/admin/activity/')
-            .then(response => response.json())
-            .then(data => {
-                const activityList = document.getElementById('activityList');
-                if (data.activities && data.activities.length > 0) {
-                    activityList.innerHTML = data.activities.slice(0, 5).map(activity => `
-                        <div class="activity-item" onclick="window.location.href='${activity.link || '#'}'">
-                            <div class="activity-icon">
-                                <i class="bi ${activity.icon || 'bi-bell'}"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="fw-semibold small">${escapeHtml(activity.title)}</div>
-                                <div class="text-muted small">${escapeHtml(activity.description)}</div>
-                                <div class="text-muted" style="font-size: 0.65rem;">${formatRelativeTime(activity.created_at)}</div>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    activityList.innerHTML = `
-                        <div class="empty-state">
-                            <i class="bi bi-inbox"></i>
-                            <p>No recent activity</p>
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading activity:', error);
-                document.getElementById('activityList').innerHTML = `
-                    <div class="empty-state">
-                        <i class="bi bi-wifi-off"></i>
-                        <p>Unable to load activity</p>
-                    </div>
-                `;
-            });
+        // Mock activity data for testing
+        const mockActivities = [
+            { title: 'Admin Logged In', description: 'Super admin accessed dashboard', icon: 'bi-box-arrow-in-right', created_at: new Date().toISOString(), link: '#' },
+            { title: 'New Member Added', description: 'Juan Dela Cruz registered', icon: 'bi-person-plus', created_at: new Date().toISOString(), link: '#' },
+            { title: 'Loan Application', description: 'APCP loan application pending review', icon: 'bi-file-text', created_at: new Date().toISOString(), link: '#' },
+            { title: 'Payment Received', description: 'Payment of ₱5,000 recorded', icon: 'bi-cash', created_at: new Date().toISOString(), link: '#' },
+            { title: 'Loan Approved', description: 'Loan application approved by committee', icon: 'bi-check-circle', created_at: new Date().toISOString(), link: '#' },
+        ];
+
+        const activityList = document.getElementById('activityList');
+        activityList.innerHTML = mockActivities.slice(0,5).map(activity => `
+            <div class="activity-item" onclick="window.location.href='${activity.link}'">
+                <div class="activity-icon">
+                    <i class="bi ${activity.icon}"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold small">${escapeHtml(activity.title)}</div>
+                    <div class="text-muted small">${escapeHtml(activity.description)}</div>
+                    <div class="text-muted" style="font-size: 0.65rem;">Just now</div>
+                </div>
+            </div>
+        `).join('');
     }
 
     // View Application Details

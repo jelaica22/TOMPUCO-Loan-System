@@ -10,6 +10,8 @@ from django.db.models import Q, Sum, Count, Avg
 from decimal import Decimal
 from datetime import datetime, timedelta, date
 import random
+from django.contrib.admin.models import LogEntry
+from django.contrib.contenttypes.models import ContentType
 import json
 from django.db import IntegrityError
 
@@ -103,6 +105,29 @@ def dashboard(request):
         'member_distribution_data': [active_members, inactive_members],
     }
     return render(request, 'admin_panel/dashboard.html', context)
+
+
+def api_activity_feed(request):
+    """API endpoint for recent activity feed"""
+    try:
+        # Get recent admin log entries
+        logs = LogEntry.objects.select_related('user').order_by('-action_time')[:10]
+
+        activities = []
+        for log in logs:
+            activity = {
+                'id': log.id,
+                'title': log.get_change_message() or log.action_flag,
+                'description': f'{log.user.username} {log.get_action_flag_display()} {log.content_type}',
+                'icon': 'bi-person-check' if log.action_flag == 1 else 'bi-pencil' if log.action_flag == 2 else 'bi-trash',
+                'link': f'/admin/{log.content_type.app_label}/{log.content_type.model}/{log.object_id}/change/',
+                'created_at': log.action_time.isoformat()
+            }
+            activities.append(activity)
+
+        return JsonResponse({'activities': activities})
+    except Exception as e:
+        return JsonResponse({'activities': [], 'error': str(e)})
 
 
 # ==================== PROFILE FUNCTIONS ====================
