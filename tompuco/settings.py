@@ -5,7 +5,6 @@ Django settings for tompuco project.
 from pathlib import Path
 import os
 import dj_database_url
-import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -16,36 +15,19 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-your-secret-ke
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# In tompuco/settings.py, update these lines:
-
-# Add CSRF trusted origins
-CSRF_TRUSTED_ORIGINS = [
-    'https://tompuco-loan-system.onrender.com',
-    'http://tompuco-loan-system.onrender.com',
-]
-
-# Also add ALLOWED_HOSTS properly
+# ALLOWED_HOSTS
 ALLOWED_HOSTS = [
     'tompuco-loan-system.onrender.com',
     'localhost',
     '127.0.0.1',
+    '*',  # Allow all during testing
 ]
 
-# Security settings for production on Render
-if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    CSRF_COOKIE_SAMESITE = 'Lax'
-    SESSION_COOKIE_SAMESITE = 'Lax'
-
-    # Only for testing!
-    CSRF_COOKIE_SECURE = False
-    CSRF_COOKIE_SAMESITE = 'None'
-    SESSION_COOKIE_SECURE = False
+# CSRF Trusted Origins - FIXED (removed duplicates)
+CSRF_TRUSTED_ORIGINS = [
+    'https://tompuco-loan-system.onrender.com',
+    'https://*.onrender.com',
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -80,8 +62,9 @@ MIDDLEWARE = [
     'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'main.middleware.VerificationMiddleware',  # Re-enabled
-    'main.middleware.RedirectManagerMiddleware',  # Add this too if needed
+    # Temporarily disable custom middleware to debug 500 error
+    # 'main.middleware.VerificationMiddleware',
+    # 'main.middleware.RedirectManagerMiddleware',
 ]
 
 # Unverified member restrictions
@@ -117,12 +100,7 @@ ASGI_APPLICATION = 'tompuco.asgi.application'
 # Channel layers for real-time notifications
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',  # For development
-        # For production with Redis:
-        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        # 'CONFIG': {
-        #     "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
-        # },
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
 
@@ -130,7 +108,6 @@ CHANNEL_LAYERS = {
 # DATABASE - PRODUCTION READY
 # ============================================
 
-# Check if running on Render (has DATABASE_URL)
 if os.environ.get('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.config(
@@ -138,7 +115,6 @@ if os.environ.get('DATABASE_URL'):
             ssl_require=True
         )
     }
-# Check if running on PythonAnywhere
 elif os.environ.get('PYTHONANYWHERE_DOMAIN'):
     DATABASES = {
         'default': {
@@ -151,7 +127,6 @@ elif os.environ.get('PYTHONANYWHERE_DOMAIN'):
         }
     }
 else:
-    # Local development with SQLite
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -177,8 +152,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-# WhiteNoise for static files
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
@@ -188,27 +161,30 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Authentication URLs - FIXED (removed duplicate)
+# Authentication URLs
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/redirect/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # Session settings
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_AGE = 3600  # 1 hour
+SESSION_COOKIE_AGE = 3600
 
 # Staff settings
-STAFF_SESSION_TIMEOUT = 1800  # 30 minutes
+STAFF_SESSION_TIMEOUT = 1800
 PENALTY_START_DAYS = 360
-PENALTY_RATE = 0.02  # 2% per month
+PENALTY_RATE = 0.02
 
 # Email backend
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# Security settings for production - DISABLED SSL REDIRECT for now
+# Security settings for production - CLEAN VERSION
 if not DEBUG:
-    # SECURE_SSL_REDIRECT = True  # Comment this out to test
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = 'Lax'
