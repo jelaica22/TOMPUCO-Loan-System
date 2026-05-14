@@ -16,7 +16,31 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-your-secret-ke
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']
+# In tompuco/settings.py, update these lines:
+
+# Add CSRF trusted origins
+CSRF_TRUSTED_ORIGINS = [
+    'https://tompuco-loan-system.onrender.com',
+    'http://tompuco-loan-system.onrender.com',
+]
+
+# Also add ALLOWED_HOSTS properly
+ALLOWED_HOSTS = [
+    'tompuco-loan-system.onrender.com',
+    'localhost',
+    '127.0.0.1',
+]
+
+# Security settings for production on Render
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = 'Lax'
 
 # Application definition
 INSTALLED_APPS = [
