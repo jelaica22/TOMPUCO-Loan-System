@@ -967,6 +967,162 @@
             updateBadges();
             setInterval(updateBadges, 30000);
         });
+        // ============================================================
+// REAL-TIME NOTIFICATIONS - WEBSOCKET
+// ============================================================
+
+let notificationSocket = null;
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 5;
+
+function connectWebSocket() {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}/ws/notifications/`;
+
+    notificationSocket = new WebSocket(wsUrl);
+
+    notificationSocket.onopen = function(e) {
+        console.log('✅ WebSocket connected for notifications');
+        reconnectAttempts = 0;
+    };
+
+    notificationSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        if (data.type === 'initial') {
+            updateNotificationBadges(data.unread_count);
+        }
+        else if (data.type === 'new_notification') {
+            // Show browser notification
+            showBrowserNotification(data.notification.title, data.notification.message);
+
+            // Update badges
+            updateNotificationBadges(data.unread_count);
+
+            // Update dropdown without refresh
+            addNotificationToDropdown(data.notification);
+        }
+        else if (data.type === 'count_update') {
+            updateNotificationBadges(data.unread_count);
+        }
+    };
+
+    notificationSocket.onclose = function(e) {
+        console.log('WebSocket disconnected, reconnecting...');
+        if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            setTimeout(connectWebSocket, 3000 * reconnectAttempts);
+        }
+    };
+
+    notificationSocket.onerror = function(e) {
+        console.error('WebSocket error:', e);
+    };
+}
+
+function updateNotificationBadges(count) {
+    const topBadge = document.getElementById('topNotificationBadge');
+    const sidebarBadge = document.getElementById('sidebarNotificationBadge');
+    const displayCount = count > 99 ? '99+' : count;
+
+    if (count > 0) {
+        if (topBadge) {
+            topBadge.textContent = displayCount;
+            topBadge.style.display = 'inline-block';
+        }
+        if (sidebarBadge) {
+            sidebarBadge.textContent = displayCount;
+            sidebarBadge.style.display = 'inline-block';
+        }
+    } else {
+        if (topBadge) topBadge.style.display = 'none';
+        if (sidebarBadge) sidebarBadge.style.display = 'none';
+    }
+}
+
+function addNotificationToDropdown(notification) {
+    const dropdownList = document.getElementById('notificationDropdownList');
+    if (!dropdownList) return;
+
+    // Escape HTML to prevent XSS
+    const escapedTitle = notification.title.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+    const escapedMessage = notification.message.substring(0, 80).replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+
+    const notifHtml = `
+        <a href="${notification.link}" class="dropdown-item notification-item" style="white-space: normal; padding: 12px 16px; border-bottom: 1px solid var(--border-color); background: rgba(13, 110, 110, 0.05);">
+            <div style="display: flex; align-items: start; gap: 10px;">
+                <div style="min-width: 35px;">
+                    <i class="bi bi-bell-fill" style="color: #0d6e6e;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 0.85rem;">${escapedTitle}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">${escapedMessage}${notification.message.length > 80 ? '...' : ''}</div>
+                    <div style="font-size: 0.6rem; color: var(--text-muted); margin-top: 5px;">Just now</div>
+                </div>
+                <span style="width: 8px; height: 8px; background: #0d6e6e; border-radius: 50%;"></span>
+            </div>
+        </a>
+    `;
+
+    // Remove empty state if exists
+    const emptyState = dropdownList.querySelector('.text-center.p-4');
+    if (emptyState) {
+        dropdownList.innerHTML = '';
+    }
+
+    // Add new notification at the top
+    dropdownList.insertAdjacentHTML('afterbegin', notifHtml);
+
+    // Ensure "View all" link exists at the bottom
+    if (!document.getElementById('viewAllLink')) {
+        const viewAllLink = document.createElement('a');
+        viewAllLink.href = "/committee/notifications/";
+        viewAllLink.className = "dropdown-item text-center";
+        viewAllLink.id = "viewAllLink";
+        viewAllLink.style.padding = "10px";
+        viewAllLink.innerHTML = "View all notifications";
+        dropdownList.appendChild(viewAllLink);
+    }
+}
+
+function showBrowserNotification(title, body) {
+    if (!("Notification" in window)) return;
+
+    if (Notification.permission === "granted") {
+        new Notification(title, {
+            body: body,
+            icon: "/static/images/logo.png",
+            tag: "notification"
+        });
+    } else if (Notification.permission !== "denied") {
+        Notification.requestPermission();
+    }
+}
+
+// Initialize WebSocket when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    connectWebSocket();
+
+    const notificationBell = document.querySelector('.notification-bell');
+    if (notificationBell) {
+        notificationBell.addEventListener('click', function() {
+            if (Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+        });
+    }
+});
+
     </script>
     {% block extra_js %}{% endblock %}
 </body>

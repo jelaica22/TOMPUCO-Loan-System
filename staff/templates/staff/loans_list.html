@@ -1,4 +1,4 @@
-﻿{% extends 'staff/base_staff.html' %}
+{% extends 'staff/base_staff.html' %}
 {% block page_title %}Loan Register{% endblock %}
 {% block content %}
 <div class="card">
@@ -14,8 +14,8 @@
                     <tr>
                         <td>{{ loan.loan_number }}</td>
                         <td>{{ loan.borrower_name }}</td>
-                        <td>₱{{ loan.principal|floatformat:2 }}</td>
-                        <td>₱{{ loan.remaining_balance|floatformat:2 }}</td>
+                        <td>?{{ loan.principal|floatformat:2 }}</td>
+                        <td>?{{ loan.remaining_balance|floatformat:2 }}</td>
                         <td><span class="badge bg-success">{{ loan.status }}</span></td>
                         <td><a href="{% url 'staff:loan_detail' loan.id %}" class="btn btn-sm btn-primary">View</a></td>
                     </tr>

@@ -3,13 +3,10 @@
 
 {% block title %}My Loan Applications - TOMPuCO{% endblock %}
 
-{% block page_title %}My Loan Applications{% endblock %}
-
 {% block extra_css %}
 <style>
     /* ===== My Applications Page - Professional Design ===== */
 
-    /* Page Container */
     .applications-container {
         max-width: 1400px;
         margin: 0 auto;
@@ -87,12 +84,6 @@
     .stat-icon.approved { background: rgba(16, 185, 129, 0.1); color: #10b981; }
     .stat-icon.rejected { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
-    [data-theme="dark"] .stat-icon.total { background: rgba(13, 110, 110, 0.2); color: #4ade80; }
-    [data-theme="dark"] .stat-icon.pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-    [data-theme="dark"] .stat-icon.committee { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-    [data-theme="dark"] .stat-icon.approved { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-    [data-theme="dark"] .stat-icon.rejected { background: rgba(239, 68, 68, 0.15); color: #f87171; }
-
     .stat-value {
         font-size: 32px;
         font-weight: 800;
@@ -157,11 +148,6 @@
         box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
     }
 
-    [data-theme="dark"] .filter-input:focus {
-        border-color: #4ade80;
-        box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.15);
-    }
-
     .btn-apply, .btn-reset {
         padding: 10px 20px;
         font-weight: 600;
@@ -185,11 +171,6 @@
         background: var(--bg-card);
         border: 1.5px solid var(--border-color);
         color: var(--text-primary);
-    }
-
-    .btn-reset:hover {
-        transform: translateY(-2px);
-        background: var(--gray-100);
     }
 
     /* Main Card */
@@ -259,10 +240,6 @@
         letter-spacing: 0.5px;
     }
 
-    [data-theme="dark"] .applications-table th {
-        background: #1e2a3a;
-    }
-
     .applications-table td {
         padding: 16px;
         vertical-align: middle;
@@ -272,15 +249,11 @@
 
     .applications-table tbody tr {
         transition: background 0.2s;
+        cursor: pointer;
     }
 
     .applications-table tbody tr:hover {
         background: var(--gray-50);
-        cursor: pointer;
-    }
-
-    [data-theme="dark"] .applications-table tbody tr:hover {
-        background: #1e2a3a;
     }
 
     /* Status Badges */
@@ -304,16 +277,30 @@
     .status-rejected { background: #fee2e2; color: #991b1b; }
     .status-needs-revision { background: #ffedd5; color: #9a3412; }
 
-    [data-theme="dark"] .status-pending { background: #451a03; color: #fde68a; }
-    [data-theme="dark"] .status-committee { background: #1e3a5f; color: #bfdbfe; }
-    [data-theme="dark"] .status-line-approved { background: #3b0764; color: #c4b5fd; }
-    [data-theme="dark"] .status-manager-approved { background: #064e3b; color: #a7f3d0; }
-    [data-theme="dark"] .status-ready-disbursement { background: #1e3a5f; color: #bfdbfe; }
-    [data-theme="dark"] .status-disbursed { background: #064e3b; color: #a7f3d0; }
-    [data-theme="dark"] .status-rejected { background: #7f1d1d; color: #fecaca; }
-    [data-theme="dark"] .status-needs-revision { background: #451a03; color: #fde68a; }
+    .app-id {
+        font-weight: 700;
+        color: #0d6e6e;
+        font-family: monospace;
+        font-size: 0.85rem;
+    }
 
-    /* Action Buttons - Visible in both modes */
+    .text-end {
+        text-align: right;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .fw-bold {
+        font-weight: 700;
+    }
+
+    .text-primary {
+        color: #0d6e6e;
+    }
+
+    /* Action Buttons */
     .action-buttons {
         display: flex;
         gap: 10px;
@@ -363,46 +350,6 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         color: white;
-    }
-
-    [data-theme="dark"] .btn-view {
-        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
-    }
-
-    [data-theme="dark"] .btn-reapply {
-        background: #059669;
-    }
-
-    /* Table Text Alignment */
-    .text-end {
-        text-align: right;
-    }
-
-    .text-center {
-        text-align: center;
-    }
-
-    .fw-bold {
-        font-weight: 700;
-    }
-
-    .text-primary {
-        color: #0d6e6e;
-    }
-
-    [data-theme="dark"] .text-primary {
-        color: #4ade80;
-    }
-
-    .app-id {
-        font-weight: 700;
-        color: #0d6e6e;
-        font-family: monospace;
-        font-size: 0.85rem;
-    }
-
-    [data-theme="dark"] .app-id {
-        color: #4ade80;
     }
 
     /* Empty State */
@@ -480,10 +427,6 @@
         border: 1px solid var(--border-color);
     }
 
-    [data-theme="dark"] .info-card-modal {
-        background: #1e2a3a;
-    }
-
     .info-card-modal h6 {
         font-size: 0.9rem;
         font-weight: 700;
@@ -491,10 +434,6 @@
         margin-bottom: 16px;
         padding-bottom: 10px;
         border-bottom: 1px solid var(--border-color);
-    }
-
-    [data-theme="dark"] .info-card-modal h6 {
-        color: #4ade80;
     }
 
     .info-card-modal table {
@@ -518,33 +457,12 @@
         font-weight: 500;
     }
 
-    .modal .btn-secondary {
-        background: var(--gray-100);
-        border: 1px solid var(--border-color);
-        color: var(--text-primary);
-        padding: 8px 20px;
-        border-radius: 8px;
-    }
-
-    .modal .btn-primary {
-        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
-        border: none;
-        padding: 8px 20px;
-        border-radius: 8px;
-        color: white;
-    }
-
     .alert-danger {
         background: #fee2e2;
         color: #991b1b;
         border: none;
         border-radius: 12px;
         padding: 12px 16px;
-    }
-
-    [data-theme="dark"] .alert-danger {
-        background: #7f1d1d;
-        color: #fecaca;
     }
 </style>
 {% endblock %}
@@ -706,16 +624,21 @@
     }
 
     function loadApplications() {
-        fetch('/api/member-applications/')
+        fetch('/api/member/applications/')
             .then(response => response.json())
             .then(data => {
-                allApplications = data.applications || [];
-                updateStats();
-                filterAndRenderApplications();
+                if (data.success) {
+                    allApplications = data.applications || [];
+                    updateStats();
+                    filterAndRenderApplications();
+                } else {
+                    console.error('API Error:', data.error);
+                    showError(data.error || 'Failed to load applications');
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showError();
+                showError('Network error: ' + error.message);
             });
     }
 
@@ -748,14 +671,10 @@
         }
 
         if (filters.dateFrom) {
-            filtered = filtered.filter(app => app.date_applied >= filters.dateFrom);
+            filtered = filtered.filter(app => app.applied_date >= filters.dateFrom);
         }
 
-        if (filters.dateTo) {
-            filtered = filtered.filter(app => app.date_applied <= filters.dateTo);
-        }
-
-        filtered.sort((a, b) => new Date(b.date_applied) - new Date(a.date_applied));
+        filtered.sort((a, b) => new Date(b.applied_date) - new Date(a.applied_date));
         renderTable(filtered);
 
         document.getElementById('showingCount').innerHTML = `Showing ${filtered.length} applications`;
@@ -785,7 +704,7 @@
 
         tbody.innerHTML = applications.map(app => `
             <tr onclick="showApplicationDetails(${app.id})" style="cursor: pointer;">
-                <td class="text-muted small">${formatDate(app.date_applied)}</td>
+                <td class="text-muted small">${formatDate(app.applied_date)}</td>
                 <td><code class="app-id">${app.application_id}</code></td>
                 <td>${app.loan_type || 'APCP'}</td>
                 <td class="text-end fw-bold text-primary">${formatCurrency(app.requested_amount)}</td>
@@ -826,7 +745,7 @@
                                         <h6><i class="bi bi-file-text"></i> Application Information</h6>
                                         <table>
                                             <tr><td><strong>Application ID:</strong></td><td>${app.application_id}</td></tr>
-                                            <tr><td><strong>Date Applied:</strong></td><td>${formatDate(app.date_applied)}</td></tr>
+                                            <tr><td><strong>Date Applied:</strong></td><td>${formatDate(app.applied_date)}</td></tr>
                                             <tr><td><strong>Loan Product:</strong></td><td>${app.loan_type || 'APCP'}</td></tr>
                                             <tr><td><strong>Requested Amount:</strong></td><td class="text-primary fw-bold">${formatCurrency(app.requested_amount)}</td></tr>
                                             <tr><td><strong>Approved Line:</strong></td><td>${app.approved_line ? formatCurrency(app.approved_line) : '—'}</td></tr>
@@ -846,16 +765,16 @@
                                     </div>
                                 </div>
                             </div>
-                            ${app.status === 'rejected' && app.committee_remarks ? `
+                            ${app.status === 'rejected' && app.remarks ? `
                             <div class="alert alert-danger mt-3">
                                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                <strong>Rejection Reason:</strong> ${app.committee_remarks}
+                                <strong>Rejection Reason:</strong> ${app.remarks}
                             </div>
                             ` : ''}
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <a href="/application/${app.id}/" class="btn btn-primary">View Full Details</a>
+                            <a href="/my-applications/${app.id}/" class="btn btn-primary">View Full Details</a>
                         </div>
                     </div>
                 </div>
@@ -874,7 +793,7 @@
         });
     }
 
-    function showError() {
+    function showError(message) {
         const tbody = document.getElementById('applicationsTableBody');
         tbody.innerHTML = `
             <tr>
@@ -882,7 +801,7 @@
                     <div class="empty-state">
                         <i class="bi bi-exclamation-triangle-fill text-danger"></i>
                         <h6>Error Loading Applications</h6>
-                        <p>There was a problem loading your applications. Please try again.</p>
+                        <p>${message}</p>
                         <button class="btn btn-primary btn-sm" onclick="loadApplications()">
                             <i class="bi bi-arrow-repeat"></i> Retry
                         </button>

@@ -1,11 +1,11 @@
-﻿{% extends 'staff/base_staff.html' %}
+{% extends 'staff/base_staff.html' %}
 {% block page_title %}Payment Schedule - {{ loan.loan_number }}{% endblock %}
 {% block content %}
 <div class="card">
     <div class="card-header">Payment Schedule for {{ loan.loan_number }}</div>
     <div class="card-body">
         <p><strong>Member:</strong> {{ loan.borrower_name }}</p>
-        <p><strong>Principal:</strong> ₱{{ loan.principal }}</p>
+        <p><strong>Principal:</strong> ?{{ loan.principal }}</p>
         <p><strong>Interest Rate:</strong> {{ loan.interest_rate }}%</p>
         <p><strong>Schedule Type:</strong> {{ loan.payment_schedule_type }}</p>
         <a href="{% url 'staff:loan_detail' loan.id %}" class="btn btn-primary">Back to Loan</a>

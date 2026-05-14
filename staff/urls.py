@@ -6,8 +6,8 @@ app_name = 'staff'
 
 urlpatterns = [
     # Dashboard
-    path('dashboard/', views.dashboard, name='staff_dashboard'),
-    path('', views.dashboard, name='staff_dashboard'),
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('', views.dashboard, name='index'),
 
     # Applications
     path('applications/', views.application_list, name='staff_applications'),
@@ -15,7 +15,7 @@ urlpatterns = [
     path('applications/<int:pk>/', views.application_review, name='review_application'),
     path('applications/<int:pk>/edit/', views.edit_application, name='edit_application'),
     path('applications/<int:pk>/add-charges/', views.add_charges, name='add_charges'),
-    path('applications/<int:pk>/create-loan/', views.create_loan, name='create_loan'),
+    path('applications/<int:app_id>/create-loan/', views.create_loan, name='create_loan'),
 
     # Loans (Loan Register)
     path('loans/', views.loan_list, name='staff_loans'),
@@ -29,6 +29,7 @@ urlpatterns = [
     path('payments/issue/', views.issue_payment_instruction, name='issue_payment_instruction'),
     path('payments/history/', views.payment_history, name='payment_history'),
     path('payments/<int:pk>/', views.payment_detail, name='payment_detail'),
+    path('payments/<int:pk>/receipt/', views.payment_receipt_json, name='payment_receipt_json'),
 
     # Restructuring
     path('restructuring/', views.restructuring_list, name='restructuring_list'),
@@ -40,6 +41,7 @@ urlpatterns = [
     path('api/restructuring/<int:pk>/', views.restructuring_api_detail, name='restructuring_api_detail'),
 
     # Reports
+    path('reports/', views.reports_index, name='staff_reports'),
     path('reports/loan-summary/', views.report_loan_summary, name='report_loan_summary'),
     path('reports/collection/', views.report_collection, name='report_collection'),
     path('reports/aging/', views.report_aging, name='report_aging'),
@@ -49,7 +51,15 @@ urlpatterns = [
     path('reports/penalty/', views.report_penalty, name='report_penalty'),
     path('reports/export/excel/', views.export_report_excel, name='export_report_excel'),
     path('reports/export/pdf/', views.export_report_pdf, name='export_report_pdf'),
-    path('reports/', views.reports_index, name='staff_reports'),
+
+    # Report API endpoints
+    path('reports/loan-summary/api/', views.report_loan_summary_api, name='report_loan_summary_api'),
+    path('reports/collection/api/', views.report_collection_api, name='report_collection_api'),
+    path('reports/aging/api/', views.report_aging_api, name='report_aging_api'),
+    path('reports/member/api/', views.report_member_api, name='report_member_api'),
+    path('reports/loan-product/api/', views.report_loan_product_api, name='report_loan_product_api'),
+    path('reports/restructuring/api/', views.report_restructuring_api, name='report_restructuring_api'),
+    path('reports/penalty/api/', views.report_penalty_api, name='report_penalty_api'),
 
     # Notifications
     path('notifications/', views.notifications_page, name='notifications_page'),
@@ -80,14 +90,11 @@ urlpatterns = [
     path('api/calculate-payment/', views.calculate_payment_breakdown, name='calculate_payment_breakdown'),
     path('api/co-maker-validate/', views.validate_co_maker, name='validate_co_maker'),
     path('api/issue-instruction/', views.issue_instruction_api, name='issue_instruction_api'),
-    path('payments/<int:pk>/receipt/', views.payment_receipt_api, name='payment_receipt_api'),
 
-    # Report API endpoints (must be before the main reports path)
-    path('reports/loan-summary/api/', views.report_loan_summary_api, name='report_loan_summary_api'),
-    path('reports/collection/api/', views.report_collection_api, name='report_collection_api'),
-    path('reports/aging/api/', views.report_aging_api, name='report_aging_api'),
-    path('reports/member/api/', views.report_member_api, name='report_member_api'),
-    path('reports/loan-product/api/', views.report_loan_product_api, name='report_loan_product_api'),
-    path('reports/restructuring/api/', views.report_restructuring_api, name='report_restructuring_api'),
-    path('reports/penalty/api/', views.report_penalty_api, name='report_penalty_api'),
+    # Add these to your staff/urls.py
+    path('api/application/<int:pk>/', views.application_api, name='application_api'),
+    path('api/loan-status/<int:loan_id>/', views.loan_status_api, name='loan_status_api'),
+
+    # Logout
+    path('logout/', views.staff_logout, name='logout'),
 ]

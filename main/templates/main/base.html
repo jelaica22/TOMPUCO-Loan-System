@@ -565,7 +565,7 @@
                     <div class="p-3" style="background: var(--brand-gradient); color: white; border-radius: 8px 8px 0 0;">
                         <div class="d-flex justify-content-between align-items-center">
                             <h6 class="mb-0"><i class="bi bi-bell"></i> Notifications</h6>
-                            <a href="{% url 'main:get_notifications' %}" class="text-white text-decoration-none small">View All</a>
+                            <a href="{% url 'main:notifications_page' %}" class="text-white text-decoration-none small">View All</a>
                         </div>
                     </div>
                     <div id="notificationDropdownList" style="max-height: 400px; overflow-y: auto;">
@@ -642,7 +642,7 @@
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a class="nav-link" href="{% url 'main:get_notifications' %}" data-nav="notifications">
+                    <a class="nav-link" href="{% url 'main:notifications_page' %}" data-nav="notifications">
                         <i class="bi bi-bell"></i>
                         <span>Notifications</span>
                         <span class="nav-badge" id="sidebarNotificationBadge" style="display: none;">0</span>

@@ -1,4 +1,4 @@
-﻿{% extends 'staff/base_staff.html' %}
+{% extends 'staff/base_staff.html' %}
 {% load static %}
 
 {% block title %}My Profile - Staff{% endblock %}
@@ -411,7 +411,7 @@
                                     </span>
                                 </td>
                                 <td>{{ log.entity_type|title }}</td>
-                                <td><code>{{ log.ip_address|default:"—" }}</code></td>
+                                <td><code>{{ log.ip_address|default:"�" }}</code></td>
                                 <td>{{ log.created_at|date:"H:i, M d" }}</td>
                             </tr>
                             {% empty %}

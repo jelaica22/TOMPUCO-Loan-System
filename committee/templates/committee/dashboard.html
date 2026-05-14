@@ -129,10 +129,10 @@
         height: 4px;
     }
 
-    .stat-card.pending::before { background: var(--warning); }
-    .stat-card.line-approved::before { background: #8b5cf6; }
-    .stat-card.approved::before { background: var(--success); }
-    .stat-card.rejected::before { background: var(--danger); }
+    .stat-card.pending-card::before { background: var(--warning); }
+    .stat-card.line-approved-card::before { background: #8b5cf6; }
+    .stat-card.approved-card::before { background: var(--success); }
+    .stat-card.rejected-card::before { background: var(--danger); }
 
     .stat-header {
         display: flex;
@@ -151,10 +151,10 @@
         font-size: 1.4rem;
     }
 
-    .stat-icon.pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
-    .stat-icon.line-approved { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
-    .stat-icon.approved { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-    .stat-icon.rejected { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+    .stat-icon.pending-icon { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .stat-icon.line-approved-icon { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+    .stat-icon.approved-icon { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .stat-icon.rejected-icon { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
 
     .stat-value {
         font-size: 32px;
@@ -254,7 +254,6 @@
 
     .chart-header {
         padding: 16px 20px;
-        background: var(--gray-50);
         border-bottom: 1px solid var(--border-color);
     }
 
@@ -338,7 +337,6 @@
 
     .card-header-custom {
         padding: 16px 20px;
-        background: var(--gray-50);
         border-bottom: 1px solid var(--border-color);
         display: flex;
         justify-content: space-between;
@@ -384,7 +382,7 @@
     }
 
     .custom-table tbody tr:hover {
-        background: var(--gray-50);
+        background: var(--table-hover);
         cursor: pointer;
     }
 
@@ -487,10 +485,12 @@
     .badge-success { background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
     .badge-danger { background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
     .badge-warning { background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
 
     [data-theme="dark"] .badge-success { background: #064e3b; color: #a7f3d0; }
     [data-theme="dark"] .badge-danger { background: #7f1d1d; color: #fecaca; }
     [data-theme="dark"] .badge-warning { background: #451a03; color: #fde68a; }
+    [data-theme="dark"] .badge-purple { background: #4c1d95; color: #ddd6fe; }
 </style>
 {% endblock %}
 
@@ -518,36 +518,36 @@
 
     <!-- Stats Cards -->
     <div class="stats-grid">
-        <div class="stat-card pending" onclick="location.href='{% url 'committee:applications_list' %}'">
+        <div class="stat-card pending-card" onclick="location.href='{% url 'committee:applications_list' %}'">
             <div class="stat-header">
-                <div class="stat-icon pending"><i class="bi bi-clock-history"></i></div>
-                <div class="stat-value">{{ pending_count|default:0 }}</div>
+                <div class="stat-icon pending-icon"><i class="bi bi-clock-history"></i></div>
+                <div class="stat-value">{{ total_pending|default:0 }}</div>
             </div>
             <div class="stat-label">Pending Applications</div>
             <div class="stat-trend">Awaiting committee review</div>
         </div>
 
-        <div class="stat-card line-approved">
+        <div class="stat-card line-approved-card">
             <div class="stat-header">
-                <div class="stat-icon line-approved"><i class="bi bi-check-lg"></i></div>
+                <div class="stat-icon line-approved-icon"><i class="bi bi-check-lg"></i></div>
                 <div class="stat-value">{{ line_approved_count|default:0 }}</div>
             </div>
             <div class="stat-label">Line Approved</div>
             <div class="stat-trend">Ready for charges</div>
         </div>
 
-        <div class="stat-card approved">
+        <div class="stat-card approved-card">
             <div class="stat-header">
-                <div class="stat-icon approved"><i class="bi bi-check-circle"></i></div>
-                <div class="stat-value">{{ approved_count|default:0 }}</div>
+                <div class="stat-icon approved-icon"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-value">{{ approved_by_committee|default:0 }}</div>
             </div>
             <div class="stat-label">Approved by Committee</div>
             <div class="stat-trend">Successfully reviewed</div>
         </div>
 
-        <div class="stat-card rejected">
+        <div class="stat-card rejected-card">
             <div class="stat-header">
-                <div class="stat-icon rejected"><i class="bi bi-x-circle"></i></div>
+                <div class="stat-icon rejected-icon"><i class="bi bi-x-circle"></i></div>
                 <div class="stat-value">{{ rejected_count|default:0 }}</div>
             </div>
             <div class="stat-label">Rejected</div>
@@ -614,7 +614,7 @@
             <div class="kpi-label">Approval Rate</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-value">{{ avg_decision_time|default:0 }}</div>
+            <div class="kpi-value">{{ avg_decision_days|default:0 }}</div>
             <div class="kpi-label">Avg Decision Time (Days)</div>
         </div>
     </div>
@@ -642,19 +642,21 @@
                     <tbody>
                         {% for app in pending_applications %}
                         <tr>
-                            <td><span class="app-id">{{ app.application_id }}</span></td>
-                            <td>{{ app.member.last_name }}, {{ app.member.first_name }}\n                            <small class="text-muted d-block">{{ app.member.membership_number|default:"" }}</small>
-                            </div>
-                            <td>{{ app.loan_product.name|default:"—" }}</div>
-                            <td>₱{{ app.requested_amount|floatformat:2 }}</div>
+                            <td><span class="app-id">{{ app.application_id }}</span></div>
                             <td>
-                                <div class="small">{{ app.votes_count|default:0 }}/{{ committee_members_count|default:3 }} voted</div>
+                                {{ app.member.last_name }}, {{ app.member.first_name }}
+                                <small class="text-muted d-block">{{ app.member.membership_number|default:"" }}</small>
+                            </div>
+                            <td>{{ app.loan_type }}</div>
+                            <td>₱{{ app.requested_amount_display }}</div>
+                            <td>
+                                <div class="small">{{ app.votes_approved|default:0 }}/{{ total_committee_members|default:4 }} approved</div>
                                 {% if app.has_voted %}
-                                <span class="badge-success mt-1" style="font-size: 0.6rem;">Voted</span>
+                                <span class="badge-success mt-1" style="font-size: 0.6rem;">✓ Voted</span>
                                 {% endif %}
                                 <div class="vote-progress">
                                     <div class="vote-bar">
-                                        <div class="vote-filled" style="width: {% widthratio app.votes_count|default:0 committee_members_count|default:3 100 %}%"></div>
+                                        <div class="vote-filled" style="width: {% widthratio app.votes_approved|default:0 total_committee_members|default:4 100 %}%"></div>
                                     </div>
                                 </div>
                             </div>
@@ -692,17 +694,24 @@
                 <div class="p-3" id="activityList">
                     {% for vote in recent_votes %}
                     <div class="activity-item" onclick="window.location.href='{% url 'committee:review_application' vote.application.id %}'">
-                        <div class="activity-icon"><i class="bi bi-check-circle"></i></div>
+                        <div class="activity-icon">
+                            {% if vote.vote == 'approved' %}
+                                <i class="bi bi-check-circle text-success"></i>
+                            {% else %}
+                                <i class="bi bi-x-circle text-danger"></i>
+                            {% endif %}
+                        </div>
                         <div class="flex-grow-1">
-                            <div class="fw-semibold small">Application {{ vote.application.application_id }}</div>
+                            <div class="fw-semibold small">Application {{ vote.application_id_display }}</div>
                             <div class="text-muted small">
                                 {% if vote.vote == 'approved' %}
                                     <span class="badge-success">Approved</span>
                                 {% else %}
                                     <span class="badge-danger">Rejected</span>
                                 {% endif %}
+                                by {{ vote.committee_member.get_full_name|default:vote.committee_member.username }}
                             </div>
-                            <div class="text-muted" style="font-size: 0.65rem;">{{ vote.voted_at|date:"M d, Y - g:i A" }}</div>
+                            <div class="text-muted" style="font-size: 0.65rem;">{{ vote.voted_date_formatted }}</div>
                         </div>
                     </div>
                     {% empty %}
@@ -722,15 +731,15 @@
                 <div class="p-3">
                     <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
                         <span class="text-muted">Total Members</span>
-                        <span class="fw-bold text-primary">{{ committee_members_count|default:3 }}</span>
+                        <span class="fw-bold text-primary">{{ total_committee_members|default:4 }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-3 pb-2 border-bottom">
                         <span class="text-muted">Active Members</span>
-                        <span class="fw-bold text-success">{{ committee_members_count|default:3 }}</span>
+                        <span class="fw-bold text-success">{{ active_committee_members|default:4 }}</span>
                     </div>
                     <div class="d-flex justify-content-between">
                         <span class="text-muted">Required Votes</span>
-                        <span class="fw-bold text-warning">Majority ({{ committee_members_count|default:3|add:1|divisibleby:2|yesno:"2,2" }}+)</span>
+                        <span class="fw-bold text-warning">Majority ({{ required_votes_majority|default:3 }}+)</span>
                     </div>
                 </div>
             </div>
@@ -779,7 +788,7 @@
                 data: {
                     labels: {{ trend_labels|safe|default:'["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]' }},
                     datasets: [{
-                        label: 'Applications Received',
+                        label: 'Applications Voted',
                         data: {{ trend_data|safe|default:'[0,0,0,0,0,0,0]' }},
                         borderColor: '#0d6e6e',
                         backgroundColor: 'rgba(13, 110, 110, 0.05)',
@@ -814,10 +823,10 @@
             decisionChart = new Chart(decisionCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: {{ decision_labels|safe|default:'["Approved", "Rejected", "Pending"]' }},
+                    labels: {{ decision_labels|safe|default:'["Approved", "Rejected"]' }},
                     datasets: [{
-                        data: {{ decision_data|safe|default:'[0,0,0]' }},
-                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                        data: {{ decision_data|safe|default:'[0,0]' }},
+                        backgroundColor: ['#10b981', '#ef4444'],
                         borderWidth: 0,
                         hoverOffset: 10
                     }]
@@ -827,7 +836,7 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10 } },
-                        tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.raw; } } }
+                        tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.raw + ' votes'; } } }
                     },
                     cutout: '60%'
                 }

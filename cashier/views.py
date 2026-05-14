@@ -6,7 +6,10 @@ from django.utils import timezone
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.hashers import check_password
 from decimal import Decimal
-from main.models import Payment, Loan, Member, Notification, SystemSetting, AuditLog, LoanApplication
+from main.models import (
+    Member, Loan, Payment, Notification,
+    SystemSetting, AuditLog, LoanApplication
+)
 from django.db import models
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
@@ -19,6 +22,26 @@ from datetime import datetime, timedelta, date
 from datetime import date
 import random
 import json
+
+from django.contrib.auth import authenticate, login as auth_login
+
+
+def cashier_login(request):
+    if request.user.is_authenticated and hasattr(request.user, 'cashier_profile'):
+        return redirect('cashier:dashboard')
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None and hasattr(user, 'cashier_profile'):
+            auth_login(request, user)
+            return redirect('cashier:dashboard')
+        else:
+            return render(request, 'cashier/login.html', {'error': 'Invalid credentials or not a cashier'})
+
+    return render(request, 'cashier/login.html')
 
 
 # Cashier required decorator

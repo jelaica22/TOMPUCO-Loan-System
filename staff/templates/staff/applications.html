@@ -1,4 +1,4 @@
-﻿{% extends 'staff/base.html' %}
+{% extends 'staff/base.html' %}
 {% block content %}
 <div class="card">
     <div class="card-header d-flex justify-content-between">
@@ -19,7 +19,7 @@
                         <td>{{ app.application_id }}</td>
                         <td>{{ app.applicant_name }}</td>
                         <td>{{ app.loan_product.display_name }}</td>
-                        <td>₱{{ app.requested_amount|floatformat:2 }}</td>
+                        <td>?{{ app.requested_amount|floatformat:2 }}</td>
                         <td><span class="badge bg-secondary">{{ app.get_status_display }}</span></td>
                         <td>
                             <a href="{% url 'staff:forward_to_committee' app.id %}" class="btn btn-sm btn-success">Forward</a>

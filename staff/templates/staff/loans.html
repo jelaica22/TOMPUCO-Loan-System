@@ -1,4 +1,4 @@
-﻿{% extends 'staff/base.html' %}
+{% extends 'staff/base.html' %}
 {% block content %}
 <div class="card">
     <div class="card-header"><h4>Loan Register</h4></div>
@@ -11,8 +11,8 @@
                     <tr>
                         <td>{{ loan.loan_number }}</td>
                         <td>{{ loan.member.get_full_name }}</td>
-                        <td>₱{{ loan.principal|floatformat:2 }}</td>
-                        <td>₱{{ loan.remaining_balance|floatformat:2 }}</td>
+                        <td>?{{ loan.principal|floatformat:2 }}</td>
+                        <td>?{{ loan.remaining_balance|floatformat:2 }}</td>
                         <td>{{ loan.status }}</td>
                     </tr>
                     {% empty %}

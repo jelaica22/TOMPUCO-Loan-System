@@ -14,6 +14,7 @@ class CommitteeProfile(models.Model):
     position = models.CharField(max_length=20, choices=POSITION_CHOICES, default='member')
     committee_id = models.CharField(max_length=50, unique=True, blank=True, null=True)
     contact_number = models.CharField(max_length=20, blank=True)
+    is_head = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

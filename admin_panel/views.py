@@ -21,6 +21,102 @@ from main.models import (
     CommitteeDecision, AuditLog, SystemSetting, PaymentReceipt,
     LoanAttachment
 )
+from django.contrib.auth.models import User
+from staff.models import StaffProfile
+from cashier.models import CashierProfile
+from committee.models import CommitteeProfile
+from manager.models import ManagerProfile
+import random
+
+
+def generate_staff_code():
+    return f"STF-{random.randint(1000, 9999)}"
+
+
+def generate_cashier_code():
+    return f"CSH-{random.randint(1000, 9999)}"
+
+
+def generate_committee_code():
+    return f"COM-{random.randint(1000, 9999)}"
+
+
+def generate_manager_code():
+    return f"MGR-{random.randint(1000, 9999)}"
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def create_staff_user(request):
+    """Only superusers can create staff accounts"""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        email = request.POST.get('email')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        user_type = request.POST.get('user_type')  # staff, cashier, committee, manager, admin
+
+        # Check if username exists
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists.")
+            return redirect('admin_panel:create_staff_user')
+
+        # Create user
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+            email=email,
+            first_name=first_name,
+            last_name=last_name
+        )
+        user.is_staff = True
+
+        if user_type == 'admin':
+            user.is_superuser = True
+
+        user.save()
+
+        # Create profile based on type
+        if user_type == 'staff':
+            StaffProfile.objects.create(
+                user=user,
+                staff_id=generate_staff_code(),  # ✅ FIXED: staff_id
+                position='loan_officer',
+                is_active=True
+            )
+            messages.success(request, f"Staff (Loan Officer) account created!")
+
+        elif user_type == 'cashier':
+            CashierProfile.objects.create(
+                user=user,
+                cashier_id=generate_cashier_code(),  # ✅ FIXED: cashier_id
+                is_active=True
+            )
+            messages.success(request, f"Cashier account created!")
+
+        elif user_type == 'committee':
+            CommitteeProfile.objects.create(
+                user=user,
+                committee_id=generate_committee_code(),  # ✅ FIXED: committee_id
+                is_active=True
+            )
+            messages.success(request, f"Committee account created!")
+
+        elif user_type == 'manager':
+            ManagerProfile.objects.create(
+                user=user,
+                manager_id=generate_manager_code(),  # ✅ FIXED: manager_id
+                is_active=True
+            )
+            messages.success(request, f"Manager account created!")
+
+        elif user_type == 'admin':
+            messages.success(request, f"Admin account created!")
+
+        return redirect('admin_panel:users_list')
+
+    return render(request, 'admin_panel/create_staff_user.html')
 
 
 # ==================== HELPER FUNCTIONS ====================
@@ -71,7 +167,7 @@ def dashboard(request):
     total_applications = LoanApplication.objects.count()
     active_loans = Loan.objects.filter(status='active').count()
 
-    total_loan_amount = Loan.objects.aggregate(total=Sum('principal_amount'))['total'] or 0
+    total_loan_amount = Loan.objects.aggregate(total=Sum('amount'))['total'] or 0
     total_payments = Payment.objects.aggregate(total=Sum('amount'))['total'] or 0
     collection_rate = (total_payments / total_loan_amount * 100) if total_loan_amount > 0 else 0
     loan_products_count = LoanProduct.objects.count()
@@ -221,7 +317,9 @@ def change_password(request):
 
 @super_admin_required
 def users_list(request):
-    """List all users - main user listing page"""
+    """List all users with role filtering"""
+    from main.models import Member
+
     users = User.objects.all().order_by('-date_joined')
 
     search = request.GET.get('search', '').strip()
@@ -236,40 +334,62 @@ def users_list(request):
             Q(last_name__icontains=search)
         )
 
+    # Get member user IDs for filtering - FIXED: use employment_status
+    member_user_ids = Member.objects.values_list('user_id', flat=True)
+    regular_member_ids = Member.objects.filter(employment_status='member').values_list('user_id', flat=True)
+    employee_member_ids = Member.objects.filter(employment_status='employee').values_list('user_id', flat=True)
+
     # Apply role filter
     if role == 'staff':
         users = users.filter(is_staff=True, is_superuser=False)
     elif role == 'superuser':
         users = users.filter(is_superuser=True)
-    elif role == 'normal':
-        users = users.filter(is_staff=False, is_superuser=False)
+    elif role == 'regular_member':
+        users = users.filter(id__in=regular_member_ids)
+    elif role == 'employee_member':
+        users = users.filter(id__in=employee_member_ids)
     elif role == 'cashier':
         users = users.filter(groups__name='Cashier')
     elif role == 'manager':
         users = users.filter(groups__name='Manager')
     elif role == 'committee':
         users = users.filter(groups__name='Committee')
+    elif role == 'normal':
+        users = users.filter(is_staff=False, is_superuser=False).exclude(id__in=member_user_ids)
 
     if status_filter == 'active':
         users = users.filter(is_active=True)
     elif status_filter == 'inactive':
         users = users.filter(is_active=False)
 
-    # Calculate counts for stats
+    # Calculate counts for stats - FIXED: use employment_status
     staff_count = User.objects.filter(is_staff=True, is_superuser=False).count()
     superuser_count = User.objects.filter(is_superuser=True).count()
-    normal_count = User.objects.filter(is_staff=False, is_superuser=False).count()
+    regular_member_count = Member.objects.filter(employment_status='member').count()
+    employee_member_count = Member.objects.filter(employment_status='employee').count()
     cashier_count = User.objects.filter(groups__name='Cashier').count()
     manager_count = User.objects.filter(groups__name='Manager').count()
     committee_count = User.objects.filter(groups__name='Committee').count()
     active_count = User.objects.filter(is_active=True).count()
     inactive_count = User.objects.filter(is_active=False).count()
+    total_users = User.objects.count()
+
+    # Annotate users with member info for template
+    for user in users:
+        if hasattr(user, 'member_profile'):
+            user.is_regular_member = user.member_profile.employment_status == 'member'
+            user.is_employee_member = user.member_profile.employment_status == 'employee'
+        else:
+            user.is_regular_member = False
+            user.is_employee_member = False
 
     return render(request, 'admin_panel/users_list.html', {
         'users': users,
+        'total_users': total_users,
         'staff_count': staff_count,
         'superuser_count': superuser_count,
-        'normal_count': normal_count,
+        'regular_member_count': regular_member_count,
+        'employee_member_count': employee_member_count,
         'cashier_count': cashier_count,
         'manager_count': manager_count,
         'committee_count': committee_count,
@@ -385,7 +505,17 @@ def user_edit(request, user_id):
 
 @super_admin_required
 def user_create(request):
-    """Create a new user"""
+    """Create a new user with role"""
+    from main.models import Member
+    from django.contrib.auth.models import Group
+    from staff.models import StaffProfile
+    from cashier.models import CashierProfile
+    from committee.models import CommitteeProfile
+    from manager.models import ManagerProfile
+    import random
+    from decimal import Decimal
+    from datetime import datetime
+
     if request.method == 'POST':
         username = request.POST.get('username')
         email = request.POST.get('email')
@@ -393,10 +523,14 @@ def user_create(request):
         first_name = request.POST.get('first_name', '')
         last_name = request.POST.get('last_name', '')
         role = request.POST.get('role', 'normal')
-        is_active = request.POST.get('is_active') == 'on'
+        is_active = request.POST.get('is_active') == 'true'
 
+        # Validation
         if User.objects.filter(username=username).exists():
             return JsonResponse({'error': 'Username already exists'}, status=400)
+
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({'error': 'Email already exists'}, status=400)
 
         user = User.objects.create_user(
             username=username,
@@ -407,39 +541,199 @@ def user_create(request):
             is_active=is_active
         )
 
-        # Set role
+        # Generate membership number
+        def generate_membership_number():
+            while True:
+                number = f"M-{random.randint(10000, 99999)}"
+                if not Member.objects.filter(membership_number=number).exists():
+                    return number
+
+        # Generate Employee ID (auto-increment)
+        def generate_employee_id():
+            year = datetime.now().year
+            # Get the last employee ID
+            last_employee = Member.objects.filter(
+                employment_status='employee',
+                employee_id__isnull=False
+            ).order_by('-id').first()
+
+            if last_employee and last_employee.employee_id:
+                try:
+                    # Extract number from format EMP-2024-0001
+                    parts = last_employee.employee_id.split('-')
+                    if len(parts) >= 3:
+                        last_num = int(parts[-1])
+                        new_num = last_num + 1
+                    else:
+                        new_num = 1000
+                except (ValueError, IndexError):
+                    new_num = 1000
+            else:
+                new_num = 1000
+
+            return f"EMP-{year}-{new_num:04d}"
+
+        # Generate Staff ID
+        def generate_staff_id():
+            year = datetime.now().year
+            last_staff = StaffProfile.objects.order_by('-id').first()
+            if last_staff and last_staff.staff_id:
+                try:
+                    last_num = int(last_staff.staff_id.split('-')[-1])
+                    new_num = last_num + 1
+                except:
+                    new_num = random.randint(1000, 9999)
+            else:
+                new_num = 1000
+            return f"STF-{year}-{new_num:04d}"
+
+        # Generate Cashier ID
+        def generate_cashier_id():
+            year = datetime.now().year
+            last_cashier = CashierProfile.objects.order_by('-id').first()
+            if last_cashier and last_cashier.cashier_id:
+                try:
+                    last_num = int(last_cashier.cashier_id.split('-')[-1])
+                    new_num = last_num + 1
+                except:
+                    new_num = random.randint(1000, 9999)
+            else:
+                new_num = 1000
+            return f"CSH-{year}-{new_num:04d}"
+
+        # Generate Manager ID
+        def generate_manager_id():
+            year = datetime.now().year
+            last_manager = ManagerProfile.objects.order_by('-id').first()
+            if last_manager and last_manager.manager_id:
+                try:
+                    last_num = int(last_manager.manager_id.split('-')[-1])
+                    new_num = last_num + 1
+                except:
+                    new_num = random.randint(1000, 9999)
+            else:
+                new_num = 1000
+            return f"MGR-{year}-{new_num:04d}"
+
+        # Generate Committee ID
+        def generate_committee_id():
+            year = datetime.now().year
+            last_committee = CommitteeProfile.objects.order_by('-id').first()
+            if last_committee and last_committee.committee_id:
+                try:
+                    last_num = int(last_committee.committee_id.split('-')[-1])
+                    new_num = last_num + 1
+                except:
+                    new_num = random.randint(1000, 9999)
+            else:
+                new_num = 1000
+            return f"COM-{year}-{new_num:04d}"
+
+        # Set role and create profiles
         if role == 'superuser':
             user.is_superuser = True
             user.is_staff = True
-        elif role in ['staff', 'cashier', 'manager', 'committee']:
-            user.is_staff = True
             user.save()
 
-            group_map = {
-                'staff': 'Staff',
-                'cashier': 'Cashier',
-                'manager': 'Manager',
-                'committee': 'Committee'
-            }
-            group_name = group_map.get(role)
-            if group_name:
-                group, _ = Group.objects.get_or_create(name=group_name)
-                user.groups.add(group)
-        else:
+        elif role == 'staff':
+            user.is_staff = True
+            user.save()
+            group, _ = Group.objects.get_or_create(name='Staff')
+            user.groups.add(group)
+            StaffProfile.objects.get_or_create(
+                user=user,
+                defaults={
+                    'staff_id': generate_staff_id(),
+                    'position': request.POST.get('position', 'Loan Officer'),
+                    'is_active': True
+                }
+            )
+
+        elif role == 'cashier':
+            user.is_staff = True
+            user.save()
+            group, _ = Group.objects.get_or_create(name='Cashier')
+            user.groups.add(group)
+            CashierProfile.objects.get_or_create(
+                user=user,
+                defaults={
+                    'cashier_id': generate_cashier_id(),
+                    'is_active': True
+                }
+            )
+
+        elif role == 'manager':
+            user.is_staff = True
+            user.save()
+            group, _ = Group.objects.get_or_create(name='Manager')
+            user.groups.add(group)
+            ManagerProfile.objects.get_or_create(
+                user=user,
+                defaults={
+                    'manager_id': generate_manager_id(),
+                    'is_active': True
+                }
+            )
+
+        elif role == 'committee':
+            user.is_staff = True
+            user.save()
+            group, _ = Group.objects.get_or_create(name='Committee')
+            user.groups.add(group)
+            CommitteeProfile.objects.get_or_create(
+                user=user,
+                defaults={
+                    'committee_id': generate_committee_id(),
+                    'is_active': True
+                }
+            )
+
+        elif role == 'regular_member':
+            # Create Regular Member (non-employee)
             user.is_staff = False
             user.is_superuser = False
+            user.save()
+            Member.objects.create(
+                user=user,
+                membership_number=generate_membership_number(),
+                first_name=first_name or username,
+                last_name=last_name or '',
+                contact_number=request.POST.get('contact_number', ''),
+                residence_address=request.POST.get('address', ''),
+                monthly_income=Decimal(request.POST.get('monthly_income', 0)),
+                employment_status='member',
+                salary_loan_eligible=False,
+                is_active=is_active,
+                verification_status='verified',
+                account_status='active'
+            )
 
-        user.save()
-
-        # Create member profile
-        Member.objects.create(
-            user=user,
-            first_name=first_name or username,
-            last_name=last_name or '',
-            contact_number='',
-            residence_address='',
-            is_active=is_active
-        )
+        elif role == 'employee_member':
+            # Create Employee Member (has salary loan access)
+            user.is_staff = False
+            user.is_superuser = False
+            user.save()
+            Member.objects.create(
+                user=user,
+                membership_number=generate_membership_number(),
+                first_name=first_name or username,
+                last_name=last_name or '',
+                contact_number=request.POST.get('contact_number', ''),
+                residence_address=request.POST.get('address', ''),
+                monthly_income=Decimal(request.POST.get('monthly_income', 0)),
+                position=request.POST.get('position', ''),
+                employee_id=generate_employee_id(),  # ✅ SYSTEM GENERATED
+                employment_status='employee',
+                salary_loan_eligible=True,
+                is_active=is_active,
+                verification_status='verified',
+                account_status='active'
+            )
+        else:
+            # Normal user (no member profile)
+            user.is_staff = False
+            user.is_superuser = False
+            user.save()
 
         _log_audit(request.user, 'create', 'User', user.id, request=request)
         return JsonResponse({'success': True, 'message': f'User {username} created'})
@@ -710,7 +1004,7 @@ def loan_product_delete(request, product_id):
 
 @super_admin_required
 def loan_applications_list(request):
-    applications = LoanApplication.objects.all().order_by('-created_at')
+    applications = LoanApplication.objects.all().order_by('-applied_date')
 
     search = request.GET.get('search', '').strip()
     status = request.GET.get('status', 'all')
@@ -834,7 +1128,7 @@ def loans_list(request):
     total_loans = Loan.objects.count()
     active_count = Loan.objects.filter(status='active').count()
     completed_count = Loan.objects.filter(status='paid').count()
-    total_amount = Loan.objects.aggregate(total=Sum('principal_amount'))['total'] or 0
+    total_amount = Loan.objects.aggregate(total=Sum('amount'))['total'] or 0  # ← FIXED!
 
     return render(request, 'admin_panel/loans_list.html', {
         'loans': loans,
@@ -852,7 +1146,7 @@ def loan_detail(request, loan_id):
         "id": loan.id,
         "loan_number": loan.loan_number,
         "borrower_name": f"{loan.borrower.first_name} {loan.borrower.last_name}",
-        "principal_amount": str(loan.principal_amount),
+        "principal_amount": str(loan.amount),  # ← FIXED!
         "remaining_balance": str(loan.remaining_balance),
         "interest_rate": str(loan.interest_rate),
         "term_months": loan.term_months,
@@ -962,7 +1256,7 @@ def payment_schedule_generate(request):
             # Delete existing schedules
             PaymentSchedule.objects.filter(loan=loan).delete()
 
-            principal = loan.principal_amount
+            principal = loan.amount
             interest_rate = loan.interest_rate / 100
             term_months = loan.term_months
 
@@ -1321,7 +1615,7 @@ def member_document_delete(request, doc_id):
 def loan_attachments_list(request):
     attachments = LoanAttachment.objects.all().order_by('-attached_at')
 
-    all_applications = LoanApplication.objects.all().order_by('-created_at')
+    all_applications = LoanApplication.objects.all().order_by('-applied_date')  # ← FIXED!
     all_documents = MemberDocument.objects.all()
 
     return render(request, 'admin_panel/loan_attachments_list.html', {
@@ -1330,7 +1624,6 @@ def loan_attachments_list(request):
         'all_documents': all_documents,
         'total_attachments': attachments.count(),
     })
-
 
 @super_admin_required
 def loan_attachment_create(request):
@@ -1427,6 +1720,60 @@ def notification_delete(request, notif_id):
     return JsonResponse({'success': False})
 
 
+@login_required
+def notifications_api(request):
+    """API endpoint for admin notifications"""
+    from main.models import Notification
+
+    notifications = Notification.objects.filter(
+        recipient=request.user
+    ).order_by('-created_at')[:20]
+
+    unread_count = Notification.objects.filter(
+        recipient=request.user, is_read=False
+    ).count()
+
+    data = {
+        'success': True,
+        'unread_count': unread_count,
+        'notifications': [{
+            'id': n.id,
+            'title': n.title,
+            'message': n.message[:100],
+            'link': n.link,
+            'notification_type': n.notification_type,
+            'created_at': n.created_at.isoformat(),
+            'is_read': n.is_read,
+        } for n in notifications]
+    }
+    return JsonResponse(data)
+
+
+@login_required
+def mark_notification_read_api(request, notif_id):
+    """Mark notification as read"""
+    from main.models import Notification
+
+    if request.method == 'POST':
+        notification = get_object_or_404(Notification, id=notif_id, recipient=request.user)
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
+
+
+@login_required
+def mark_all_notifications_read_api(request):
+    """Mark all notifications as read"""
+    from main.models import Notification
+
+    if request.method == 'POST':
+        Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+        return JsonResponse(
+            {'success': True, 'count': Notification.objects.filter(recipient=request.user, is_read=False).count()})
+    return JsonResponse({'success': False})
+
+
 # ==================== AUDIT LOGS ====================
 
 @super_admin_required
@@ -1485,7 +1832,7 @@ def system_setting_update(request, setting_id):
 def reports(request):
     total_members = Member.objects.count()
     total_loans = Loan.objects.count()
-    total_disbursed = Loan.objects.aggregate(total=Sum('principal_amount'))['total'] or 0
+    total_disbursed = Loan.objects.aggregate(total=Sum('amount'))['total'] or 0  # ← FIXED!
     total_payments = Payment.objects.aggregate(total=Sum('amount'))['total'] or 0
     collection_rate = (total_payments / total_disbursed * 100) if total_disbursed > 0 else 0
 
@@ -1515,10 +1862,108 @@ def reports_api(request, report_type):
         for l in loans:
             data['rows'].append(
                 [l.loan_number, f"{l.borrower.first_name} {l.borrower.last_name}" if l.borrower else '-',
-                 f"₱{l.principal_amount:,.2f}", f"₱{l.remaining_balance:,.2f}", l.status])
+                 f"₱{l.amount:,.2f}", f"₱{l.remaining_balance:,.2f}", l.status])  # ← FIXED: l.principal_amount -> l.amount
         return JsonResponse(data)
 
     else:
         data = {'success': True, 'title': 'Report', 'headers': ['Category', 'Value'],
                 'rows': [['Sample Data', 'Working']]}
         return JsonResponse(data)
+
+#member verify
+
+@login_required
+@user_passes_test(lambda u: u.is_staff or u.is_superuser)
+def verify_member(request, member_id):
+    """Admin view to verify or reject member registration"""
+    member = get_object_or_404(Member, id=member_id)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'verify':
+            member.verification_status = 'verified'
+            member.verification_date = timezone.now()
+            member.verified_by = request.user
+            member.max_loan_amount = Decimal('50000')  # Increase limit
+            member.max_active_loans = 1
+            member.is_active = True
+            member.member_tier = 'standard'
+
+            # Send notification to member
+            Notification.objects.create(
+                user=member.user,
+                title="Account Verified!",
+                message="Your account has been verified. You can now apply for loans.",
+                notification_type='system'
+            )
+
+            messages.success(request, f"Member {member.user.username} has been verified.")
+
+        elif action == 'reject':
+            rejection_reason = request.POST.get('rejection_reason', '')
+            member.verification_status = 'rejected'
+            member.rejection_reason = rejection_reason
+            member.is_active = False
+
+            # Send notification to member
+            Notification.objects.create(
+                user=member.user,
+                title="Account Verification Failed",
+                message=f"Your account verification was rejected. Reason: {rejection_reason}",
+                notification_type='alert'
+            )
+
+            messages.warning(request, f"Member {member.user.username} has been rejected.")
+
+        elif action == 'suspend':
+            suspension_reason = request.POST.get('suspension_reason', '')
+            member.verification_status = 'suspended'
+            member.is_restricted = True
+            member.restriction_reason = suspension_reason
+            member.restricted_until = request.POST.get('restricted_until') or None
+            member.is_active = False
+
+            messages.warning(request, f"Member {member.user.username} has been suspended.")
+
+        member.save()
+        return redirect('admin_panel:members_list')
+
+    context = {
+        'member': member,
+        'today': date.today(),
+    }
+    return render(request, 'admin_panel/verify_member.html', context)
+
+
+@login_required
+@super_admin_required
+def verify_member_ajax(request, member_id):
+    """Verify a pending member via AJAX"""
+    if request.method == 'POST':
+        try:
+            member = Member.objects.get(id=member_id)
+            member.verification_status = 'verified'
+            member.account_status = 'active'
+            member.is_active = True
+            member.save()
+
+            # Also activate the user
+            user = member.user
+            user.is_active = True
+            user.save()
+
+            # Send notification
+            from main.notification_helper import create_notification
+            create_notification(
+                recipient=user,
+                notification_type='system',
+                title='Account Verified!',
+                message=f'Congratulations {member.first_name}! Your account has been verified. You can now apply for loans.',
+                link='/dashboard/'
+            )
+
+            return JsonResponse({'success': True})
+        except Member.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Member not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid method'})

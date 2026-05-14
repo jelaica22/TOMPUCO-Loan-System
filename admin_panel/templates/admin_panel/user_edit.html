@@ -69,6 +69,45 @@
         transition: all 0.2s;
     }
 
+    /* Password wrapper with toggle button */
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-wrapper input {
+        padding-right: 45px;
+        width: 100%;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        border-radius: 8px;
+        z-index: 10;
+    }
+
+    .password-toggle:hover {
+        color: #0d6e6e;
+        background: rgba(13, 110, 110, 0.1);
+    }
+
+    .password-toggle i {
+        font-size: 1.1rem;
+    }
+
     .form-group input:focus,
     .form-group select:focus {
         outline: none;
@@ -76,7 +115,8 @@
         box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
     }
 
-    .form-group input:disabled {
+    .form-group input:disabled,
+    .form-group input[readonly] {
         background: #e5e7eb;
         cursor: not-allowed;
     }
@@ -200,6 +240,39 @@
         gap: 10px;
     }
 
+    /* Member Fields Section */
+    .member-fields {
+        background: #f0fdf4;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+        border: 1px solid #bbf7d0;
+        display: none;
+    }
+
+    .member-fields h5 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: #166534;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .employee-fields {
+        background: #fef3c7;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 15px;
+        border: 1px solid #fde68a;
+        display: none;
+    }
+
+    .employee-fields h5 {
+        color: #92400e;
+    }
+
     /* Dark Mode */
     [data-theme="dark"] .form-card {
         background: #1e1e2a;
@@ -217,7 +290,8 @@
         color: #eef2ff;
     }
 
-    [data-theme="dark"] .form-group input:disabled {
+    [data-theme="dark"] .form-group input:disabled,
+    [data-theme="dark"] .form-group input[readonly] {
         background: #2a2a3a;
     }
 
@@ -228,6 +302,33 @@
 
     [data-theme="dark"] .password-section h5 {
         color: #eef2ff;
+    }
+
+    [data-theme="dark"] .password-toggle {
+        color: #9ca3af;
+    }
+
+    [data-theme="dark"] .password-toggle:hover {
+        color: #4ade80;
+        background: rgba(74, 222, 128, 0.1);
+    }
+
+    [data-theme="dark"] .member-fields {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    [data-theme="dark"] .member-fields h5 {
+        color: #34d399;
+    }
+
+    [data-theme="dark"] .employee-fields {
+        background: rgba(245, 158, 11, 0.1);
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    [data-theme="dark"] .employee-fields h5 {
+        color: #fbbf24;
     }
 
     [data-theme="dark"] .btn-cancel {
@@ -289,6 +390,8 @@
     .badge-manager { background: #ede9fe; color: #5b21b6; }
     .badge-cashier { background: #d1fae5; color: #065f46; }
     .badge-committee { background: #fce7f3; color: #be185d; }
+    .badge-regular { background: #d1fae5; color: #065f46; }
+    .badge-employee { background: #dcfce7; color: #166534; }
     .badge-normal { background: #f3f4f6; color: #374151; }
 
     [data-theme="dark"] .badge-superuser { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
@@ -296,6 +399,8 @@
     [data-theme="dark"] .badge-manager { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
     [data-theme="dark"] .badge-cashier { background: rgba(16, 185, 129, 0.2); color: #34d399; }
     [data-theme="dark"] .badge-committee { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+    [data-theme="dark"] .badge-regular { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    [data-theme="dark"] .badge-employee { background: rgba(16, 185, 129, 0.2); color: #34d399; }
     [data-theme="dark"] .badge-normal { background: #374151; color: #e5e7eb; }
 </style>
 {% endblock %}
@@ -311,6 +416,12 @@
                     <span class="role-badge badge-superuser"><i class="bi bi-star-fill"></i> Superuser</span>
                 {% elif user.is_staff %}
                     <span class="role-badge badge-staff"><i class="bi bi-briefcase-fill"></i> Staff</span>
+                {% elif member_profile %}
+                    {% if member_profile.employment_status == 'employee' %}
+                        <span class="role-badge badge-employee"><i class="bi bi-star"></i> Employee Member</span>
+                    {% else %}
+                        <span class="role-badge badge-regular"><i class="bi bi-person"></i> Regular Member</span>
+                    {% endif %}
                 {% else %}
                     <span class="role-badge badge-normal"><i class="bi bi-person"></i> Normal</span>
                 {% endif %}
@@ -318,7 +429,6 @@
         </div>
 
         <div class="form-body">
-            <!-- Messages -->
             {% if messages %}
                 {% for message in messages %}
                     <div class="alert-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
@@ -331,7 +441,6 @@
             <form method="post" id="editUserForm">
                 {% csrf_token %}
 
-                <!-- IMPORTANT: Hidden input to preserve username -->
                 <input type="hidden" name="username" value="{{ user.username }}">
 
                 <div class="form-row">
@@ -361,12 +470,14 @@
                     <div class="form-group">
                         <label><i class="bi bi-shield"></i> Role / Access Level</label>
                         <select name="role" id="roleSelect">
-                            <option value="normal" {% if not user.is_staff and not user.is_superuser %}selected{% endif %}>Normal User</option>
-                            <option value="staff" {% if user.is_staff and not user.is_superuser %}selected{% endif %}>Staff</option>
-                            <option value="superuser" {% if user.is_superuser %}selected{% endif %}>Superuser (Full Access)</option>
+                            <option value="regular_member" {% if member_profile and member_profile.employment_status == 'member' %}selected{% endif %}>👤 Regular Member</option>
+                            <option value="employee_member" {% if member_profile and member_profile.employment_status == 'employee' %}selected{% endif %}>⭐ Employee Member</option>
+                            <option value="normal" {% if not user.is_staff and not user.is_superuser and not member_profile %}selected{% endif %}>Normal User</option>
+                            <option value="staff" {% if user.is_staff and not user.is_superuser and not user.groups.all.0.name %}selected{% endif %}>Staff</option>
                             <option value="cashier" {% if user.groups.all.0.name == 'Cashier' %}selected{% endif %}>Cashier</option>
                             <option value="manager" {% if user.groups.all.0.name == 'Manager' %}selected{% endif %}>Manager</option>
                             <option value="committee" {% if user.groups.all.0.name == 'Committee' %}selected{% endif %}>Committee</option>
+                            <option value="superuser" {% if user.is_superuser %}selected{% endif %}>Superuser (Full Access)</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -378,18 +489,81 @@
                     </div>
                 </div>
 
-                <!-- Password Change Section -->
+                <!-- Member Fields (for Regular/Employee Member) -->
+                <div id="memberFields" class="member-fields" style="display: none;">
+                    <h5><i class="bi bi-person-vcard"></i> Member Information</h5>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Contact Number</label>
+                            <input type="text" name="contact_number" id="contact_number" class="form-control" value="{{ member_profile.contact_number|default:'' }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Residence Address</label>
+                            <input type="text" name="address" id="address" class="form-control" value="{{ member_profile.residence_address|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Monthly Income (₱)</label>
+                            <input type="number" name="monthly_income" id="monthly_income" class="form-control" value="{{ member_profile.monthly_income|default:0 }}" step="1000">
+                        </div>
+                        <div class="form-group">
+                            <label>Membership Number</label>
+                            <input type="text" value="{{ member_profile.membership_number|default:'Not assigned' }}" disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Specific Fields - Employee ID is READ-ONLY -->
+                <div id="employeeFields" class="employee-fields" style="display: none;">
+                    <h5><i class="bi bi-briefcase"></i> Employee Details</h5>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Position</label>
+                            <input type="text" name="position" id="position" class="form-control" value="{{ member_profile.position|default:'' }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Employee ID</label>
+                            <input type="text" name="employee_id" id="employee_id" class="form-control"
+                                   value="{{ member_profile.employee_id|default:'Will be auto-generated' }}"
+                                   readonly disabled>
+                            <div class="password-hint">Employee ID is auto-generated by the system and cannot be changed manually.</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date Hired</label>
+                            <input type="date" name="date_hired" id="date_hired" class="form-control" value="{{ member_profile.date_hired|default:'' }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Department</label>
+                            <input type="text" name="department" id="department" class="form-control" value="{{ member_profile.department|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password Change Section with Show/Hide -->
                 <div class="password-section">
                     <h5><i class="bi bi-key"></i> Change Password (Optional)</h5>
                     <div class="form-row">
                         <div class="form-group">
                             <label>New Password</label>
-                            <input type="password" name="new_password" id="new_password" autocomplete="off">
+                            <div class="password-wrapper">
+                                <input type="password" name="new_password" id="new_password" autocomplete="off">
+                                <button type="button" class="password-toggle" onclick="togglePassword('new_password')">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
                             <div class="password-hint">Leave blank to keep current password. Minimum 8 characters.</div>
                         </div>
                         <div class="form-group">
                             <label>Confirm New Password</label>
-                            <input type="password" name="confirm_password" id="confirm_password" autocomplete="off">
+                            <div class="password-wrapper">
+                                <input type="password" name="confirm_password" id="confirm_password" autocomplete="off">
+                                <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -399,12 +573,13 @@
                     <div>
                         <strong>Information:</strong> Changing user role affects their access permissions.
                         Superusers have full system access including user management.
+                        Employee Members have access to Salary Loan products.
                     </div>
                 </div>
 
                 <div class="action-buttons">
-                    <a href="javascript:history.back()" class="btn-cancel">
-                        <i class="bi bi-arrow-left"></i> Back
+                    <a href="{% url 'admin_panel:users_list' %}" class="btn-cancel">
+                        <i class="bi bi-arrow-left"></i> Back to Users
                     </a>
                     <button type="submit" class="btn-save">
                         <i class="bi bi-save"></i> Save Changes
@@ -416,6 +591,45 @@
 </div>
 
 <script>
+    // Password visibility toggle function
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const toggleBtn = field.parentElement.querySelector('.password-toggle');
+
+        if (field.type === 'password') {
+            field.type = 'text';
+            toggleBtn.innerHTML = '<i class="bi bi-eye"></i>';
+        } else {
+            field.type = 'password';
+            toggleBtn.innerHTML = '<i class="bi bi-eye-slash"></i>';
+        }
+    }
+
+    // Show/hide member and employee fields based on role
+    const roleSelect = document.getElementById('roleSelect');
+    const memberFields = document.getElementById('memberFields');
+    const employeeFields = document.getElementById('employeeFields');
+
+    function updateRoleFields() {
+        const selectedRole = roleSelect.value;
+
+        if (selectedRole === 'regular_member' || selectedRole === 'employee_member') {
+            memberFields.style.display = 'block';
+            if (selectedRole === 'employee_member') {
+                employeeFields.style.display = 'block';
+            } else {
+                employeeFields.style.display = 'none';
+            }
+        } else {
+            memberFields.style.display = 'none';
+            employeeFields.style.display = 'none';
+        }
+    }
+
+    roleSelect?.addEventListener('change', updateRoleFields);
+    updateRoleFields();
+
+    // Form validation
     document.getElementById('editUserForm')?.addEventListener('submit', function(e) {
         const newPassword = document.getElementById('new_password').value;
         const confirmPassword = document.getElementById('confirm_password').value;

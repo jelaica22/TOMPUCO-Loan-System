@@ -1,3 +1,837 @@
-ï»¿{% extends 'staff/base_staff.html' %}
-{% block page_title %}Create Loan{% endblock %}
-{% block content %}<div class="card"><div class="card-body"><p>Create loan for {{ application.application_id }}</p><a href="{% url 'staff:staff_applications' %}" class="btn btn-secondary">Back</a></div></div>{% endblock %}
+{% extends 'staff/base_staff.html' %}
+{% load static %}
+
+{% block title %}Create Loan - Staff{% endblock %}
+{% block page_title %}Create Loan for Disbursement{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Main Container */
+    .loan-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Main Card */
+    .loan-card {
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .loan-header {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 24px 28px;
+        color: white;
+        text-align: center;
+    }
+
+    .loan-header h4 {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .loan-header small {
+        opacity: 0.9;
+        font-size: 0.8rem;
+    }
+
+    /* Section Styles */
+    .info-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin: 20px;
+        border: 1px solid var(--border-color);
+    }
+
+    .section-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .section-title i {
+        color: #0d6e6e;
+        font-size: 1rem;
+    }
+
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        .info-card {
+            margin: 15px;
+        }
+    }
+
+    .info-row {
+        display: flex;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .info-label {
+        width: 140px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .info-value {
+        flex: 1;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    /* Badges */
+    .badge-info {
+        background: #dbeafe;
+        color: #1e40af;
+        padding: 8px 15px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 20px;
+    }
+
+    .badge-policy {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 12px 15px;
+        margin: 0 20px 20px 20px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    [data-theme="dark"] .badge-info {
+        background: #1e3a8a;
+        color: #bfdbfe;
+    }
+
+    [data-theme="dark"] .badge-policy {
+        background: #451a03;
+        color: #fde68a;
+    }
+
+    /* Summary Card */
+    .summary-card {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        border-radius: 20px;
+        padding: 24px;
+        margin: 20px;
+        color: white;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        text-align: center;
+    }
+
+    @media (max-width: 768px) {
+        .summary-grid {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+    }
+
+    .amount-display {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin: 8px 0;
+    }
+
+    .text-positive {
+        color: #10b981;
+    }
+
+    /* Term Selector */
+    .term-selector {
+        background: var(--bg-body);
+        border-radius: 16px;
+        padding: 20px;
+        margin: 20px;
+        border: 1px solid var(--border-color);
+    }
+
+    .term-options {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+    }
+
+    .term-option {
+        flex: 1;
+        min-width: 100px;
+        text-align: center;
+        padding: 12px;
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+
+    .term-option:hover {
+        border-color: #0d6e6e;
+        background: rgba(13, 110, 110, 0.05);
+    }
+
+    .term-option.selected {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        border-color: #0d6e6e;
+        color: white;
+    }
+
+    .term-option.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Payment Option */
+    .payment-option {
+        background: var(--bg-body);
+        border-radius: 16px;
+        padding: 20px;
+        margin: 20px;
+        border: 1px solid var(--border-color);
+    }
+
+    .payment-option-header {
+        display: flex;
+        gap: 15px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+
+    .payment-type-btn {
+        flex: 1;
+        min-width: 150px;
+        padding: 15px;
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        background: var(--bg-card);
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+        color: var(--text-primary);
+    }
+
+    .payment-type-btn.active {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border-color: #10b981;
+        color: white;
+    }
+
+    .payment-type-btn:hover:not(.active) {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    /* BUTTONS */
+    .btn-submit {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-cancel {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-cancel:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    [data-theme="dark"] .btn-cancel {
+        background: transparent;
+        border-color: #2a9d8f;
+        color: #2a9d8f;
+    }
+
+    [data-theme="dark"] .btn-cancel:hover {
+        background: #0d6e6e;
+        color: white;
+    }
+
+    /* Amortization Table */
+    .schedule-container {
+        max-height: 400px;
+        overflow-y: auto;
+        margin-top: 15px;
+    }
+
+    .amortization-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+    }
+
+    .amortization-table th {
+        background: var(--bg-body);
+        padding: 12px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        text-align: left;
+        border-bottom: 2px solid var(--border-color);
+        color: var(--text-secondary);
+    }
+
+    .amortization-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+    }
+
+    .amortization-table .text-right {
+        text-align: right;
+    }
+
+    .amortization-table tbody tr:hover {
+        background: var(--table-hover);
+    }
+
+    /* Summary Row */
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .summary-row:last-child {
+        border-bottom: none;
+    }
+
+    .text-danger {
+        color: #ef4444;
+    }
+
+    .text-success {
+        color: #10b981;
+    }
+
+    .text-warning {
+        color: #f59e0b;
+    }
+
+    /* Alert */
+    .alert-info-custom {
+        background: #dbeafe;
+        border-radius: 12px;
+        padding: 12px 15px;
+        margin-top: 15px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 0.8rem;
+        color: #1e40af;
+    }
+
+    [data-theme="dark"] .alert-info-custom {
+        background: #1e3a8a;
+        color: #bfdbfe;
+    }
+
+    /* Action Buttons Container */
+    .action-buttons-container {
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        padding: 20px 24px;
+        border-top: 1px solid var(--border-color);
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+        .action-buttons-container {
+            justify-content: center;
+        }
+        .btn-submit, .btn-cancel {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="loan-container">
+    <div class="loan-card">
+        <div class="loan-header">
+            <h4><i class="bi bi-bank me-2"></i>Create Loan for Disbursement</h4>
+            <small>Step 6 of 6: Finalize and Disburse</small>
+        </div>
+
+        <form method="post" id="createLoanForm">
+            {% csrf_token %}
+
+            <!-- Application Information -->
+            <div class="info-card">
+                <div class="section-title">
+                    <i class="bi bi-file-text"></i> Application Information
+                </div>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <div class="info-label">Application ID:</div>
+                        <div class="info-value">{{ application.application_id }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Loan Type:</div>
+                        <div class="info-value">{{ application.loan_product.name|default:"NCL" }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Member:</div>
+                        <div class="info-value">{{ application.member.last_name }}, {{ application.member.first_name }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Interest Rate:</div>
+                        <div class="info-value">{{ interest_rate }}% per annum</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Important Information -->
+            <div class="badge-info">
+                <i class="bi bi-info-circle-fill"></i>
+                <strong>Production-Based Loan:</strong> Interest is calculated based on actual days between payments.
+            </div>
+
+            <!-- Loan Policy Information -->
+            <div class="badge-policy">
+                <i class="bi bi-shield-check"></i>
+                <div>
+                    <strong>Loan Policy:</strong>
+                    {% if is_trade_loan %}
+                        Trade Loan: Flexible term (per month basis). Interest calculated daily.
+                    {% else %}
+                        Standard Loan: 360 days maximum term. Penalty of 2% per month starts at 361 days.
+                        Daily interest rate: {{ daily_rate|floatformat:6 }}% ({{ interest_rate }}% / 360 days)
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payment Type Selection -->
+            <div class="payment-option">
+                <div class="section-title">
+                    <i class="bi bi-calendar-check"></i> Payment Preference
+                </div>
+                <div class="payment-option-header">
+                    <div class="payment-type-btn active" data-type="flexible" onclick="selectPaymentType('flexible')">
+                        <i class="bi bi-calendar-week"></i><br>
+                        <strong>Flexible Payment</strong><br>
+                        <small>Based on production schedule</small>
+                    </div>
+                    <div class="payment-type-btn" data-type="scheduled" onclick="selectPaymentType('scheduled')">
+                        <i class="bi bi-calendar-month"></i><br>
+                        <strong>Scheduled Payment</strong><br>
+                        <small>Fixed monthly amortization</small>
+                    </div>
+                </div>
+                <input type="hidden" name="payment_type" id="payment_type" value="flexible">
+            </div>
+
+            <!-- Loan Term Selection -->
+            <div class="term-selector">
+                <div class="section-title">
+                    <i class="bi bi-calendar"></i> Select Loan Term
+                </div>
+                {% if is_trade_loan %}
+                    <p class="text-muted small mb-3">Trade Loan - Choose repayment period in months (based on 30-day months)</p>
+                    <div class="term-options" id="termOptions">
+                        <div class="term-option" data-term="3">
+                            <div>3 months</div>
+                            <small>(90 days max)</small>
+                        </div>
+                        <div class="term-option" data-term="6">
+                            <div>6 months</div>
+                            <small>(180 days max)</small>
+                        </div>
+                        <div class="term-option selected" data-term="12">
+                            <div>12 months</div>
+                            <small>(360 days max)</small>
+                        </div>
+                        <div class="term-option" data-term="18">
+                            <div>18 months</div>
+                            <small>(540 days max)</small>
+                        </div>
+                        <div class="term-option" data-term="24">
+                            <div>24 months</div>
+                            <small>(720 days max)</small>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="text-muted small mb-3">Standard Loan - Fixed 360 days term (12 months of 30 days)</p>
+                    <div class="term-options" id="termOptions">
+                        <div class="term-option selected" data-term="12">
+                            <div>12 months</div>
+                            <small>(360 days)</small>
+                        </div>
+                    </div>
+                {% endif %}
+                <input type="hidden" name="term_months" id="term_months" value="12">
+            </div>
+
+            <!-- Financial Summary -->
+            <div class="summary-card">
+                <div class="summary-grid">
+                    <div>
+                        <small class="opacity-75">APPROVED LINE (PRINCIPAL)</small>
+                        <div class="amount-display">?{{ principal|floatformat:2 }}</div>
+                        <small>Amount the member borrows</small>
+                    </div>
+                    <div>
+                        <small class="opacity-75">NET PROCEEDS TO MEMBER</small>
+                        <div class="amount-display text-positive">
+                            ?{{ net_proceeds|floatformat:2 }}
+                        </div>
+                        <small>Actual cash the member receives</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amortization Schedule (shown only when scheduled payment is selected) -->
+            <div id="scheduleSection" style="display: none;">
+                <div class="info-card">
+                    <div class="section-title">
+                        <i class="bi bi-table"></i> Amortization Schedule
+                    </div>
+                    <div class="small text-muted mb-2">Fixed monthly payments | Based on 30-day months</div>
+                    <div class="schedule-container">
+                        <table class="amortization-table">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Due Date</th>
+                                    <th class="text-right">Payment</th>
+                                    <th class="text-right">Interest</th>
+                                    <th class="text-right">Principal</th>
+                                    <th class="text-right">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="amortizationBody">
+                                <tr><td colspan="6" class="text-center py-4">Select term to generate schedule...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flexible Payment Info -->
+            <div id="flexibleSection">
+                <div class="info-card">
+                    <div class="section-title">
+                        <i class="bi bi-calculator"></i> Flexible Payment Information
+                    </div>
+                    <div>
+                        <p class="mb-2"><strong>How Interest Works:</strong></p>
+                        <ul class="text-muted" style="color: var(--text-secondary);">
+                            <li>Interest = Principal × Daily Rate × Number of Days</li>
+                            <li>Daily Rate = {{ daily_rate|floatformat:6 }}% ({{ interest_rate }}% ÷ 360 days)</li>
+                            <li>Pay anytime based on production/harvest schedule</li>
+                            <li>No fixed monthly payment required</li>
+                        </ul>
+                        <div class="alert-info-custom">
+                            <i class="bi bi-lightbulb"></i>
+                            <div>
+                                <strong>Example:</strong> If member pays after 45 days, interest = ?{{ principal|floatformat:2 }} × {{ daily_rate|floatformat:6 }}% × 45 = <strong id="exampleInterest">-</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loan Summary -->
+            <div class="info-card">
+                <div class="section-title">
+                    <i class="bi bi-info-circle"></i> Loan Summary
+                </div>
+                <div class="info-grid">
+                    <div>
+                        <div class="summary-row">
+                            <span>Loan Principal:</span>
+                            <strong>?{{ principal|floatformat:2 }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Interest Rate:</span>
+                            <strong>{{ interest_rate }}% per annum</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Daily Interest Rate:</span>
+                            <strong>{{ daily_rate|floatformat:6 }}%</strong>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="summary-row">
+                            <span>Service Charge (3%):</span>
+                            <strong class="text-danger">?{{ service_charge|floatformat:2|default:"0.00" }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>CBU Retention (2%):</span>
+                            <strong class="text-danger">?{{ cbu_retention|floatformat:2|default:"0.00" }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Insurance (1.32%):</span>
+                            <strong class="text-danger">?{{ insurance|floatformat:2|default:"0.00" }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Service Fee:</span>
+                            <strong class="text-danger">?{{ service_fee|floatformat:2|default:"35.00" }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Notarial Fee:</span>
+                            <strong class="text-danger">?{{ notarial_fee|floatformat:2|default:"200.00" }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Total Deductions:</span>
+                            <strong class="text-danger">?{{ total_deductions|floatformat:2 }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Cash to Member:</span>
+                            <strong class="text-success">?{{ net_proceeds|floatformat:2 }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Penalty Policy:</span>
+                            <strong class="text-warning">2% per month after 360 days</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-buttons-container">
+                <a href="{% url 'staff:staff_applications' %}" class="btn-cancel">
+                    <i class="bi bi-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="btn-submit" {% if principal == 0 %}disabled{% endif %}>
+                    <i class="bi bi-bank"></i> Create Loan & Disburse
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const principal = {{ principal|default:0 }};
+    const interestRate = {{ interest_rate|default:15 }};
+    const isTradeLoan = {{ is_trade_loan|yesno:"true,false" }};
+    const dailyRate = interestRate / 100 / 360;
+    let currentTerm = isTradeLoan ? 12 : 12;
+
+    // Calculate monthly payment for amortization
+    function calculateMonthlyPayment(term) {
+        if (principal <= 0 || !term || term <= 0) return 0;
+
+        const monthlyRate = interestRate / 100 / term;
+
+        if (monthlyRate === 0) return principal / term;
+
+        const numerator = monthlyRate * Math.pow(1 + monthlyRate, term);
+        const denominator = Math.pow(1 + monthlyRate, term) - 1;
+        return principal * (numerator / denominator);
+    }
+
+    // Generate amortization schedule
+    function generateAmortization(term) {
+        if (principal <= 0 || !term || term <= 0) return [];
+
+        const monthlyRate = interestRate / 100 / term;
+        let balance = principal;
+        let schedule = [];
+        let monthlyPayment = calculateMonthlyPayment(term);
+        let startDate = new Date();
+
+        for (let i = 1; i <= term; i++) {
+            let interest = balance * monthlyRate;
+            let principalPaid = monthlyPayment - interest;
+
+            if (i === term) {
+                principalPaid = balance;
+                monthlyPayment = interest + balance;
+            }
+
+            if (principalPaid < 0) principalPaid = 0;
+            balance = balance - principalPaid;
+
+            let dueDate = new Date(startDate);
+            dueDate.setDate(startDate.getDate() + (i * 30));
+
+            schedule.push({
+                month: i,
+                dueDate: dueDate.toISOString().split('T')[0],
+                payment: monthlyPayment,
+                interest: interest,
+                principal: principalPaid,
+                balance: Math.max(0, balance)
+            });
+
+            if (balance <= 0.01) break;
+        }
+
+        return schedule;
+    }
+
+    // Display amortization table
+    function displayAmortization(term) {
+        const schedule = generateAmortization(term);
+
+        if (schedule.length === 0 || principal === 0) {
+            document.getElementById('amortizationBody').innerHTML = '<tr><td colspan="6" class="text-center py-4">No schedule available</td></tr>';
+            return;
+        }
+
+        let html = '';
+        for (let row of schedule) {
+            html += `<tr>
+                        <td class="text-center">${row.month}</td>
+                        <td class="text-center">${row.dueDate}</td>
+                        <td class="text-right">?${row.payment.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="text-right">?${row.interest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="text-right">?${row.principal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="text-right">?${row.balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>`;
+        }
+
+        document.getElementById('amortizationBody').innerHTML = html;
+    }
+
+    // Calculate example interest
+    function calculateExampleInterest() {
+        if (principal <= 0) return;
+        const exampleDays = 45;
+        const exampleInterest = principal * dailyRate * exampleDays;
+        document.getElementById('exampleInterest').innerHTML = '?' + exampleInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    // Select payment type
+    function selectPaymentType(type) {
+        const flexibleSection = document.getElementById('flexibleSection');
+        const scheduleSection = document.getElementById('scheduleSection');
+        const paymentTypeInput = document.getElementById('payment_type');
+        const typeButtons = document.querySelectorAll('.payment-type-btn');
+
+        paymentTypeInput.value = type;
+
+        typeButtons.forEach(btn => {
+            if (btn.getAttribute('data-type') === type) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        if (type === 'scheduled') {
+            flexibleSection.style.display = 'none';
+            scheduleSection.style.display = 'block';
+            displayAmortization(currentTerm);
+        } else {
+            flexibleSection.style.display = 'block';
+            scheduleSection.style.display = 'none';
+            calculateExampleInterest();
+        }
+    }
+
+    // Handle term selection
+    function initTermSelection() {
+        const termOptions = document.querySelectorAll('.term-option');
+        const termInput = document.getElementById('term_months');
+
+        if (!isTradeLoan && termOptions.length === 1) {
+            currentTerm = 12;
+            if (termInput) termInput.value = 12;
+            if (termOptions[0]) termOptions[0].classList.add('selected');
+        }
+
+        termOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                if (this.classList.contains('disabled')) return;
+
+                termOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+
+                currentTerm = parseInt(this.getAttribute('data-term'));
+                if (termInput) termInput.value = currentTerm;
+
+                // If scheduled payment is selected, update schedule
+                const paymentType = document.getElementById('payment_type').value;
+                if (paymentType === 'scheduled') {
+                    displayAmortization(currentTerm);
+                }
+            });
+        });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        if (principal > 0) {
+            calculateExampleInterest();
+            initTermSelection();
+        } else {
+            // Disable form if no principal
+            const submitBtn = document.querySelector('.btn-submit');
+            if (submitBtn) submitBtn.disabled = true;
+            document.getElementById('amortizationBody').innerHTML = '<tr><td colspan="6" class="text-center py-4 text-warning">No approved line amount. Cannot create loan.</td></tr>';
+        }
+
+        // Default to flexible payment
+        selectPaymentType('flexible');
+    });
+</script>
+{% endblock %}

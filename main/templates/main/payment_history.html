@@ -3,13 +3,10 @@
 
 {% block title %}Payment History - TOMPuCO{% endblock %}
 
-{% block page_title %}Payment History{% endblock %}
-
 {% block extra_css %}
 <style>
     /* ===== Payment History Page - Professional Design ===== */
 
-    /* Stats Grid */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -67,10 +64,6 @@
     .stat-icon.count { background: rgba(16, 185, 129, 0.1); color: #10b981; }
     .stat-icon.last { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
 
-    [data-theme="dark"] .stat-icon.total { background: rgba(13, 110, 110, 0.2); color: #4ade80; }
-    [data-theme="dark"] .stat-icon.count { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-    [data-theme="dark"] .stat-icon.last { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-
     .stat-value {
         font-size: 32px;
         font-weight: 800;
@@ -87,7 +80,6 @@
         margin-top: 8px;
     }
 
-    /* Filter Section */
     .filter-section {
         background: var(--bg-card);
         border-radius: 20px;
@@ -135,11 +127,6 @@
         box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
     }
 
-    [data-theme="dark"] .filter-input:focus {
-        border-color: #4ade80;
-        box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.15);
-    }
-
     .btn-apply, .btn-reset {
         padding: 10px 20px;
         font-weight: 600;
@@ -165,12 +152,6 @@
         color: var(--text-primary);
     }
 
-    .btn-reset:hover {
-        transform: translateY(-2px);
-        background: var(--gray-100);
-    }
-
-    /* Main Card */
     .main-card {
         background: var(--bg-card);
         border-radius: 20px;
@@ -212,7 +193,6 @@
         color: white;
     }
 
-    /* Professional Table */
     .table-container {
         overflow-x: auto;
         width: 100%;
@@ -237,10 +217,6 @@
         letter-spacing: 0.5px;
     }
 
-    [data-theme="dark"] .payments-table th {
-        background: #1e2a3a;
-    }
-
     .payments-table td {
         padding: 16px;
         vertical-align: middle;
@@ -248,19 +224,11 @@
         color: var(--text-primary);
     }
 
-    .payments-table tbody tr {
-        transition: background 0.2s;
-    }
-
     .payments-table tbody tr:hover {
         background: var(--gray-50);
+        cursor: pointer;
     }
 
-    [data-theme="dark"] .payments-table tbody tr:hover {
-        background: #1e2a3a;
-    }
-
-    /* Text Alignment */
     .text-end {
         text-align: right;
     }
@@ -277,16 +245,8 @@
         color: #10b981;
     }
 
-    [data-theme="dark"] .text-success {
-        color: #34d399;
-    }
-
     .text-danger {
         color: #dc2626;
-    }
-
-    [data-theme="dark"] .text-danger {
-        color: #f87171;
     }
 
     .payment-id {
@@ -296,10 +256,6 @@
         font-size: 0.85rem;
     }
 
-    [data-theme="dark"] .payment-id {
-        color: #4ade80;
-    }
-
     .loan-number {
         font-weight: 700;
         color: #0d6e6e;
@@ -307,11 +263,6 @@
         font-size: 0.85rem;
     }
 
-    [data-theme="dark"] .loan-number {
-        color: #4ade80;
-    }
-
-    /* Payment Method Badges */
     .method-badge {
         padding: 6px 14px;
         border-radius: 20px;
@@ -327,11 +278,6 @@
     .method-pesada { background: #dbeafe; color: #1e40af; }
     .method-quedan { background: #fef3c7; color: #92400e; }
 
-    [data-theme="dark"] .method-cash { background: #064e3b; color: #a7f3d0; }
-    [data-theme="dark"] .method-pesada { background: #1e3a5f; color: #bfdbfe; }
-    [data-theme="dark"] .method-quedan { background: #451a03; color: #fde68a; }
-
-    /* Receipt Button */
     .btn-view-receipt {
         padding: 6px 14px;
         border-radius: 8px;
@@ -354,7 +300,6 @@
         color: white;
     }
 
-    /* Empty State */
     .empty-state {
         text-align: center;
         padding: 60px 20px;
@@ -362,11 +307,6 @@
 
     .empty-state i {
         font-size: 4rem;
-        color: var(--text-muted);
-        margin-bottom: 15px;
-    }
-
-    .empty-state p {
         color: var(--text-muted);
         margin-bottom: 15px;
     }
@@ -385,19 +325,11 @@
         transition: all 0.3s;
     }
 
-    .btn-create:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
-        color: white;
-    }
-
-    /* Loading State */
     .loading-state {
         text-align: center;
         padding: 60px 20px;
     }
 
-    /* Modal Styles */
     .modal-content {
         background: var(--bg-card);
         border-radius: 20px;
@@ -421,32 +353,12 @@
         border-top: 1px solid var(--border-color);
     }
 
-    .receipt-preview {
-        text-align: center;
-        padding: 20px;
-    }
-
-    .receipt-preview i {
-        font-size: 4rem;
-        color: #0d6e6e;
-        margin-bottom: 20px;
-    }
-
-    [data-theme="dark"] .receipt-preview i {
-        color: #4ade80;
-    }
-
     .alert-info {
         background: #dbeafe;
         color: #1e40af;
         border: none;
         border-radius: 12px;
         padding: 12px 16px;
-    }
-
-    [data-theme="dark"] .alert-info {
-        background: #1e3a5f;
-        color: #bfdbfe;
     }
 </style>
 {% endblock %}
@@ -544,7 +456,7 @@
                                 <div class="spinner-border text-primary" role="status"></div>
                                 <p class="mt-2 text-muted">Loading your payment history...</p>
                             </div>
-                        </td>
+                        </div>
                     </tr>
                 </tbody>
             </table>
@@ -567,8 +479,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <a href="#" id="downloadReceiptBtn" class="btn btn-primary" download>
-                    <i class="bi bi-download"></i> Download PDF
+                <a href="#" id="downloadReceiptBtn" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-download"></i> View/Download PDF
                 </a>
             </div>
         </div>
@@ -585,7 +497,7 @@
     };
 
     function formatCurrency(amount) {
-        if (!amount && amount !== 0) return '₱0';
+        if (!amount && amount !== 0) return '₱0.00';
         return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', minimumFractionDigits: 2 }).format(amount);
     }
 
@@ -609,18 +521,23 @@
         fetch('/api/member-payments/')
             .then(response => response.json())
             .then(data => {
-                allPayments = data.payments || [];
-                updateStats();
-                filterAndRenderPayments();
+                if (data.success !== false) {
+                    allPayments = data.payments || [];
+                    updateStats();
+                    filterAndRenderPayments();
+                } else {
+                    console.error('API Error:', data.error);
+                    showError(data.error || 'Failed to load payments');
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showError();
+                showError('Network error: ' + error.message);
             });
     }
 
     function updateStats() {
-        const total = allPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const total = allPayments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
         const count = allPayments.length;
         const lastPayment = allPayments.length > 0 ? allPayments[0].payment_date : null;
 
@@ -639,7 +556,7 @@
         if (filters.search) {
             const searchLower = filters.search.toLowerCase();
             filtered = filtered.filter(p =>
-                p.loan_number.toLowerCase().includes(searchLower) ||
+                (p.loan_number && p.loan_number.toLowerCase().includes(searchLower)) ||
                 (p.receipt_number && p.receipt_number.toLowerCase().includes(searchLower))
             );
         }
@@ -674,59 +591,70 @@
                                 <i class="bi bi-bank"></i> View Your Loans
                             </a>
                         </div>
-                    </div>
+                    </td>
                 </tr>
             `;
             return;
         }
 
         tbody.innerHTML = payments.map(payment => `
-            <tr>
-                <td class="text-muted small">${formatDate(payment.payment_date)}</div>
-                <td><code class="payment-id">${payment.receipt_number || '—'}</code></div>
-                <td><code class="loan-number">${payment.loan_number}</code></div>
-                <td class="text-end fw-bold text-success">${formatCurrency(payment.amount)}</div>
-                <td>${getMethodBadge(payment.payment_method)}</div>
-                <td class="text-end">${formatCurrency(payment.principal_amount || 0)}</div>
-                <td class="text-end">${formatCurrency(payment.interest_amount || 0)}</div>
-                <td class="text-end ${payment.penalty_amount > 0 ? 'text-danger fw-bold' : ''}">${formatCurrency(payment.penalty_amount || 0)}</div>
-                <td class="text-center">
-                    ${payment.receipt_url ?
-                        `<button class="btn-view-receipt" onclick="viewReceipt('${payment.receipt_url}', '${payment.receipt_number}', ${payment.id}); return false;">
-                            <i class="bi bi-eye"></i> View Receipt
-                        </button>` :
-                        '<span class="text-muted small">—</span>'
-                    }
-                </div>
+            <tr onclick="viewReceipt('${payment.receipt_url || ''}', '${payment.receipt_number || ''}', ${payment.id})" style="cursor: pointer;">
+                <td class="text-muted small">${formatDate(payment.payment_date)}</td>
+                <td><code class="payment-id">${payment.receipt_number || '—'}</code></td>
+                <td><code class="loan-number">${payment.loan_number}</code></td>
+                <td class="text-end fw-bold text-success">${formatCurrency(payment.amount)}</td>
+                <td>${getMethodBadge(payment.payment_method)}</td>
+                <td class="text-end">${formatCurrency(payment.principal_amount || 0)}</td>
+                <td class="text-end">${formatCurrency(payment.interest_amount || 0)}</td>
+                <td class="text-end ${payment.penalty_amount > 0 ? 'text-danger fw-bold' : ''}">${formatCurrency(payment.penalty_amount || 0)}</td>
+                <td class="text-center" onclick="event.stopPropagation()">
+                    <button class="btn-view-receipt" onclick="viewReceipt('${payment.receipt_url || ''}', '${payment.receipt_number || ''}', ${payment.id}); return false;">
+                        <i class="bi bi-eye"></i> View Receipt
+                    </button>
+                </td>
             </tr>
         `).join('');
     }
 
     function viewReceipt(receiptUrl, receiptNumber, paymentId) {
         const modalContent = document.getElementById('receiptContent');
-        modalContent.innerHTML = `
-            <div class="receipt-preview">
-                <i class="bi bi-receipt"></i>
-                <h5 class="mt-3">Receipt #${receiptNumber}</h5>
-                <p class="text-muted">Click download to get your PDF receipt</p>
-                <div class="alert alert-info mt-3">
-                    <i class="bi bi-info-circle"></i>
-                    <strong>Payment Receipt</strong><br>
-                    Receipt is available for download in PDF format.
-                </div>
-            </div>
-        `;
 
-        document.getElementById('downloadReceiptBtn').href = receiptUrl;
-        document.getElementById('downloadReceiptBtn').onclick = function() {
-            console.log('Downloading receipt:', receiptNumber);
-        };
+        if (receiptUrl) {
+            modalContent.innerHTML = `
+                <div class="text-center">
+                    <i class="bi bi-receipt" style="font-size: 3rem; color: #0d6e6e;"></i>
+                    <h5 class="mt-3">Receipt #${receiptNumber}</h5>
+                    <p class="text-muted">Click the button below to view/download your PDF receipt</p>
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Official Receipt</strong><br>
+                        This receipt is an official record of your payment.
+                    </div>
+                </div>
+            `;
+            document.getElementById('downloadReceiptBtn').href = receiptUrl;
+            document.getElementById('downloadReceiptBtn').style.display = 'inline-flex';
+        } else {
+            modalContent.innerHTML = `
+                <div class="text-center">
+                    <i class="bi bi-receipt" style="font-size: 3rem; color: #6c757d;"></i>
+                    <h5 class="mt-3">Receipt #${receiptNumber}</h5>
+                    <p class="text-muted">Receipt preview is not available</p>
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Receipt Not Available</strong><br>
+                        The receipt file is not available for this payment.
+                    </div>
+                </div>
+            `;
+            document.getElementById('downloadReceiptBtn').style.display = 'none';
+        }
 
         const modal = new bootstrap.Modal(document.getElementById('receiptModal'));
         modal.show();
     }
 
-    function showError() {
+    function showError(message) {
         const tbody = document.getElementById('paymentsTableBody');
         tbody.innerHTML = `
             <tr>
@@ -734,12 +662,12 @@
                     <div class="empty-state">
                         <i class="bi bi-exclamation-triangle-fill text-danger"></i>
                         <h6>Error Loading Payments</h6>
-                        <p>There was a problem loading your payment history. Please try again.</p>
+                        <p>${message}</p>
                         <button class="btn btn-primary btn-sm" onclick="loadPayments()">
                             <i class="bi bi-arrow-repeat"></i> Retry
                         </button>
                     </div>
-                </div>
+                </td>
             </tr>
         `;
     }

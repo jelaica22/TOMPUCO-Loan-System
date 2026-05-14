@@ -8,6 +8,8 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('api/activity/', views.api_activity_feed, name='api_activity_feed'),
+    path('member/<int:member_id>/verify/', views.verify_member, name='verify_member'),
+    path('create-staff-user/', views.create_staff_user, name='create_staff_user'),
 
     # Profile
     path('profile/', views.profile, name='profile'),
@@ -75,6 +77,7 @@ urlpatterns = [
     path('member-documents/create/', views.member_document_create, name='member_document_create'),
     path('member-documents/<int:doc_id>/verify/', views.member_document_verify, name='member_document_verify'),
     path('member-documents/<int:doc_id>/delete/', views.member_document_delete, name='member_document_delete'),
+    path('members/<int:member_id>/verify/', views.verify_member_ajax, name='verify_member_ajax'),
 
     # Loan Attachments
     path('loan-attachments/', views.loan_attachments_list, name='loan_attachments_list'),
@@ -89,6 +92,9 @@ urlpatterns = [
     path('notifications/', views.notifications_list, name='notifications_list'),
     path('notifications/<int:notif_id>/mark-read/', views.notification_mark_read, name='notification_mark_read'),
     path('notifications/<int:notif_id>/delete/', views.notification_delete, name='notification_delete'),
+    path('api/notifications/', views.notifications_api, name='notifications_api'),
+    path('api/notifications/mark-read/<int:notif_id>/', views.mark_notification_read_api, name='mark_notification_read_api'),
+    path('api/notifications/mark-all-read/', views.mark_all_notifications_read_api, name='mark_all_notifications_read_api'),
 
     # Audit Logs
     path('audit-logs/', views.audit_logs_list, name='audit_logs_list'),

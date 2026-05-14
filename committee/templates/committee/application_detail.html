@@ -1,0 +1,379 @@
+{% extends 'committee/base_committee.html' %}
+{% load static %}
+
+{% block title %}Application Details - Committee{% endblock %}
+{% block page_title %}Application Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        padding-top: 10px;
+    }
+    
+    .detail-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+    
+    .card-header-custom {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        padding: 18px 24px;
+        color: white;
+    }
+    
+    .card-header-custom h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .card-body-custom {
+        padding: 24px;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+    }
+    
+    .info-item {
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 12px;
+    }
+    
+    .info-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        display: block;
+    }
+    
+    .info-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .info-value.amount {
+        color: #0d6e6e;
+        font-size: 1.2rem;
+        font-weight: 800;
+    }
+    
+    .info-full {
+        margin-top: 10px;
+    }
+    
+    .info-full .info-label {
+        margin-bottom: 8px;
+    }
+    
+    .info-full .info-value {
+        background: var(--bg-body);
+        padding: 12px 16px;
+        border-radius: 12px;
+        margin-top: 5px;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .status-pending {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
+    .status-approved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .status-line-approved {
+        background: #ede9fe;
+        color: #5b21b6;
+    }
+    
+    .btn-back {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+    
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .votes-section {
+        margin-top: 20px;
+    }
+    
+    .vote-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: var(--bg-body);
+        border-radius: 12px;
+        margin-bottom: 8px;
+    }
+    
+    .vote-member {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text-primary);
+    }
+
+    .vote-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .vote-badge.approved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .vote-badge.rejected {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-head {
+        background: #f59e0b;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 0.6rem;
+        font-weight: 600;
+    }
+
+    [data-theme="dark"] .badge-head {
+        background: #f59e0b;
+        color: #1a1a2e;
+    }
+
+    [data-theme="dark"] .vote-badge.approved {
+        background: #064e3b;
+        color: #a7f3d0;
+    }
+
+    [data-theme="dark"] .vote-badge.rejected {
+        background: #7f1d1d;
+        color: #fecaca;
+    }
+
+    [data-theme="dark"] .status-pending {
+        background: #451a03;
+        color: #fde68a;
+    }
+
+    [data-theme="dark"] .status-approved {
+        background: #064e3b;
+        color: #a7f3d0;
+    }
+
+    [data-theme="dark"] .status-rejected {
+        background: #7f1d1d;
+        color: #fecaca;
+    }
+
+    [data-theme="dark"] .status-line-approved {
+        background: #4c1d95;
+        color: #ddd6fe;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="mb-3">
+        <a href="javascript:history.back()" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <!-- Application Details Card -->
+    <div class="detail-card">
+        <div class="card-header-custom">
+            <h5><i class="bi bi-file-text-fill"></i> Application Information</h5>
+        </div>
+        <div class="card-body-custom">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Application ID</span>
+                    <div class="info-value"><code>{{ application.application_id }}</code></div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Status</span>
+                    <div class="info-value">
+                        {% if application.status == 'pending_staff_review' %}
+                            <span class="status-badge status-pending">Pending Staff Review</span>
+                        {% elif application.status == 'with_committee' %}
+                            <span class="status-badge status-pending">With Committee</span>
+                        {% elif application.status == 'line_approved' %}
+                            <span class="status-badge status-line-approved">Line Approved</span>
+                        {% elif application.status == 'approved' %}
+                            <span class="status-badge status-approved">Approved</span>
+                        {% elif application.status == 'rejected' %}
+                            <span class="status-badge status-rejected">Rejected</span>
+                        {% else %}
+                            <span class="status-badge status-pending">{{ application.status|title }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date Applied</span>
+                    <div class="info-value">{{ application.applied_date|date:"Y-m-d" }}</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Loan Product</span>
+                    <div class="info-value">{{ application.loan_product.name|default:"N/A" }}</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Requested Amount</span>
+                    <div class="info-value amount">₱{{ application.amount|floatformat:2 }}</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Approved Line</span>
+                    <div class="info-value amount">
+                        {% if application.approved_line %}
+                            ₱{{ application.approved_line|floatformat:2 }}
+                        {% else %}
+                            <span class="text-muted">Not yet approved</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Loan Term</span>
+                    <div class="info-value">{{ application.loan_product.term_months|default:"12" }} months</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Mode of Payment</span>
+                    <div class="info-value">{{ application.preferred_payment_mode|default:"Monthly" }}</div>
+                </div>
+            </div>
+            
+            <div class="info-full">
+                <span class="info-label">Purpose</span>
+                <div class="info-value">{{ application.purpose|default:"-" }}</div>
+            </div>
+            
+            <div class="info-full">
+                <span class="info-label">Collateral Offered</span>
+                <div class="info-value">{{ application.collateral|default:"No collateral provided" }}</div>
+            </div>
+            
+            {% if application.committee_reduction_reason %}
+            <div class="info-full">
+                <span class="info-label">Reduction Reason</span>
+                <div class="info-value">{{ application.committee_reduction_reason }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Member Information Card -->
+    <div class="detail-card">
+        <div class="card-header-custom">
+            <h5><i class="bi bi-person-fill"></i> Member Information</h5>
+        </div>
+        <div class="card-body-custom">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Full Name</span>
+                    <div class="info-value">{{ application.member.first_name }} {{ application.member.last_name }}</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Membership #</span>
+                    <div class="info-value">{{ application.member.membership_number|default:"-" }}</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Contact Number</span>
+                    <div class="info-value">{{ application.member.contact_number|default:"-" }}</div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Residence Address</span>
+                    <div class="info-value">{{ application.member.residence_address|default:"-" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Committee Votes Section -->
+    <div class="detail-card">
+        <div class="card-header-custom">
+            <h5><i class="bi bi-people-fill"></i> Committee Votes</h5>
+        </div>
+        <div class="card-body-custom">
+            {% if committee_votes %}
+                <div class="votes-section">
+                    {% for vote in committee_votes %}
+                    <div class="vote-item">
+                        <div class="vote-member">
+                            <i class="bi bi-person-circle"></i>
+                            {{ vote.committee_member.get_full_name|default:vote.committee_member.username }}
+                            {% if vote.committee_member.committee_profile.is_head %}
+                                <span class="badge-head">HEAD</span>
+                            {% endif %}
+                        </div>
+                        <div class="vote-badge {% if vote.vote == 'approved' %}approved{% else %}rejected{% endif %}">
+                            <i class="bi bi-{% if vote.vote == 'approved' %}check-circle{% else %}x-circle{% endif %}"></i>
+                            {{ vote.vote|title }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+                    <p class="text-muted mt-2">No votes have been cast yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

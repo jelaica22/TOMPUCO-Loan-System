@@ -26,13 +26,10 @@
     <style>
         /* ===== CSS Variables for Light/Dark Mode ===== */
         :root {
-            /* Layout */
             --header-height: 64px;
             --sidebar-width: 280px;
             --sidebar-collapsed-width: 80px;
             --transition-speed: 0.3s;
-
-            /* Brand Colors - Teal & Navy Theme */
             --brand-primary: #0d6e6e;
             --brand-primary-dark: #0a5a5a;
             --brand-primary-light: #1a8a8a;
@@ -40,8 +37,6 @@
             --brand-accent: #00b4b4;
             --brand-gradient: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
             --brand-gradient-light: linear-gradient(135deg, #1a8a8a 0%, #0d6e6e 100%);
-
-            /* Light Mode Colors */
             --bg-body: #f0f4f8;
             --bg-card: #ffffff;
             --bg-sidebar: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
@@ -68,7 +63,6 @@
             --info-text: #1e40af;
         }
 
-        /* Dark Mode */
         [data-theme="dark"] {
             --bg-body: #121826;
             --bg-card: #1a2332;
@@ -96,7 +90,6 @@
             --info-text: #bfdbfe;
         }
 
-        /* ===== Base Styles ===== */
         * {
             margin: 0;
             padding: 0;
@@ -115,7 +108,6 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* ===== Fixed Navbar ===== */
         .top-navbar {
             position: fixed;
             top: 0;
@@ -132,7 +124,6 @@
             transition: background 0.3s ease;
         }
 
-        /* Theme Toggle Button */
         .theme-toggle {
             background: rgba(255, 255, 255, 0.15);
             border: none;
@@ -153,11 +144,182 @@
             transform: scale(1.05);
         }
 
-        .theme-toggle i {
+        /* ===== NOTIFICATION BELL STYLES ===== */
+        .notification-dropdown {
+            position: relative;
+            margin-right: 10px;
+        }
+
+        .notification-bell {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .notification-bell:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .notification-bell i {
             font-size: 1.2rem;
         }
 
-        /* Navbar Left Section */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 600;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            border: 2px solid var(--brand-primary);
+        }
+
+        .notification-menu {
+            width: 380px;
+            max-width: 90vw;
+            padding: 0;
+            margin-top: 10px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .notification-header h6 {
+            margin: 0;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .mark-all-read-btn {
+            background: none;
+            border: none;
+            color: var(--brand-primary);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mark-all-read-btn:hover {
+            text-decoration: underline;
+        }
+
+        .notification-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .notification-item:hover {
+            background: var(--table-hover);
+        }
+
+        .notification-item.unread {
+            background: var(--info-bg);
+        }
+
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-icon i {
+            font-size: 1.1rem;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .notification-message {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .notification-time {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        .notification-footer {
+            padding: 10px 16px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .view-all-link {
+            color: var(--brand-primary);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .view-all-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-notifications {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-notifications i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
         .navbar-left {
             display: flex;
             align-items: center;
@@ -222,14 +384,12 @@
             letter-spacing: 0.5px;
         }
 
-        /* Navbar Right Section */
         .navbar-right {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 5px;
         }
 
-        /* User Dropdown */
         .user-dropdown-btn {
             display: flex;
             align-items: center;
@@ -281,7 +441,6 @@
             }
         }
 
-        /* ===== Sidebar ===== */
         .sidebar {
             position: fixed;
             top: var(--header-height);
@@ -391,7 +550,6 @@
             margin: 10px 20px;
         }
 
-        /* Collapsed Sidebar */
         body.sidebar-collapsed .sidebar {
             width: var(--sidebar-collapsed-width);
         }
@@ -427,7 +585,6 @@
             margin-left: var(--sidebar-collapsed-width);
         }
 
-        /* ===== Main Content ===== */
         .main-content {
             margin-left: var(--sidebar-width);
             padding: 24px;
@@ -435,7 +592,6 @@
             min-height: calc(100vh - var(--header-height) - 60px);
         }
 
-        /* ===== Footer ===== */
         .app-footer {
             background: var(--footer-bg);
             border-top: 1px solid var(--border-color);
@@ -447,17 +603,6 @@
             text-align: center;
         }
 
-        .app-footer a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .app-footer a:hover {
-            color: var(--brand-primary);
-        }
-
-        /* ===== Responsive ===== */
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -498,7 +643,6 @@
             }
         }
 
-        /* ===== Card Styles ===== */
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -508,11 +652,6 @@
             transition: all 0.3s;
         }
 
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
-        }
-
         .card-header {
             background: var(--bg-card);
             border-bottom: 1px solid var(--border-color);
@@ -520,7 +659,6 @@
             border-radius: 16px 16px 0 0 !important;
         }
 
-        /* Table Styles */
         .table {
             color: var(--text-primary);
         }
@@ -544,7 +682,6 @@
             background: var(--table-hover);
         }
 
-        /* Status Badges */
         .badge-success {
             background: var(--success-bg);
             color: var(--success-text);
@@ -593,7 +730,6 @@
             gap: 6px;
         }
 
-        /* Action Buttons */
         .btn-action {
             padding: 6px 14px;
             border-radius: 8px;
@@ -616,85 +752,6 @@
             color: white;
         }
 
-        .btn-action-outline {
-            background: transparent;
-            border: 1px solid var(--brand-primary);
-            color: var(--brand-primary);
-        }
-
-        .btn-action-outline:hover {
-            background: var(--brand-primary);
-            color: white;
-        }
-
-        [data-theme="dark"] .btn-action-outline {
-            border-color: #4ade80;
-            color: #4ade80;
-        }
-
-        [data-theme="dark"] .btn-action-outline:hover {
-            background: #4ade80;
-            color: #1a2332;
-        }
-
-        /* Button Styles */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-light));
-            border: none;
-            transition: all 0.3s;
-            padding: 10px 24px;
-            border-radius: 10px;
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--brand-primary-dark), var(--brand-primary));
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
-        }
-
-        .btn-secondary {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            transition: all 0.3s;
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--brand-primary);
-            color: var(--brand-primary);
-            transform: translateY(-2px);
-        }
-
-        /* Alert Styles */
-        .alert-success {
-            background: var(--success-bg);
-            color: var(--success-text);
-            border: none;
-            border-radius: 12px;
-        }
-
-        .alert-warning {
-            background: var(--warning-bg);
-            color: var(--warning-text);
-            border: none;
-            border-radius: 12px;
-        }
-
-        .alert-danger {
-            background: var(--danger-bg);
-            color: var(--danger-text);
-            border: none;
-            border-radius: 12px;
-        }
-
-        .alert-info {
-            background: var(--info-bg);
-            color: var(--info-text);
-            border: none;
-            border-radius: 12px;
-        }
-
-        /* Sidebar Overlay for Mobile */
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -711,7 +768,6 @@
             display: block;
         }
 
-        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -726,20 +782,17 @@
             border-radius: 3px;
         }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--brand-primary-light);
-        }
-
-        /* Logout Modal */
         .logout-modal .modal-content {
             border-radius: 16px;
             overflow: hidden;
         }
+
         .logout-modal .modal-header {
             background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
             border: none;
         }
+
         .logout-icon {
             width: 70px;
             height: 70px;
@@ -750,66 +803,18 @@
             justify-content: center;
             margin: 0 auto 15px;
         }
+
         .logout-icon i {
             font-size: 2.5rem;
             color: #dc2626;
-        }
-
-        /* DataTables Overrides */
-        .dataTables_wrapper .dataTables_length,
-        .dataTables_wrapper .dataTables_filter,
-        .dataTables_wrapper .dataTables_info,
-        .dataTables_wrapper .dataTables_processing,
-        .dataTables_wrapper .dataTables_paginate {
-            color: var(--text-primary);
-        }
-
-        .dataTables_wrapper .dataTables_filter input {
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            border-radius: 8px;
-            padding: 6px 12px;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-            background: var(--brand-primary);
-            color: white;
-        }
-
-        /* Pagination */
-        .pagination .page-link {
-            background: var(--bg-card);
-            border-color: var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .pagination .page-link:hover {
-            background: var(--brand-primary);
-            color: white;
-            border-color: var(--brand-primary);
-        }
-
-        .pagination .page-item.active .page-link {
-            background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-light));
-            border-color: var(--brand-primary);
-            color: white;
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 
 <body>
-    <!-- Sidebar Overlay (Mobile) -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- Top Navbar -->
     <div class="top-navbar">
         <div class="navbar-left">
             <button class="mobile-menu-btn" id="mobileMenuBtn">
@@ -825,12 +830,33 @@
         </div>
 
         <div class="navbar-right">
-            <!-- Theme Toggle Button -->
             <button class="theme-toggle" id="themeToggle" title="Dark/Light Mode">
                 <i class="bi bi-moon-stars"></i>
             </button>
 
-            <!-- User Dropdown with Profile Image -->
+            <!-- NOTIFICATION BELL -->
+            <div class="dropdown notification-dropdown">
+                <button class="notification-bell" data-bs-toggle="dropdown" aria-expanded="false" id="notificationBell">
+                    <i class="bi bi-bell"></i>
+                    <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end notification-menu" id="notificationMenu">
+                    <div class="notification-header">
+                        <h6>Notifications</h6>
+                        <button class="mark-all-read-btn" id="markAllReadBtn">Mark all as read</button>
+                    </div>
+                    <div class="notification-list" id="notificationList">
+                        <div class="text-center py-3 text-muted">
+                            <i class="bi bi-bell-slash"></i>
+                            <p class="mb-0 small">Loading notifications...</p>
+                        </div>
+                    </div>
+                    <div class="notification-footer">
+                        <a href="{% url 'admin_panel:notifications_list' %}" class="view-all-link">View All Notifications</a>
+                    </div>
+                </div>
+            </div>
+
             <div class="dropdown">
                 <button class="user-dropdown-btn" data-bs-toggle="dropdown">
                     <div class="user-avatar">
@@ -856,7 +882,6 @@
         </div>
     </div>
 
-    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse Sidebar">
@@ -883,6 +908,12 @@
                     <a class="nav-link" href="{% url 'admin_panel:members_list' %}" data-nav="members">
                         <i class="bi bi-person-badge"></i>
                         <span>Members</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_panel:create_staff_user' %}" data-nav="create-staff">
+                        <i class="bi bi-person-plus"></i>
+                        <span>Create Staff User</span>
                     </a>
                 </div>
                 <div class="nav-item">
@@ -937,6 +968,8 @@
                     <a class="nav-link" href="{% url 'admin_panel:notifications_list' %}" data-nav="notifications">
                         <i class="bi bi-bell"></i>
                         <span>Notifications</span>
+                        <!-- Sidebar notification badge -->
+                        <span class="nav-badge" id="sidebarNotificationBadge" style="display: none;"></span>
                     </a>
                 </div>
                 <div class="nav-item">
@@ -973,7 +1006,6 @@
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
         {% if messages %}
             {% for message in messages %}
@@ -988,14 +1020,13 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
     <footer class="app-footer">
         <div class="container-fluid">
             <p class="mb-0">&copy; {% now "Y" %} Tolong Multi-Purpose Cooperative. All rights reserved. | <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a></p>
         </div>
     </footer>
 
-    <!-- Logout Confirmation Modal -->
+    <!-- Logout Modal -->
     <div class="modal fade logout-modal" id="logoutModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -1029,15 +1060,10 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // ============================================================
-        // DARK / LIGHT MODE TOGGLE
-        // ============================================================
-
-        // Get theme from localStorage or default to 'light'
+        // Theme Toggle
         const theme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', theme);
 
-        // Update theme toggle icon
         const themeToggle = document.getElementById('themeToggle');
         const updateThemeIcon = () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -1049,30 +1075,15 @@
         };
         updateThemeIcon();
 
-        // Theme toggle click handler
         themeToggle?.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateThemeIcon();
-
-            // Reload DataTables if they exist to adjust colors
-            if ($.fn.DataTable) {
-                $('.dataTable').each(function() {
-                    $(this).DataTable().destroy();
-                    $(this).DataTable({
-                        responsive: true,
-                        pageLength: 10
-                    });
-                });
-            }
         });
 
-        // ============================================================
-        // SIDEBAR COLLAPSE (Desktop)
-        // ============================================================
+        // Sidebar Collapse
         const sidebar = document.getElementById('sidebar');
         const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
         const body = document.body;
@@ -1085,21 +1096,10 @@
             sidebarCollapseBtn.addEventListener('click', function() {
                 body.classList.toggle('sidebar-collapsed');
                 localStorage.setItem('adminSidebarCollapsed', body.classList.contains('sidebar-collapsed'));
-
-                // Reload DataTables to adjust layout
-                setTimeout(() => {
-                    if ($.fn.DataTable) {
-                        $('.dataTable').each(function() {
-                            $(this).DataTable().draw();
-                        });
-                    }
-                }, 300);
             });
         }
 
-        // ============================================================
-        // MOBILE SIDEBAR
-        // ============================================================
+        // Mobile Menu
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
 
@@ -1127,16 +1127,201 @@
             }
         });
 
-        // ============================================================
-        // ACTIVE LINK HIGHLIGHTING
-        // ============================================================
+        // NOTIFICATION SYSTEM
+        let notificationInterval = null;
+        let currentUnreadCount = 0;
+
+        function loadNotifications() {
+            fetch('/api/notifications/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentUnreadCount = data.unread_count;
+                        updateNotificationBadges(currentUnreadCount);
+                        renderNotificationList(data.notifications || []);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading notifications:', error);
+                });
+        }
+
+        function updateNotificationBadges(count) {
+            const bellBadge = document.getElementById('notificationBadge');
+            const sidebarBadge = document.getElementById('sidebarNotificationBadge');
+
+            if (count > 0) {
+                bellBadge.style.display = 'flex';
+                bellBadge.textContent = count > 99 ? '99+' : count;
+                if (sidebarBadge) {
+                    sidebarBadge.style.display = 'inline-flex';
+                    sidebarBadge.textContent = count > 99 ? '99+' : count;
+                }
+            } else {
+                bellBadge.style.display = 'none';
+                if (sidebarBadge) {
+                    sidebarBadge.style.display = 'none';
+                }
+            }
+        }
+
+        function renderNotificationList(notifications) {
+            const container = document.getElementById('notificationList');
+
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-notifications">
+                        <i class="bi bi-bell-slash"></i>
+                        <p class="mb-0">No notifications</p>
+                        <small class="text-muted">You're all caught up!</small>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifications.map(notif => `
+                <a href="${notif.link || '#'}" class="notification-item ${notif.is_read ? '' : 'unread'}" data-id="${notif.id}">
+                    <div class="notification-icon" style="background: ${getNotificationIconBg(notif.notification_type)}">
+                        <i class="bi ${getNotificationIcon(notif.notification_type)}" style="color: white;"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">${escapeHtml(notif.title)}</div>
+                        <div class="notification-message">${escapeHtml(notif.message)}</div>
+                        <div class="notification-time">${formatTimeAgo(notif.created_at)}</div>
+                    </div>
+                </a>
+            `).join('');
+
+            // Attach click handlers to mark as read
+            document.querySelectorAll('.notification-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    const id = this.dataset.id;
+                    if (id && this.classList.contains('unread')) {
+                        markNotificationAsRead(id);
+                    }
+                });
+            });
+        }
+
+        function getNotificationIconBg(type) {
+            switch(type) {
+                case 'application': return '#0d6e6e';
+                case 'payment': return '#10b981';
+                case 'approval': return '#3b82f6';
+                case 'alert': return '#ef4444';
+                default: return '#6b7280';
+            }
+        }
+
+        function getNotificationIcon(type) {
+            switch(type) {
+                case 'application': return 'bi-file-text';
+                case 'payment': return 'bi-cash';
+                case 'approval': return 'bi-check-circle';
+                case 'alert': return 'bi-exclamation-triangle';
+                default: return 'bi-bell';
+            }
+        }
+
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins} min ago`;
+            if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+            if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function markNotificationAsRead(notificationId) {
+            fetch(`/api/notifications/mark-read/${notificationId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications(); // Reload to update counts
+                }
+            })
+            .catch(error => console.error('Error marking notification as read:', error));
+        }
+
+        function markAllNotificationsAsRead() {
+            fetch('/api/notifications/mark-all-read/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                }
+            })
+            .catch(error => console.error('Error marking all as read:', error));
+        }
+
+        function getCSRFToken() {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, 10) === 'csrftoken=') {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Initialize notifications on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotifications();
+            // Refresh notifications every 30 seconds
+            notificationInterval = setInterval(loadNotifications, 30000);
+        });
+
+        // Clean up interval on page unload
+        window.addEventListener('beforeunload', function() {
+            if (notificationInterval) {
+                clearInterval(notificationInterval);
+            }
+        });
+
+        // Mark all read button
+        document.getElementById('markAllReadBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            markAllNotificationsAsRead();
+        });
+
+        // Active nav link highlighting
         document.addEventListener('DOMContentLoaded', function() {
             const currentPath = window.location.pathname;
-
             const navPaths = {
                 'dashboard': ['/superadmin/', '/superadmin/dashboard/'],
                 'users': ['/superadmin/users/'],
                 'members': ['/superadmin/members/'],
+                'create-staff': ['/superadmin/create-staff-user/'],
                 'loan-products': ['/superadmin/loan-products/'],
                 'loan-applications': ['/superadmin/loan-applications/'],
                 'member-documents': ['/superadmin/member-documents/'],
@@ -1164,16 +1349,9 @@
                     }
                 }
             }
-
-            if (!document.querySelector('.nav-link.active') && (currentPath === '/superadmin/' || currentPath === '/superadmin/dashboard/')) {
-                const dashboardLink = document.querySelector('.nav-link[data-nav="dashboard"]');
-                if (dashboardLink) dashboardLink.classList.add('active');
-            }
         });
 
-        // ============================================================
-        // LOGOUT MODAL
-        // ============================================================
+        // Logout modal
         const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
         document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
             e.preventDefault();
@@ -1184,28 +1362,22 @@
             logoutModal.show();
         });
 
-        // Force add favicon to dashboard
+        // Fix favicon
         (function() {
-            // Remove any existing favicons
             var oldLinks = document.querySelectorAll("link[rel*='icon']");
             oldLinks.forEach(function(link) {
                 link.parentNode.removeChild(link);
             });
-
-            // Create new favicon with your actual logo
             var link = document.createElement('link');
             link.rel = 'icon';
             link.type = 'image/png';
             link.href = "{% static 'images/logo.png' %}?v=" + Date.now();
             document.head.appendChild(link);
-
             var link2 = document.createElement('link');
             link2.rel = 'shortcut icon';
             link2.type = 'image/png';
             link2.href = "{% static 'images/logo.png' %}?v=" + Date.now();
             document.head.appendChild(link2);
-
-            console.log('Favicon added to dashboard');
         })();
     </script>
     {% block extra_js %}{% endblock %}

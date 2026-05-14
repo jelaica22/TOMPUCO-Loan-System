@@ -1,0 +1,375 @@
+{% extends 'main/auth_base.html' %}
+{% load static %}
+
+{% block title %}Register - TOMPUCO ALMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-wrapper { width: 100%; }
+    .brand-side {
+        background: linear-gradient(135deg, var(--teal-deep) 0%, var(--teal-primary) 70%, var(--teal-medium) 100%);
+        height: 100%; min-height: 100%; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; padding: 3rem 2rem;
+        color: white; text-align: center; position: relative; overflow: hidden;
+    }
+    .brand-side::before {
+        content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        opacity: 0.15; z-index: 0; animation: slide 20s linear infinite;
+    }
+    @keyframes slide { from { background-position: 0 0; } to { background-position: 100px 100px; } }
+    .brand-logo { width: 180px; height: 180px; background: white; border-radius: 40px; padding: 20px; margin-bottom: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); transition: all 0.3s ease; position: relative; z-index: 1; }
+    .brand-logo:hover { transform: scale(1.05); }
+    .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand-side h2 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; position: relative; z-index: 1; }
+    .brand-side p { font-size: 0.9rem; opacity: 0.9; margin-bottom: 2rem; position: relative; z-index: 1; }
+    .feature-list { list-style: none; padding: 0; margin: 0; width: 100%; position: relative; z-index: 1; }
+    .feature-list li { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 1rem; font-size: 1rem; }
+    .feature-list i { color: #ffd966; font-size: 1.2rem; }
+    .form-side { background: white; padding: 2rem; max-height: 90vh; overflow-y: auto; }
+    .form-side h1 { color: var(--teal-deep); font-size: 1.8rem; font-weight: 700; margin-bottom: 0.25rem; text-align: center; }
+    .form-side .subtitle { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; text-align: center; }
+    .form-section { background: #f8fafc; border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem; border: 1px solid #e2e8f0; transition: all 0.3s ease; }
+    .form-section:hover { border-color: var(--teal-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .form-section h6 { color: var(--teal-deep); font-size: 1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--teal-primary); display: flex; align-items: center; gap: 8px; }
+    .form-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.25rem; }
+    .form-control, .form-select { padding: 0.6rem 0.75rem; font-size: 0.85rem; border: 1.5px solid #e2e8f0; border-radius: 10px; transition: all 0.3s ease; }
+    .form-control:focus, .form-select:focus { border-color: var(--teal-primary); box-shadow: 0 0 0 3px rgba(26,138,138,0.1); outline: none; }
+    .help-text { font-size: 0.65rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+    /* Password wrapper and toggle button */
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .password-wrapper .form-control {
+        padding-right: 45px;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        border-radius: 8px;
+        z-index: 10;
+    }
+    .password-toggle:hover {
+        color: var(--teal-primary);
+        background: rgba(13, 110, 110, 0.1);
+    }
+    .password-toggle i {
+        font-size: 1.1rem;
+    }
+    [data-theme="dark"] .password-toggle {
+        color: #9ca3af;
+    }
+    [data-theme="dark"] .password-toggle:hover {
+        color: #1a8a8a;
+        background: rgba(26, 138, 138, 0.15);
+    }
+
+    .password-strength { height: 4px; margin-top: 8px; border-radius: 4px; transition: all 0.3s; background: #e2e8f0; }
+    .strength-weak { width: 25%; background: #dc3545; }
+    .strength-fair { width: 50%; background: #ffc107; }
+    .strength-good { width: 75%; background: #17a2b8; }
+    .strength-strong { width: 100%; background: #10b981; }
+    .requirements-list { font-size: 0.7rem; margin-top: 8px; list-style: none; padding-left: 0; display: flex; flex-wrap: wrap; gap: 12px; }
+    .requirements-list li { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; }
+    .form-check { margin-bottom: 0.75rem; }
+    .form-check-input { width: 1rem; height: 1rem; margin-top: 0.15rem; cursor: pointer; accent-color: var(--teal-primary); }
+    .form-check-label { font-size: 0.75rem; color: var(--text-secondary); cursor: pointer; }
+    .btn-register { background: linear-gradient(135deg, var(--teal-deep) 0%, var(--teal-primary) 50%, var(--teal-medium) 100%); border: none; padding: 0.9rem; border-radius: 14px; font-weight: 700; font-size: 1rem; color: white; transition: all 0.3s; width: 100%; cursor: pointer; margin-top: 0.5rem; }
+    .btn-register:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(10,90,90,0.3); }
+    .btn-register:disabled { opacity: 0.6; cursor: not-allowed; }
+    .alert-custom { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; border-radius: 12px; padding: 1rem; display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; font-size: 0.85rem; }
+    .login-link { text-align: center; margin-top: 1.5rem; }
+    .login-link p { font-size: 0.85rem; color: var(--text-muted); }
+    .login-link a { color: var(--teal-primary); text-decoration: none; font-weight: 600; }
+    .form-side::-webkit-scrollbar { width: 6px; }
+    .form-side::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+    .form-side::-webkit-scrollbar-thumb { background: var(--teal-primary); border-radius: 3px; }
+    @media (max-width: 768px) { .brand-side { display: none; } .form-side { padding: 1.5rem; max-height: 100vh; } .form-side h1 { font-size: 1.5rem; } .form-section { padding: 1rem; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-wrapper">
+    <div class="row g-0">
+        <div class="col-lg-5 d-none d-lg-block">
+            <div class="brand-side">
+                <div class="brand-logo">
+                    <img src="{% static 'images/logo.png' %}" alt="TOMPUCO Logo">
+                </div>
+                <h2>TOMPUCO ALMS</h2>
+                <p>Automated Loan Management System</p>
+                <ul class="feature-list">
+                    <li><i class="bi bi-shield-check"></i> Secure & Reliable</li>
+                    <li><i class="bi bi-graph-up"></i> Real-time Analytics</li>
+                    <li><i class="bi bi-headset"></i> 24/7 Member Support</li>
+                    <li><i class="bi bi-speedometer2"></i> Fast Processing</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="form-side">
+                <h1>Create an Account</h1>
+                <p class="subtitle">Join TOMPUCO ALMS and start your journey with us</p>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert-custom"><i class="bi bi-exclamation-triangle-fill"></i><div>{{ message }}</div></div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" id="registerForm">
+                    {% csrf_token %}
+
+                    <!-- ACCOUNT TYPE -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-person-badge"></i> Account Type</h6>
+                        <div class="row g-2">
+                            <div class="col-md-12">
+                                <label class="form-label">Select Account Type *</label>
+                                <select name="user_type" id="user_type" class="form-select" required>
+                                    <option value="">-- Select Account Type --</option>
+                                    <option value="member">📋 Regular Member</option>
+                                    <option value="employee">⭐ Employee Member</option>
+                                </select>
+                                <div class="help-text">Regular members can apply for loans. Employee members get salary loan benefits.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EMPLOYEE DETAILS (only for employee type) -->
+                    <div id="employeeSection" style="display: none;">
+                        <div class="form-section">
+                            <h6><i class="bi bi-briefcase"></i> Employee Details</h6>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label">Position *</label>
+                                    <input type="text" name="position" id="position" class="form-control" placeholder="e.g., Cashier, Loan Officer">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Employee ID</label>
+                                    <input type="text" name="employee_id" id="employee_id" class="form-control" placeholder="If you have one">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Date Hired</label>
+                                    <input type="date" name="date_hired" id="date_hired" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PERSONAL INFORMATION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-person"></i> Personal Information</h6>
+                        <div class="row g-2">
+                            <div class="col-md-6"><label class="form-label">Last Name *</label><input type="text" name="last_name" class="form-control" required></div>
+                            <div class="col-md-6"><label class="form-label">First Name *</label><input type="text" name="first_name" class="form-control" required></div>
+                            <div class="col-md-4"><label class="form-label">Middle Initial</label><input type="text" name="middle_initial" class="form-control" maxlength="2"></div>
+                            <div class="col-md-4"><label class="form-label">Nickname</label><input type="text" name="nickname" class="form-control"></div>
+                            <div class="col-md-4"><label class="form-label">Civil Status *</label>
+                                <select name="civil_status" id="civil_status" class="form-select" required>
+                                    <option value="">-- Select --</option>
+                                    <option value="single">Single</option><option value="married">Married</option>
+                                    <option value="divorced">Divorced</option><option value="widowed">Widowed</option>
+                                    <option value="separated">Legally Separated</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4" id="spouseNameDiv" style="display:none;">
+                                <label class="form-label">Spouse Name</label><input type="text" name="spouse_name" class="form-control">
+                            </div>
+                            <div class="col-md-4"><label class="form-label">Birthdate *</label><input type="date" name="birthdate" class="form-control" required></div>
+                            <div class="col-md-4"><label class="form-label">Gender *</label>
+                                <select name="gender" class="form-select" required><option value="">Select</option><option value="M">Male</option><option value="F">Female</option></select>
+                            </div>
+                            <div class="col-md-4"><label class="form-label">Nationality *</label><input type="text" name="nationality" class="form-control" value="Filipino" required></div>
+                            <div class="col-md-6"><label class="form-label">Contact Number *</label><input type="tel" name="contact_number" class="form-control" placeholder="09123456789" required></div>
+                            <div class="col-md-6"><label class="form-label">Number of Dependents</label><input type="number" name="num_dependents" class="form-control" min="0" value="0"></div>
+                            <div class="col-md-12"><label class="form-label">Residence Address *</label><textarea name="residence_address" class="form-control" rows="2" required></textarea></div>
+                        </div>
+                    </div>
+
+                    <!-- FARM INFORMATION -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-tree"></i> Farm Information</h6>
+                        <div class="row g-2">
+                            <div class="col-md-12"><label class="form-label">Farm Location</label><input type="text" name="farm_location" class="form-control"></div>
+                            <div class="col-md-4"><label class="form-label">Owned (hectares)</label><input type="number" name="farm_owned_hectares" class="form-control" step="0.01" min="0" value="0"></div>
+                            <div class="col-md-4"><label class="form-label">Leased (hectares)</label><input type="number" name="farm_leased_hectares" class="form-control" step="0.01" min="0" value="0"></div>
+                            <div class="col-md-4"><label class="form-label">Area Planted</label><input type="number" name="area_planted" class="form-control" step="0.01" min="0" value="0"></div>
+                            <div class="col-md-4"><label class="form-label">New Plant</label><input type="number" name="new_plant" class="form-control" step="0.01" min="0" value="0"></div>
+                            <div class="col-md-4"><label class="form-label">Ratoon Crops</label><input type="number" name="ratoon_crops" class="form-control" step="0.01" min="0" value="0"></div>
+                            <div class="col-md-4"><label class="form-label">Adjacent Farm</label><input type="text" name="adjacent_farm" class="form-control"></div>
+                        </div>
+                    </div>
+
+                    <!-- INCOME -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-cash"></i> Income Information</h6>
+                        <div class="row g-2">
+                            <div class="col-md-6"><label class="form-label">Monthly Income (₱) *</label><input type="number" name="monthly_income" class="form-control" step="1000" min="0" required></div>
+                            <div class="col-md-6"><label class="form-label">Other Income Sources</label><input type="text" name="other_income_sources" class="form-control"></div>
+                            <div class="col-md-12"><label class="form-label">Loans from other institutions</label><textarea name="other_loans" class="form-control" rows="2" placeholder="If none, write 'None'"></textarea></div>
+                        </div>
+                    </div>
+
+                    <!-- ACCOUNT LOGIN WITH PASSWORD TOGGLE -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-key"></i> Account Login</h6>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Username *</label>
+                                <input type="text" name="username" id="username" class="form-control" required>
+                                <div id="username-check" class="small mt-1"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email *</label>
+                                <input type="email" name="email" id="email" class="form-control" required>
+                                <div id="email-check" class="small mt-1"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Password *</label>
+                                <div class="password-wrapper">
+                                    <input type="password" name="password1" id="password1" class="form-control" required>
+                                    <button type="button" class="password-toggle" onclick="togglePassword('password1')">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </button>
+                                </div>
+                                <div class="password-strength"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Confirm Password *</label>
+                                <div class="password-wrapper">
+                                    <input type="password" name="password2" id="password2" class="form-control" required>
+                                    <button type="button" class="password-toggle" onclick="togglePassword('password2')">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </button>
+                                </div>
+                                <div id="password-match" class="small mt-1"></div>
+                            </div>
+                            <div class="col-12">
+                                <ul class="requirements-list">
+                                    <li id="length-req"><i class="bi bi-circle"></i> 8+ characters</li>
+                                    <li id="upper-req"><i class="bi bi-circle"></i> Uppercase</li>
+                                    <li id="lower-req"><i class="bi bi-circle"></i> Lowercase</li>
+                                    <li id="number-req"><i class="bi bi-circle"></i> Number</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TERMS -->
+                    <div class="form-section">
+                        <h6><i class="bi bi-file-text"></i> Terms & Conditions</h6>
+                        <div class="form-check"><input type="checkbox" class="form-check-input" id="terms" required><label class="form-check-label" for="terms">I certify that all information provided is true and correct.</label></div>
+                        <div class="form-check"><input type="checkbox" class="form-check-input" id="dataPrivacy" required><label class="form-check-label" for="dataPrivacy">I agree to the Data Privacy Act.</label></div>
+                        <div class="form-check"><input type="checkbox" class="form-check-input" id="agreeTerms" required><label class="form-check-label" for="agreeTerms">I agree to the Terms and Conditions of the cooperative.</label></div>
+                    </div>
+
+                    <button type="submit" class="btn-register" id="submitBtn" disabled><i class="bi bi-person-plus"></i> Create Account</button>
+                </form>
+
+                <div class="login-link"><p>Already have an account? <a href="{% url 'main:login' %}">Sign in here</a></p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Password visibility toggle function
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const toggleBtn = field.parentElement.querySelector('.password-toggle');
+
+        if (field.type === 'password') {
+            field.type = 'text';
+            toggleBtn.innerHTML = '<i class="bi bi-eye"></i>';
+        } else {
+            field.type = 'password';
+            toggleBtn.innerHTML = '<i class="bi bi-eye-slash"></i>';
+        }
+    }
+
+    // Toggle sections based on user type
+    const userTypeSelect = document.getElementById('user_type');
+    const employeeSection = document.getElementById('employeeSection');
+    const civilStatusSelect = document.getElementById('civil_status');
+    const spouseNameDiv = document.getElementById('spouseNameDiv');
+
+    function toggleSections() {
+        const userType = userTypeSelect ? userTypeSelect.value : '';
+        if (userType === 'employee' && employeeSection) employeeSection.style.display = 'block';
+        else if (employeeSection) employeeSection.style.display = 'none';
+    }
+
+    function toggleSpouseField() {
+        if (civilStatusSelect && civilStatusSelect.value === 'married') spouseNameDiv.style.display = 'block';
+        else if (spouseNameDiv) spouseNameDiv.style.display = 'none';
+    }
+
+    userTypeSelect?.addEventListener('change', toggleSections);
+    civilStatusSelect?.addEventListener('change', toggleSpouseField);
+    toggleSections(); toggleSpouseField();
+
+    // Username check
+    document.getElementById('username')?.addEventListener('blur', function() {
+        fetch(`/check-username/?username=${this.value}`).then(r=>r.json()).then(d=>{
+            document.getElementById('username-check').innerHTML = d.exists ? '<i class="bi bi-x-circle-fill text-danger"></i> Username taken' : '<i class="bi bi-check-circle-fill text-success"></i> Username available';
+        });
+    });
+
+    // Email check
+    document.getElementById('email')?.addEventListener('blur', function() {
+        fetch(`/check-email/?email=${this.value}`).then(r=>r.json()).then(d=>{
+            document.getElementById('email-check').innerHTML = d.exists ? '<i class="bi bi-x-circle-fill text-danger"></i> Email registered' : '<i class="bi bi-check-circle-fill text-success"></i> Email available';
+        });
+    });
+
+    // Password strength
+    const p1 = document.getElementById('password1'), p2 = document.getElementById('password2');
+    function checkStrength() {
+        let s=0, p=p1.value;
+        document.getElementById('length-req').innerHTML = p.length>=8 ? '<i class="bi bi-check-circle-fill text-success"></i> 8+ characters' : '<i class="bi bi-circle text-muted"></i> 8+ characters';
+        if(p.length>=8) s++;
+        document.getElementById('upper-req').innerHTML = /[A-Z]/.test(p) ? '<i class="bi bi-check-circle-fill text-success"></i> Uppercase' : '<i class="bi bi-circle text-muted"></i> Uppercase';
+        if(/[A-Z]/.test(p)) s++;
+        document.getElementById('lower-req').innerHTML = /[a-z]/.test(p) ? '<i class="bi bi-check-circle-fill text-success"></i> Lowercase' : '<i class="bi bi-circle text-muted"></i> Lowercase';
+        if(/[a-z]/.test(p)) s++;
+        document.getElementById('number-req').innerHTML = /[0-9]/.test(p) ? '<i class="bi bi-check-circle-fill text-success"></i> Number' : '<i class="bi bi-circle text-muted"></i> Number';
+        if(/[0-9]/.test(p)) s++;
+        let el = document.querySelector('.password-strength');
+        el.classList.remove('strength-weak','strength-fair','strength-good','strength-strong');
+        if(s===1) el.classList.add('strength-weak');
+        else if(s===2) el.classList.add('strength-fair');
+        else if(s===3) el.classList.add('strength-good');
+        else if(s===4) el.classList.add('strength-strong');
+        else el.style.background = '#e2e8f0';
+        checkMatch();
+    }
+    function checkMatch() {
+        if(p2.value.length>0) document.getElementById('password-match').innerHTML = p1.value===p2.value ? '<i class="bi bi-check-circle-fill text-success"></i> Passwords match' : '<i class="bi bi-x-circle-fill text-danger"></i> Passwords do not match';
+        checkSubmit();
+    }
+    function checkSubmit() {
+        document.getElementById('submitBtn').disabled = !(p1.value.length>=8 && /[A-Z]/.test(p1.value) && /[a-z]/.test(p1.value) && /[0-9]/.test(p1.value) && p1.value===p2.value && p2.value.length>0 && document.getElementById('terms').checked && document.getElementById('dataPrivacy').checked && document.getElementById('agreeTerms').checked);
+    }
+    p1?.addEventListener('input', checkStrength);
+    p2?.addEventListener('input', checkMatch);
+    document.getElementById('terms')?.addEventListener('change', checkSubmit);
+    document.getElementById('dataPrivacy')?.addEventListener('change', checkSubmit);
+    document.getElementById('agreeTerms')?.addEventListener('change', checkSubmit);
+</script>
+{% endblock %}

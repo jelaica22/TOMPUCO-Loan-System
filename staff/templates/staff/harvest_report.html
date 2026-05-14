@@ -1,4 +1,4 @@
-﻿{% extends 'staff/base_staff.html' %}
+{% extends 'staff/base_staff.html' %}
 {% block page_title %}Harvest-based Payment Report{% endblock %}
 {% block content %}
 <div class="card">
@@ -10,7 +10,7 @@
                 <thead><tr><th>Loan Number</th><th>Member</th><th>Principal</th><th>Schedule Type</th></tr></thead>
                 <tbody>
                     {% for loan in loans %}
-                    <tr><td>{{ loan.loan_number }}</td><td>{{ loan.borrower_name }}</td><td>₱{{ loan.principal }}</td><td>{{ loan.payment_schedule_type }}</td></tr>
+                    <tr><td>{{ loan.loan_number }}</td><td>{{ loan.borrower_name }}</td><td>?{{ loan.principal }}</td><td>{{ loan.payment_schedule_type }}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

@@ -7,9 +7,8 @@
 
 {% block extra_css %}
 <style>
-    /* ===== Loan Types Page Styles - Light Mode First ===== */
+    /* ===== Loan Types Page Styles ===== */
 
-    /* Page Header */
     .loan-types-container {
         max-width: 1400px;
         margin: 0 auto;
@@ -142,7 +141,7 @@
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
     }
 
-    /* Card Header Gradients - Teal Theme */
+    /* Card Header Gradients */
     .loan-card-header {
         padding: 24px 20px;
         color: white;
@@ -186,6 +185,20 @@
         border-radius: 20px;
         font-size: 0.7rem;
         font-weight: 600;
+    }
+
+    .employee-badge {
+        display: inline-block;
+        background: #10b981;
+        color: white;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        margin-left: 8px;
+        position: absolute;
+        top: 20px;
+        left: 20px;
     }
 
     /* Card Body */
@@ -385,20 +398,6 @@
     [data-theme="dark"] .btn-apply.disabled {
         background: #6b7280;
     }
-
-    .employee-badge {
-        display: inline-block;
-        background: #10b981;
-        color: white;
-        padding: 2px 10px;
-        border-radius: 20px;
-        font-size: 0.65rem;
-        font-weight: 600;
-        margin-left: 8px;
-        position: absolute;
-        top: 20px;
-        left: 20px;
-    }
 </style>
 {% endblock %}
 
@@ -415,8 +414,10 @@
         <i class="bi bi-info-circle-fill"></i>
         <div class="content">
             <strong>Note:</strong> Salary Loan is only available for TOMPuCO employees.
-            {% if not member.is_employee %}
-                You are not eligible for Salary Loan.
+            {% if member.employment_status == 'employee' %}
+                <span style="color: #10b981;">✓ You are eligible for Salary Loan!</span>
+            {% else %}
+                <span style="color: #ef4444;">You are not eligible for Salary Loan.</span>
             {% endif %}
         </div>
     </div>
@@ -506,14 +507,14 @@
             </div>
         </div>
 
-        <!-- SALARY -->
+        <!-- SALARY - Conditional based on employee status -->
         <div class="loan-card">
             <div class="loan-card-header salary">
                 <span class="loan-icon">💼</span>
                 <div class="loan-name">SALARY</div>
                 <div class="loan-subtitle">Salary Loan</div>
                 <span class="amount-badge">₱5K - ₱500K</span>
-                {% if member.is_employee %}
+                {% if member.employment_status == 'employee' %}
                     <span class="employee-badge">✓ Eligible</span>
                 {% endif %}
             </div>
@@ -544,7 +545,7 @@
                         <li><i class="bi bi-check-circle-fill"></i> Latest payslip</li>
                     </ul>
                 </div>
-                {% if member.is_employee %}
+                {% if member.employment_status == 'employee' %}
                     <button class="btn-apply" onclick="applyForLoan('SALARY')">
                         <i class="bi bi-file-text"></i> Apply Now
                     </button>

@@ -1,0 +1,705 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Create Staff User - TOMPuCO Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============================================================
+       CREATE STAFF USER - PROFESSIONAL STYLES
+    ============================================================ */
+
+    .page-header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 24px;
+    }
+
+    .page-title-section h4 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--text-primary);
+    }
+
+    .page-title-section p {
+        margin: 4px 0 0;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    /* Main Card */
+    .main-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
+    }
+
+    .card-header-custom {
+        background: var(--brand-gradient);
+        padding: 20px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .card-title {
+        color: white !important;
+        margin: 0 !important;
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Form Styles */
+    .form-container {
+        padding: 28px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-label i {
+        margin-right: 6px;
+        font-size: 0.8rem;
+    }
+
+    .required-star {
+        color: #ef4444;
+        margin-left: 4px;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    .form-control::placeholder {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    /* Password Strength Indicator */
+    .password-strength {
+        margin-top: 10px;
+    }
+
+    .strength-bar {
+        height: 4px;
+        background: var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+
+    .strength-fill {
+        width: 0%;
+        height: 100%;
+        transition: width 0.3s ease, background 0.3s ease;
+    }
+
+    .strength-fill.weak { width: 25%; background: #ef4444; }
+    .strength-fill.fair { width: 50%; background: #f59e0b; }
+    .strength-fill.good { width: 75%; background: #06b6d4; }
+    .strength-fill.strong { width: 100%; background: #10b981; }
+
+    .strength-text {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    /* Password wrapper and toggle button */
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-wrapper .form-control,
+    .password-wrapper .form-select {
+        padding-right: 45px;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        border-radius: 8px;
+        z-index: 10;
+    }
+
+    .password-toggle:hover {
+        color: var(--brand-primary);
+        background: rgba(13, 110, 110, 0.1);
+    }
+
+    .password-toggle i {
+        font-size: 1.1rem;
+    }
+
+    [data-theme="dark"] .password-toggle {
+        color: #9ca3af;
+    }
+
+    [data-theme="dark"] .password-toggle:hover {
+        color: #1a8a8a;
+        background: rgba(26, 138, 138, 0.15);
+    }
+
+    .requirements-list {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .requirements-list li {
+        font-size: 0.7rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: var(--text-muted);
+    }
+
+    .requirements-list li i {
+        font-size: 0.7rem;
+    }
+
+    .requirements-list li.valid {
+        color: #10b981;
+    }
+
+    .requirements-list li.invalid {
+        color: var(--text-muted);
+    }
+
+    /* Action Buttons */
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-submit {
+        background: var(--brand-gradient);
+        border: none;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: white;
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.35);
+    }
+
+    .btn-cancel {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border-color);
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        transition: all 0.2s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-cancel:hover {
+        border-color: var(--brand-primary);
+        color: var(--brand-primary);
+        transform: translateY(-2px);
+    }
+
+    /* Info Alert */
+    .info-alert {
+        background: rgba(13, 110, 110, 0.08);
+        border-left: 3px solid var(--brand-primary);
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .info-alert i {
+        font-size: 1.3rem;
+        color: var(--brand-primary);
+    }
+
+    .info-alert-content {
+        flex: 1;
+    }
+
+    .info-alert-title {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .info-alert-text {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    [data-theme="dark"] .info-alert {
+        background: rgba(13, 110, 110, 0.15);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 20px;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+        .btn-submit, .btn-cancel {
+            justify-content: center;
+        }
+        .requirements-list {
+            flex-direction: column;
+            gap: 5px;
+        }
+    }
+
+    /* Row Layout */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 0;
+    }
+
+    .col-6 {
+        flex: 1;
+        min-width: calc(50% - 10px);
+    }
+
+    @media (max-width: 576px) {
+        .col-6 {
+            min-width: 100%;
+        }
+        .row {
+            gap: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header-section">
+        <div class="page-title-section">
+            <h4><i class="bi bi-person-plus"></i> Create Staff / Admin User</h4>
+            <p>Create staff, cashier, committee, manager, or admin accounts</p>
+        </div>
+    </div>
+
+    <!-- Main Form Card -->
+    <div class="main-card">
+        <div class="card-header-custom">
+            <div class="card-title">
+                <i class="bi bi-person-badge-fill"></i>
+                <span>New User Details</span>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <!-- Info Alert -->
+            <div class="info-alert">
+                <i class="bi bi-shield-lock"></i>
+                <div class="info-alert-content">
+                    <div class="info-alert-title">Admin Access Required</div>
+                    <div class="info-alert-text">Only Super Administrators can create staff accounts. These users will have elevated permissions.</div>
+                </div>
+            </div>
+
+            <form method="post" id="createUserForm">
+                {% csrf_token %}
+
+                <!-- User Type Selection -->
+                <div class="form-group">
+                    <label class="form-label"><i class="bi bi-tag"></i> User Type <span class="required-star">*</span></label>
+                    <select name="user_type" id="userType" class="form-select" required>
+                        <option value="">-- Select User Type --</option>
+                        <option value="staff">👔 Staff (Loan Officer)</option>
+                        <option value="cashier">💰 Cashier</option>
+                        <option value="committee">👥 Committee Member</option>
+                        <option value="manager">📊 Manager</option>
+                        <option value="admin">🔧 System Administrator</option>
+                    </select>
+                </div>
+
+                <!-- Name Fields -->
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label"><i class="bi bi-person"></i> First Name <span class="required-star">*</span></label>
+                            <input type="text" name="first_name" id="firstName" class="form-control" placeholder="Enter first name" required>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label"><i class="bi bi-person"></i> Last Name <span class="required-star">*</span></label>
+                            <input type="text" name="last_name" id="lastName" class="form-control" placeholder="Enter last name" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Username & Email -->
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label"><i class="bi bi-person-circle"></i> Username <span class="required-star">*</span></label>
+                            <input type="text" name="username" id="username" class="form-control" placeholder="Enter username" required>
+                            <div id="usernameStatus" class="small mt-1"></div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label"><i class="bi bi-envelope"></i> Email <span class="required-star">*</span></label>
+                            <input type="email" name="email" id="email" class="form-control" placeholder="Enter email address" required>
+                            <div id="emailStatus" class="small mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password Fields with Toggle -->
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label"><i class="bi bi-key"></i> Password <span class="required-star">*</span></label>
+                            <div class="password-wrapper">
+                                <input type="password" name="password" id="password" class="form-control" placeholder="Enter password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength">
+                                <div class="strength-bar">
+                                    <div class="strength-fill" id="strengthFill"></div>
+                                </div>
+                                <div class="strength-text" id="strengthText">Enter a password</div>
+                            </div>
+                            <ul class="requirements-list" id="requirements">
+                                <li id="lengthReq"><i class="bi bi-circle"></i> At least 8 characters</li>
+                                <li id="upperReq"><i class="bi bi-circle"></i> Uppercase letter</li>
+                                <li id="lowerReq"><i class="bi bi-circle"></i> Lowercase letter</li>
+                                <li id="numberReq"><i class="bi bi-circle"></i> Number</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label"><i class="bi bi-key-fill"></i> Confirm Password <span class="required-star">*</span></label>
+                            <div class="password-wrapper">
+                                <input type="password" name="confirm_password" id="confirmPassword" class="form-control" placeholder="Confirm password" required>
+                                <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
+                            <div id="confirmStatus" class="small mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role Description -->
+                <div class="info-alert" id="roleDescription" style="display: none;">
+                    <i class="bi bi-info-circle"></i>
+                    <div class="info-alert-content">
+                        <div class="info-alert-title" id="roleTitle">Role Information</div>
+                        <div class="info-alert-text" id="roleText">Select a user type to see role description</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        <i class="bi bi-check-lg"></i> Create User
+                    </button>
+                    <a href="{% url 'admin_panel:users_list' %}" class="btn-cancel">
+                        <i class="bi bi-x-lg"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Role descriptions
+    const roleDescriptions = {
+        staff: { title: "👔 Staff (Loan Officer)", text: "Can process loan applications, review documents, and make recommendations. Cannot approve loans without committee/manager approval." },
+        cashier: { title: "💰 Cashier", text: "Can process payments, issue receipts, and handle daily collection reports. Cannot modify loan applications." },
+        committee: { title: "👥 Committee Member", text: "Can review loan applications, vote on approvals, and set approved loan amounts. Has voting rights." },
+        manager: { title: "📊 Manager", text: "Can approve loans, manage staff, view all reports, and override decisions. Has significant authority." },
+        admin: { title: "🔧 System Administrator", text: "Has full system access. Can create/edit/delete any user, modify settings, and access all features." }
+    };
+
+    // Show role description when user type changes
+    const userTypeSelect = document.getElementById('userType');
+    const roleDescriptionDiv = document.getElementById('roleDescription');
+    const roleTitle = document.getElementById('roleTitle');
+    const roleText = document.getElementById('roleText');
+
+    userTypeSelect.addEventListener('change', function() {
+        const selectedType = this.value;
+        if (selectedType && roleDescriptions[selectedType]) {
+            roleTitle.innerHTML = roleDescriptions[selectedType].title;
+            roleText.innerHTML = roleDescriptions[selectedType].text;
+            roleDescriptionDiv.style.display = 'flex';
+        } else {
+            roleDescriptionDiv.style.display = 'none';
+        }
+    });
+
+    // Password strength checker
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirmPassword');
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthText = document.getElementById('strengthText');
+    const submitBtn = document.getElementById('submitBtn');
+
+    const lengthReq = document.getElementById('lengthReq');
+    const upperReq = document.getElementById('upperReq');
+    const lowerReq = document.getElementById('lowerReq');
+    const numberReq = document.getElementById('numberReq');
+    const confirmStatus = document.getElementById('confirmStatus');
+
+    function checkPasswordStrength() {
+        const pwd = password.value;
+        let strength = 0;
+
+        // Length check
+        if (pwd.length >= 8) {
+            lengthReq.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> At least 8 characters';
+            lengthReq.classList.add('valid');
+            strength++;
+        } else {
+            lengthReq.innerHTML = '<i class="bi bi-circle"></i> At least 8 characters';
+            lengthReq.classList.remove('valid');
+        }
+
+        // Uppercase check
+        if (/[A-Z]/.test(pwd)) {
+            upperReq.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Uppercase letter';
+            upperReq.classList.add('valid');
+            strength++;
+        } else {
+            upperReq.innerHTML = '<i class="bi bi-circle"></i> Uppercase letter';
+            upperReq.classList.remove('valid');
+        }
+
+        // Lowercase check
+        if (/[a-z]/.test(pwd)) {
+            lowerReq.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Lowercase letter';
+            lowerReq.classList.add('valid');
+            strength++;
+        } else {
+            lowerReq.innerHTML = '<i class="bi bi-circle"></i> Lowercase letter';
+            lowerReq.classList.remove('valid');
+        }
+
+        // Number check
+        if (/[0-9]/.test(pwd)) {
+            numberReq.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Number';
+            numberReq.classList.add('valid');
+            strength++;
+        } else {
+            numberReq.innerHTML = '<i class="bi bi-circle"></i> Number';
+            numberReq.classList.remove('valid');
+        }
+
+        // Update strength bar
+        strengthFill.classList.remove('weak', 'fair', 'good', 'strong');
+        if (strength === 1) {
+            strengthFill.classList.add('weak');
+            strengthText.textContent = 'Weak password';
+            strengthText.style.color = '#ef4444';
+        } else if (strength === 2) {
+            strengthFill.classList.add('fair');
+            strengthText.textContent = 'Fair password';
+            strengthText.style.color = '#f59e0b';
+        } else if (strength === 3) {
+            strengthFill.classList.add('good');
+            strengthText.textContent = 'Good password';
+            strengthText.style.color = '#06b6d4';
+        } else if (strength === 4) {
+            strengthFill.classList.add('strong');
+            strengthText.textContent = 'Strong password';
+            strengthText.style.color = '#10b981';
+        } else {
+            strengthText.textContent = 'Enter a password';
+            strengthText.style.color = 'var(--text-muted)';
+        }
+
+        checkPasswordMatch();
+        validateForm();
+    }
+
+    function checkPasswordMatch() {
+        if (confirmPassword.value.length > 0) {
+            if (password.value === confirmPassword.value) {
+                confirmStatus.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Passwords match';
+                confirmStatus.className = 'small text-success mt-1';
+            } else {
+                confirmStatus.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i> Passwords do not match';
+                confirmStatus.className = 'small text-danger mt-1';
+            }
+        } else {
+            confirmStatus.innerHTML = '';
+        }
+        validateForm();
+    }
+
+    function validateForm() {
+        const isPasswordValid = password.value.length >= 8 && /[A-Z]/.test(password.value) && /[a-z]/.test(password.value) && /[0-9]/.test(password.value);
+        const isMatch = password.value === confirmPassword.value && confirmPassword.value.length > 0;
+        const isUserTypeSelected = userTypeSelect.value !== '';
+        const isNameFilled = document.getElementById('firstName').value.trim() !== '' && document.getElementById('lastName').value.trim() !== '';
+        const isUsernameFilled = document.getElementById('username').value.trim() !== '';
+        const isEmailFilled = document.getElementById('email').value.trim() !== '';
+
+        submitBtn.disabled = !(isPasswordValid && isMatch && isUserTypeSelected && isNameFilled && isUsernameFilled && isEmailFilled);
+    }
+
+    // Username availability check
+    const usernameInput = document.getElementById('username');
+    const usernameStatus = document.getElementById('usernameStatus');
+
+    usernameInput.addEventListener('blur', function() {
+        const username = this.value;
+        if (username.length > 2) {
+            fetch(`/check-username/?username=${encodeURIComponent(username)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        usernameStatus.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i> Username already taken';
+                        usernameStatus.className = 'small text-danger mt-1';
+                    } else {
+                        usernameStatus.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Username available';
+                        usernameStatus.className = 'small text-success mt-1';
+                    }
+                    validateForm();
+                });
+        } else if (username.length > 0) {
+            usernameStatus.innerHTML = '<i class="bi bi-info-circle-fill text-warning"></i> Username must be at least 3 characters';
+            usernameStatus.className = 'small text-warning mt-1';
+        } else {
+            usernameStatus.innerHTML = '';
+        }
+    });
+
+    // Email validation
+    const emailInput = document.getElementById('email');
+    const emailStatus = document.getElementById('emailStatus');
+
+    emailInput.addEventListener('blur', function() {
+        const email = this.value;
+        if (email.length > 5 && email.includes('@')) {
+            fetch(`/check-email/?email=${encodeURIComponent(email)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        emailStatus.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i> Email already registered';
+                        emailStatus.className = 'small text-danger mt-1';
+                    } else {
+                        emailStatus.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Email available';
+                        emailStatus.className = 'small text-success mt-1';
+                    }
+                    validateForm();
+                });
+        } else if (email.length > 0) {
+            emailStatus.innerHTML = '<i class="bi bi-info-circle-fill text-warning"></i> Enter a valid email address';
+            emailStatus.className = 'small text-warning mt-1';
+        } else {
+            emailStatus.innerHTML = '';
+        }
+    });
+
+    // Add event listeners
+    password.addEventListener('input', checkPasswordStrength);
+    confirmPassword.addEventListener('input', checkPasswordMatch);
+    userTypeSelect.addEventListener('change', validateForm);
+    document.getElementById('firstName').addEventListener('input', validateForm);
+    document.getElementById('lastName').addEventListener('input', validateForm);
+
+    // Initial check
+    validateForm();
+
+    // Password visibility toggle
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const toggleBtn = field.parentElement.querySelector('.password-toggle');
+
+        if (field.type === 'password') {
+            field.type = 'text';
+            toggleBtn.innerHTML = '<i class="bi bi-eye"></i>';
+        } else {
+            field.type = 'password';
+            toggleBtn.innerHTML = '<i class="bi bi-eye-slash"></i>';
+        }
+    }
+</script>
+{% endblock %}

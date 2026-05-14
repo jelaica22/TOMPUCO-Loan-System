@@ -1,4 +1,4 @@
-﻿from decimal import Decimal
+from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -31,7 +31,6 @@ from main.models import (
     Payment, PaymentSchedule, Notification, AuditLog
 )
 
-# Import ManagerProfile model - handle potential import error
 try:
     from .models import ManagerProfile
 except ImportError:
@@ -152,11 +151,8 @@ def change_password(request):
 @manager_required
 def notifications_list(request):
     """View all notifications"""
-    notifications = Notification.objects.filter(
-        recipient=request.user
-    ).order_by('-created_at')
+    notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')
 
-    # Apply filters
     filter_type = request.GET.get('type', 'all')
     status = request.GET.get('status', 'all')
     search = request.GET.get('search', '')
@@ -175,18 +171,15 @@ def notifications_list(request):
             Q(message__icontains=search)
         )
 
-    # Pagination
     paginator = Paginator(notifications, 20)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
-    # Calculate counts for stats
     total_notifications = Notification.objects.filter(recipient=request.user).count()
     unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
     read_count = total_notifications - unread_count
     system_count = Notification.objects.filter(recipient=request.user, notification_type='system_alert').count()
 
-    # Pass current filter values to template
     context = {
         'notifications': page_obj,
         'total_notifications': total_notifications,
@@ -203,18 +196,11 @@ def notifications_list(request):
 @login_required
 def notifications_api(request):
     """API endpoint for notification badges and list"""
-    unread_count = Notification.objects.filter(
-        recipient=request.user,
-        is_read=False
-    ).count()
-
+    unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
     total_count = Notification.objects.filter(recipient=request.user).count()
     read_count = total_count - unread_count
 
-    # Get recent notifications for dropdown
-    recent_notifications = Notification.objects.filter(
-        recipient=request.user
-    ).order_by('-created_at')[:10]
+    recent_notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:10]
 
     notifications_data = []
     for notif in recent_notifications:
@@ -256,17 +242,14 @@ def mark_all_notifications_read(request):
     """Mark all notifications as read"""
     if request.method == 'POST':
         try:
-            count = Notification.objects.filter(
-                recipient=request.user,
-                is_read=False
-            ).update(is_read=True)
+            count = Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
             return JsonResponse({'success': True, 'message': f'{count} notification(s) marked as read'})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
-# ==================== DASHBOARD ====================
+# ==================== DASHBOARD - COMPLETELY REWRITTEN ====================
 
 @login_required
 @manager_required
@@ -285,14 +268,16 @@ def dashboard(request):
     payments = Payment.objects.all()
 
     if date_from:
-        applications = applications.filter(created_at__date__gte=date_from)
-        loans = loans.filter(created_at__date__gte=date_from)
+        applications = applications.filter(applied_date__gte=date_from)
+        loans = loans.filter(created_at__gte=date_from)
     if date_to:
-        applications = applications.filter(created_at__date__lte=date_to)
-        loans = loans.filter(created_at__date__lte=date_to)
+        applications = applications.filter(applied_date__lte=date_to)
+        loans = loans.filter(created_at__lte=date_to)
+
+    # FIX: Only filter applications by loan_type (Loan model doesn't have loan_product)
     if loan_type:
         applications = applications.filter(loan_product__name=loan_type)
-        loans = loans.filter(loan_product__name=loan_type)
+        # DO NOT filter loans with loan_product - remove this line!
 
     total_applications = applications.count()
     pending_manager_count = applications.filter(status='pending_manager_approval').count()
@@ -311,17 +296,18 @@ def dashboard(request):
         approval_labels.append(date.strftime('%a'))
         count = LoanApplication.objects.filter(
             status='manager_approved',
-            created_at__date=date
+            applied_date=date
         ).count()
         approval_data.append(count)
 
-    # Loan distribution
+    # Loan distribution - FIX: Use applications, NOT loans
     distribution_labels = []
     distribution_data = []
     products = LoanProduct.objects.filter(is_active=True)
     for product in products:
         distribution_labels.append(product.name)
-        distribution_data.append(loans.filter(loan_product=product).count())
+        # Count APPLICATIONS for this product (not loans)
+        distribution_data.append(applications.filter(loan_product=product).count())
 
     # Status distribution
     status_labels = ['Pending Staff', 'With Committee', 'Line Approved', 'Manager Approved', 'Rejected']
@@ -348,7 +334,8 @@ def dashboard(request):
 
     approved_apps = applications.filter(status='manager_approved').count()
     approval_rate = (approved_apps / total_applications * 100) if total_applications > 0 else 0
-    avg_loan_size = loans.aggregate(avg=Avg('principal_amount'))['avg'] or 0
+    avg_loan_size = loans.aggregate(avg=Avg('amount'))['avg'] or 0
+    total_portfolio = loans.aggregate(total=Sum('amount'))['total'] or 0
 
     # Risk assessment
     overdue_loans = loans.filter(status='active', due_date__lt=today)
@@ -365,7 +352,6 @@ def dashboard(request):
 
     default_count = loans.filter(status='default').count()
     default_rate = (default_count / loans.count() * 100) if loans.count() > 0 else 0
-    total_portfolio = loans.aggregate(total=Sum('principal_amount'))['total'] or 0
     at_risk_amount = \
     loans.filter(status='active', due_date__lt=today - timedelta(days=30)).aggregate(total=Sum('remaining_balance'))[
         'total'] or 0
@@ -407,7 +393,7 @@ def dashboard(request):
 @manager_required
 def staff_applications(request):
     """View all loan applications for monitoring"""
-    applications = LoanApplication.objects.all().order_by('-created_at')
+    applications = LoanApplication.objects.all().order_by('-applied_date')
 
     search = request.GET.get('search', '').strip()
     status = request.GET.get('status', 'all')
@@ -426,9 +412,9 @@ def staff_applications(request):
         applications = applications.filter(status=status)
 
     if date_from:
-        applications = applications.filter(created_at__date__gte=date_from)
+        applications = applications.filter(applied_date__gte=date_from)
     if date_to:
-        applications = applications.filter(created_at__date__lte=date_to)
+        applications = applications.filter(applied_date__lte=date_to)
 
     total_applications = LoanApplication.objects.count()
     pending_count = LoanApplication.objects.filter(status='pending_staff_review').count()
@@ -469,7 +455,7 @@ def review_application(request, app_id):
         service_fee = Decimal('35.00')
         notarial_fee = Decimal('200.00')
         total_deductions = service_charge + cbu_retention + insurance + service_fee + notarial_fee
-        net_proceeds = application.approved_line + total_deductions
+        net_proceeds = application.approved_line - total_deductions
 
         if not application.service_charge:
             application.service_charge = service_charge
@@ -513,7 +499,7 @@ def approve_application(request, app_id):
     application = get_object_or_404(LoanApplication, id=app_id)
 
     if request.method == 'POST':
-        approved_line = request.POST.get('approved_line', application.requested_amount)
+        approved_line = request.POST.get('approved_line', application.amount)
         application.status = 'manager_approved'
         application.approved_line = Decimal(approved_line)
         application.manager_approved_at = datetime.now()
@@ -539,22 +525,22 @@ def staff_loans(request):
     if search:
         loans = loans.filter(
             Q(loan_number__icontains=search) |
-            Q(borrower__first_name__icontains=search) |
-            Q(borrower__last_name__icontains=search) |
-            Q(borrower__membership_number__icontains=search)
+            Q(member__first_name__icontains=search) |
+            Q(member__last_name__icontains=search) |
+            Q(member__membership_number__icontains=search)
         )
 
     if status_filter and status_filter != 'all':
         loans = loans.filter(status=status_filter)
 
     if date_from:
-        loans = loans.filter(due_date__gte=date_from)
+        loans = loans.filter(created_at__gte=date_from)
     if date_to:
-        loans = loans.filter(due_date__lte=date_to)
+        loans = loans.filter(created_at__lte=date_to)
 
     total_loans = Loan.objects.count()
     active_loans = Loan.objects.filter(status='active').count()
-    completed_loans = Loan.objects.filter(status='completed').count()
+    completed_loans = Loan.objects.filter(status='paid').count()
     overdue_loans = Loan.objects.filter(status='overdue').count()
 
     for loan in loans:
@@ -579,7 +565,7 @@ def loan_detail(request, loan_id):
     loan = get_object_or_404(Loan, id=loan_id)
     payment_schedules = PaymentSchedule.objects.filter(loan=loan).order_by('due_date')
     total_paid = Payment.objects.filter(loan=loan, status='completed').aggregate(total=Sum('amount'))['total'] or 0
-    progress_percentage = (total_paid / loan.principal_amount * 100) if loan.principal_amount > 0 else 0
+    progress_percentage = (total_paid / loan.amount * 100) if loan.amount > 0 else 0
 
     context = {
         'loan': loan,
@@ -675,9 +661,7 @@ def payment_receipt(request, payment_id):
 @manager_required
 def pending_approvals(request):
     """View pending approvals"""
-    applications = LoanApplication.objects.filter(
-        status='pending_manager_approval'
-    ).order_by('-created_at')
+    applications = LoanApplication.objects.filter(status='pending_manager_approval').order_by('-applied_date')
     context = {'applications': applications}
     return render(request, 'manager/pending_approvals.html', context)
 
@@ -686,7 +670,7 @@ def pending_approvals(request):
 @manager_required
 def approved_applications(request):
     """View approved applications ready for disbursement"""
-    applications = LoanApplication.objects.filter(status='manager_approved').order_by('-updated_at')
+    applications = LoanApplication.objects.filter(status='manager_approved').order_by('-applied_date')
 
     search = request.GET.get('search', '').strip()
     product_id = request.GET.get('product', '')
@@ -705,9 +689,9 @@ def approved_applications(request):
         applications = applications.filter(loan_product_id=product_id)
 
     if date_from:
-        applications = applications.filter(updated_at__date__gte=date_from)
+        applications = applications.filter(applied_date__gte=date_from)
     if date_to:
-        applications = applications.filter(updated_at__date__lte=date_to)
+        applications = applications.filter(applied_date__lte=date_to)
 
     for app in applications:
         if app.approved_line and not app.service_charge:
@@ -717,7 +701,7 @@ def approved_applications(request):
             service_fee = Decimal('35')
             notarial_fee = Decimal('200')
             total_deductions = service_charge + cbu_retention + insurance + service_fee + notarial_fee
-            net_proceeds = app.approved_line + total_deductions
+            net_proceeds = app.approved_line - total_deductions
 
             app.service_charge = service_charge
             app.cbu_retention = cbu_retention
@@ -737,7 +721,7 @@ def approved_applications(request):
         if hasattr(app, 'committee_approved_date') and app.committee_approved_date:
             app.approval_date = app.committee_approved_date
         else:
-            app.approval_date = app.updated_at or app.created_at
+            app.approval_date = app.updated_at or app.applied_date
 
     context = {
         'applications': applications,
@@ -776,7 +760,7 @@ def reports(request):
     total_loans = Loan.objects.count()
     active_loans = Loan.objects.filter(status='active').count()
     overdue_loans = Loan.objects.filter(status='overdue').count()
-    total_loan_amount = Loan.objects.aggregate(total=Sum('principal_amount'))['total'] or 0
+    total_loan_amount = Loan.objects.aggregate(total=Sum('amount'))['total'] or 0
     total_payments = Payment.objects.aggregate(total=Sum('amount'))['total'] or 0
     collection_rate = (total_payments / total_loan_amount * 100) if total_loan_amount > 0 else 0
 
@@ -812,9 +796,9 @@ def audit_logs(request):
         logs = logs.filter(action=action)
 
     if date_from:
-        logs = logs.filter(created_at__date__gte=date_from)
+        logs = logs.filter(created_at__gte=date_from)
     if date_to:
-        logs = logs.filter(created_at__date__lte=date_to)
+        logs = logs.filter(created_at__lte=date_to)
 
     total_logs = AuditLog.objects.count()
     login_count = AuditLog.objects.filter(action__in=['login', 'logout']).count()
@@ -861,12 +845,11 @@ def application_api_detail(request, app_id):
         'member_name': f"{application.member.last_name}, {application.member.first_name}",
         'membership_number': application.member.membership_number,
         'loan_product': application.loan_product.name if application.loan_product else "APCP",
-        'requested_amount': str(application.requested_amount),
-        'approved_line': str(application.approved_line) if application.approved_line else str(
-            application.requested_amount),
+        'requested_amount': str(application.amount),
+        'approved_line': str(application.approved_line) if application.approved_line else str(application.amount),
         'purpose': application.purpose,
-        'collateral': application.collateral_offered,
-        'date_applied': application.created_at.strftime("%Y-%m-%d %H:%M"),
+        'collateral': application.collateral,
+        'date_applied': application.applied_date.strftime("%Y-%m-%d %H:%M"),
     })
 
 

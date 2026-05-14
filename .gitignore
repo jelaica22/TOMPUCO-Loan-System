@@ -1,7 +1,48 @@
-.env 
-venv/ 
-__pycache__/ 
-*.pyc 
-db.sqlite3 
-staticfiles/ 
-media/ 
+﻿# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.ropeproject
+
+# Testing
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+
+# Render
+.venv/
+*.pid
+*.seed
+*.pid.lock

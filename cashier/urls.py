@@ -6,6 +6,7 @@ app_name = 'cashier'
 urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('', views.dashboard, name='dashboard'),
+    path('login/', views.cashier_login, name='login'),
     path('activity/api/', views.activity_api, name='activity_api'),
     path('dashboard-stats/', views.dashboard_stats_api, name='dashboard_stats'),
     path('post-payment/', views.post_payment, name='post_payment'),

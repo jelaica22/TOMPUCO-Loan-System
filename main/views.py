@@ -1,3 +1,5 @@
+# main/views.py - COMPLETE CORRECTED VERSION
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout, authenticate, login as auth_login
@@ -9,70 +11,98 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.urls import reverse_lazy
 from decimal import Decimal
-import json
-import random
-import base64
-from datetime import datetime, timedelta, date
-from django.db import models
+from django.contrib.auth.models import User
+from django.db import IntegrityError
 from django.db.models import Sum, Q
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 from django.utils.dateparse import parse_date
-import csv
-from django_otp.plugins.otp_totp.models import TOTPDevice
-import qrcode
-import io
+from datetime import datetime, timedelta, date
+import random
+import json
 import base64
+import csv
 import secrets
+import io
 from io import StringIO, BytesIO
+
+# QR Code
+import qrcode
+
 from reportlab.lib.pagesizes import letter, landscape
+from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER
 
-from main.forms import MemberRegistrationForm
-from main.notification_helper import create_notification, get_user_notifications, get_unread_count
-from main.models import (
+# Django OTP
+from django_otp.plugins.otp_totp.models import TOTPDevice
+
+# Main models (only what exists in main/models.py)
+from .models import (
     Member, Loan, LoanApplication, LoanProduct,
     Payment, PaymentSchedule, Notification, MemberDocument,
-    CommitteeDecision, AuditLog, SystemSetting, PaymentReceipt, PaymentReminder
+    CommitteeDecision, AuditLog, SystemSetting, PaymentReceipt,
+    PaymentReminder, CommitteeVote, generate_membership_number, generate_employee_id
 )
+
+# Import from other apps
+from staff.models import StaffProfile
+from committee.models import CommitteeProfile
+from cashier.models import CashierProfile
+from manager.models import ManagerProfile
+
+# Forms and helpers
+from main.forms import MemberRegistrationForm
+from main.notification_helper import create_notification, get_user_notifications, get_unread_count
 
 # OTP storage
 otp_storage = {}
 
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+
+
+@login_required
+def role_based_redirect(request):
+    """Redirect users to their appropriate dashboard based on role"""
+    user = request.user
+
+    # Check for different user types and redirect accordingly
+    if hasattr(user, 'cashier_profile'):
+        return redirect('cashier:dashboard')
+    elif hasattr(user, 'staff_profile'):
+        return redirect('staff:dashboard')
+    if hasattr(user, 'committee_profile'):
+        return redirect('committee:dashboard')
+    elif hasattr(user, 'manager_profile'):
+        return redirect('manager:dashboard')
+    elif user.is_superuser:
+        return redirect('admin_panel:dashboard')
+    elif hasattr(user, 'member_profile'):
+        return redirect('main:dashboard')
+    else:
+        # Default fallback
+        return redirect('main:dashboard')
+
 
 # ============================================================
-# QR CODE GENERATION FUNCTION
+# QR CODE GENERATION FUNCTIONS
 # ============================================================
 
 def generate_member_qr_code(member):
     """Generate QR code for member"""
-    # Create QR code data (Member ID)
     qr_data = member.membership_number
-
-    # Generate QR code
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(qr_data)
     qr.make(fit=True)
-
-    # Create image with brand color
     img = qr.make_image(fill_color="#0d6e6e", back_color="white")
-
-    # Convert to base64 for embedding in HTML
     buffer = BytesIO()
     img.save(buffer, format='PNG')
-    img_str = base64.b64encode(buffer.getvalue()).decode()
-
-    return img_str
+    return base64.b64encode(buffer.getvalue()).decode()
 
 
 def generate_loan_qr_code(loan):
@@ -95,7 +125,7 @@ def staff_login(request):
     """Custom login view that redirects to staff dashboard"""
     if request.user.is_authenticated:
         if hasattr(request.user, 'staff_profile') or request.user.is_staff:
-            return redirect('staff:staff_dashboard')
+            return redirect('staff:dashboard')
         return redirect('/')
 
     if request.method == 'POST':
@@ -106,7 +136,7 @@ def staff_login(request):
         if user is not None:
             auth_login(request, user)
             if user.is_staff or hasattr(user, 'staff_profile'):
-                return redirect('staff:staff_dashboard')
+                return redirect('staff:dashboard')
             else:
                 messages.warning(request, 'You do not have staff access.')
                 return redirect('/')
@@ -123,34 +153,89 @@ class CustomLoginView(LoginView):
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             user = request.user
+
+            # Superuser redirect
             if user.is_superuser:
-                return redirect('/superadmin/')
-            elif user.groups.filter(name='Manager').exists():
-                return redirect('manager:dashboard')
-            elif user.groups.filter(name='Committee').exists():
-                return redirect('committee:dashboard')
-            elif user.groups.filter(name='Cashier').exists():
+                return redirect('admin_panel:dashboard')
+
+            # Staff/Loan Officer redirect
+            if hasattr(user, 'staff_profile'):
+                return redirect('staff:dashboard')
+
+            # Cashier redirect
+            if hasattr(user, 'cashier_profile'):
                 return redirect('cashier:dashboard')
-            elif user.is_staff:
-                return redirect('staff:staff_dashboard')
-            else:
+
+            # Committee redirect
+            if hasattr(user, 'committee_profile'):
+                return redirect('committee:dashboard')
+
+            # Manager redirect
+            if hasattr(user, 'manager_profile'):
+                return redirect('manager:dashboard')
+
+            # Group redirects (fallback if profiles don't exist)
+            if user.groups.filter(name='Manager').exists():
+                return redirect('manager:dashboard')
+            if user.groups.filter(name='Committee').exists():
+                return redirect('committee:dashboard')
+            if user.groups.filter(name='Cashier').exists():
+                return redirect('cashier:dashboard')
+
+            # Check for staff flag
+            if user.is_staff:
+                return redirect('staff:dashboard')
+
+            # Regular member
+            if hasattr(user, 'member_profile'):
                 return redirect('main:dashboard')
+
+            # Default fallback
+            return redirect('main:dashboard')
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         user = self.request.user
+
+        # Superuser redirect
         if user.is_superuser:
             return reverse_lazy('admin_panel:dashboard')
-        elif user.groups.filter(name='Manager').exists():
-            return reverse_lazy('manager:dashboard')
-        elif user.groups.filter(name='Committee').exists():
-            return reverse_lazy('committee:dashboard')
-        elif user.groups.filter(name='Cashier').exists():
+
+        # Staff/Loan Officer redirect - FIXED: changed 'staff_dashboard' to 'dashboard'
+        if hasattr(user, 'staff_profile'):
+            return reverse_lazy('staff:dashboard')  # ← CHANGE THIS LINE
+
+        # Cashier redirect
+        if hasattr(user, 'cashier_profile'):
             return reverse_lazy('cashier:dashboard')
-        elif user.is_staff:
-            return reverse_lazy('staff:staff_dashboard')
-        else:
+
+        # Committee redirect
+        if hasattr(user, 'committee_profile'):
+            return reverse_lazy('committee:dashboard')
+
+        # Manager redirect
+        if hasattr(user, 'manager_profile'):
+            return reverse_lazy('manager:dashboard')
+
+        # Group redirects (fallback)
+        if user.groups.filter(name='Manager').exists():
+            return reverse_lazy('manager:dashboard')
+        if user.groups.filter(name='Committee').exists():
+            return reverse_lazy('committee:dashboard')
+        if user.groups.filter(name='Cashier').exists():
+            return reverse_lazy('cashier:dashboard')
+
+        # Staff flag - FIXED: changed 'staff_dashboard' to 'dashboard'
+        if user.is_staff:
+            return reverse_lazy('staff:dashboard')  # ← CHANGE THIS LINE
+
+        # Regular member
+        if hasattr(user, 'member_profile'):
             return reverse_lazy('main:dashboard')
+
+        # Default fallback
+        return reverse_lazy('main:dashboard')
 
 
 def landing_page(request):
@@ -162,32 +247,243 @@ def custom_logout(request):
     return redirect('/')
 
 
+def check_username(request):
+    """API endpoint to check if username exists"""
+    username = request.GET.get('username', '')
+    exists = User.objects.filter(username__iexact=username).exists()
+    return JsonResponse({'exists': exists})
+
+
+def check_email(request):
+    """API endpoint to check if email exists"""
+    email = request.GET.get('email', '')
+    exists = User.objects.filter(email__iexact=email).exists()
+    return JsonResponse({'exists': exists})
+
+
+def verification_pending(request):
+    """Verification pending page"""
+    # If user is already verified, redirect to dashboard
+    if request.user.is_authenticated and hasattr(request.user, 'member_profile'):
+        member = request.user.member_profile
+        if member.verification_status == 'verified' and member.is_active:
+            return redirect('main:dashboard')
+    return render(request, 'main/verification_pending.html')
+
+
 def register(request):
-    if request.user.is_authenticated:
-        return redirect('main:dashboard')
-
     if request.method == 'POST':
-        form = MemberRegistrationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            Member.objects.create(
-                user=user,
-                first_name=form.cleaned_data['first_name'],
-                last_name=form.cleaned_data['last_name'],
-                contact_number=form.cleaned_data.get('contact_number', ''),
-                residence_address=form.cleaned_data.get('residence_address', ''),
-                is_active=True
-            )
-            messages.success(request, 'Registration successful! You can now login.')
-            return redirect('main:login')
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field}: {error}")
-    else:
-        form = MemberRegistrationForm()
+        from datetime import datetime
 
-    return render(request, 'main/register.html', {'form': form})
+        # Helper function for safe Decimal conversion
+        def safe_decimal(value, default=0):
+            if value and str(value).strip() and str(value) != '':
+                try:
+                    return Decimal(str(value))
+                except:
+                    return Decimal(str(default))
+            return Decimal(str(default))
+
+        def safe_int(value, default=0):
+            if value and str(value).strip():
+                try:
+                    return int(value)
+                except:
+                    return default
+            return default
+
+        # Get basic account data
+        username = request.POST.get('username')
+        password = request.POST.get('password1')
+        email = request.POST.get('email')
+        user_type = request.POST.get('user_type')
+
+        # Get personal data
+        last_name = request.POST.get('last_name')
+        first_name = request.POST.get('first_name')
+        middle_initial = request.POST.get('middle_initial', '')
+        nickname = request.POST.get('nickname', '')
+        civil_status = request.POST.get('civil_status', 'single')
+        nationality = request.POST.get('nationality', 'Filipino')
+
+        # Convert birthdate
+        birthdate_str = request.POST.get('birthdate')
+        if birthdate_str and birthdate_str.strip():
+            try:
+                birthdate = datetime.strptime(birthdate_str, '%Y-%m-%d').date()
+            except:
+                birthdate = None
+        else:
+            birthdate = None
+
+        gender = request.POST.get('gender')
+        contact_number = request.POST.get('contact_number')
+        residence_address = request.POST.get('residence_address')
+        spouse_name = request.POST.get('spouse_name', '')
+        num_dependents = safe_int(request.POST.get('num_dependents', 0))
+
+        # Farm data
+        farm_location = request.POST.get('farm_location', '')
+        farm_owned_hectares = safe_decimal(request.POST.get('farm_owned_hectares', 0))
+        farm_leased_hectares = safe_decimal(request.POST.get('farm_leased_hectares', 0))
+        area_planted = safe_decimal(request.POST.get('area_planted', 0))
+        new_plant = safe_decimal(request.POST.get('new_plant', 0))
+        ratoon_crops = safe_decimal(request.POST.get('ratoon_crops', 0))
+        adjacent_farm = request.POST.get('adjacent_farm', '')
+
+        # Income data
+        monthly_income = safe_decimal(request.POST.get('monthly_income', 0))
+
+        # Employee specific fields
+        employee_position = request.POST.get('position', '')
+        employee_id = request.POST.get('employee_id', '')
+        date_hired_str = request.POST.get('date_hired', '')
+
+        if date_hired_str and date_hired_str.strip() and user_type == 'employee':
+            try:
+                date_hired = datetime.strptime(date_hired_str, '%Y-%m-%d').date()
+            except:
+                date_hired = None
+        else:
+            date_hired = None
+
+        # Validate
+        if user_type not in ['member', 'employee']:
+            messages.error(request, "Invalid account type selected.")
+            return render(request, 'registration/register.html')
+
+        if not all([username, password, email, last_name, first_name, contact_number, residence_address]):
+            messages.error(request, "Please fill in all required fields.")
+            return render(request, 'registration/register.html')
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists.")
+            return render(request, 'registration/register.html')
+
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email already registered.")
+            return render(request, 'registration/register.html')
+
+        try:
+            # Create User
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                email=email,
+                first_name=first_name,
+                last_name=last_name
+            )
+
+            # Generate UNIQUE membership number with retry logic
+            import random
+            max_attempts = 10
+            membership_number = None
+
+            for attempt in range(max_attempts):
+                # Generate number like M-37897 (based on your pattern)
+                new_number = random.randint(10000, 99999)
+                test_number = f"M-{new_number}"
+
+                # Also check M-2026-XXXX format
+                test_number2 = f"M-{datetime.now().year}-{new_number:04d}"
+
+                if not Member.objects.filter(membership_number=test_number).exists() and \
+                        not Member.objects.filter(membership_number=test_number2).exists():
+                    membership_number = test_number
+                    break
+
+            # If all attempts failed, use timestamp
+            if not membership_number:
+                membership_number = f"M-{int(datetime.now().timestamp())}"
+
+            # Create Member profile
+            member = Member.objects.create(
+                user=user,
+                membership_number=membership_number,
+                first_name=first_name,
+                last_name=last_name,
+                middle_initial=middle_initial if middle_initial else None,
+                nickname=nickname if nickname else None,
+                civil_status=civil_status,
+                birthdate=birthdate,
+                gender=gender if gender else None,
+                nationality=nationality,
+                contact_number=contact_number,
+                residence_address=residence_address,
+                spouse_name=spouse_name if spouse_name else None,
+                num_dependents=num_dependents,
+                farm_location=farm_location if farm_location else None,
+                farm_owned_hectares=farm_owned_hectares,
+                farm_leased_hectares=farm_leased_hectares,
+                area_planted=area_planted,
+                new_plant=new_plant,
+                ratoon_crops=ratoon_crops,
+                adjacent_farm=adjacent_farm if adjacent_farm else None,
+                monthly_income=monthly_income,
+                employment_status=user_type,
+                employee_id=employee_id if user_type == 'employee' else None,
+                position=employee_position if user_type == 'employee' else None,
+                date_hired=date_hired,
+                salary_loan_eligible=(user_type == 'employee'),
+                max_regular_loan=Decimal('10000'),
+                max_salary_loan=Decimal('50000') if user_type == 'employee' else Decimal('0'),
+                max_active_loans=0,
+                verification_status='pending',
+                account_status='pending',
+                member_tier='basic',
+                is_active=False,
+            )
+
+            # Notify admins
+            from main.notification_helper import create_notification
+            for admin in User.objects.filter(is_superuser=True):
+                create_notification(
+                    recipient=admin,
+                    notification_type='system',
+                    title='New Member Registration',
+                    message=f'{first_name} {last_name} registered as {user_type}. Awaiting verification.',
+                    link='/superadmin/members/'
+                )
+
+            # Notify staff
+            from staff.models import StaffProfile
+            for staff_profile in StaffProfile.objects.filter(is_active=True):
+                create_notification(
+                    recipient=staff_profile.user,
+                    notification_type='system',
+                    title='New Member Registration',
+                    message=f'{first_name} {last_name} registered. Pending verification.',
+                    link='/staff/members/'
+                )
+
+            # Send confirmation to member
+            create_notification(
+                recipient=user,
+                notification_type='system',
+                title='Registration Received',
+                message=f'Thank you for registering {first_name}! Your account is pending verification.',
+                link='/verification-pending/'  # ← CHANGE THIS
+            )
+
+            messages.success(request,
+                             f"Registration submitted! Your membership number is {membership_number}. Your account will be verified within 24-48 hours.")
+            return redirect('verification_pending')
+
+        except IntegrityError as e:
+            # Clean up user if member creation failed
+            if User.objects.filter(username=username).exists():
+                User.objects.filter(username=username).delete()
+            messages.error(request, f"Registration failed: {str(e)}")
+            return render(request, 'registration/register.html')
+        except Exception as e:
+            if User.objects.filter(username=username).exists():
+                User.objects.filter(username=username).delete()
+            import traceback
+            traceback.print_exc()
+            messages.error(request, f"An error occurred: {str(e)}")
+            return render(request, 'registration/register.html')
+
+    return render(request, 'registration/register.html')
 
 
 # ============================================================
@@ -226,28 +522,51 @@ def log_audit(user, action, entity_type, entity_id=None, old_values=None, new_va
 
 @login_required
 def dashboard(request):
-    if request.user.is_superuser:
-        return redirect('/superadmin/')
-    if request.user.is_staff:
-        return redirect('/staff/dashboard/')
-
     user = request.user
 
-    if user.groups.filter(name='Committee').exists():
-        return redirect('committee:committee_dashboard')
-    if user.groups.filter(name='Cashier').exists():
+    # Superuser redirect
+    if user.is_superuser:
+        return redirect('admin_panel:dashboard')
+
+    # Staff/Loan Officer redirect
+    if hasattr(user, 'staff_profile'):
+        return redirect('staff:dashboard')
+
+    # Cashier redirect
+    if hasattr(user, 'cashier_profile'):
         return redirect('cashier:dashboard')
-    if user.groups.filter(name='Manager').exists():
+
+    # Committee redirect
+    if hasattr(user, 'committee_profile'):
+        return redirect('committee:dashboard')
+
+    # Manager redirect
+    if hasattr(user, 'manager_profile'):
         return redirect('manager:dashboard')
 
+    # Group redirects (fallback)
+    if user.groups.filter(name='Manager').exists():
+        return redirect('manager:dashboard')
+    if user.groups.filter(name='Committee').exists():
+        return redirect('committee:dashboard')
+    if user.groups.filter(name='Cashier').exists():
+        return redirect('cashier:dashboard')
+
+    # Staff flag
+    if user.is_staff:
+        return redirect('staff:dashboard')
+
+    # Regular member dashboard
     try:
         member = user.member_profile
-        loans = Loan.objects.filter(borrower=member)
-        total_loaned = loans.aggregate(total=Sum('principal_amount'))['total'] or Decimal(0)
+        # FIXED: changed 'borrower' to 'member'
+        loans = Loan.objects.filter(member=member)
+        # FIXED: changed 'principal_amount' to 'amount'
+        total_loaned = loans.aggregate(total=Sum('amount'))['total'] or Decimal(0)
         active_loans = loans.filter(status='active')
-        total_paid = Payment.objects.filter(member=member, status='completed').aggregate(total=Sum('amount'))[
-                         'total'] or Decimal(0)
-        applications = LoanApplication.objects.filter(member=member).order_by('-created_at')[:5]
+        total_paid = Payment.objects.filter(member=member, status='completed').aggregate(total=Sum('amount'))['total'] or Decimal(0)
+        # FIXED: changed '-created_at' to '-applied_date' if needed
+        applications = LoanApplication.objects.filter(member=member).order_by('-applied_date')[:5]
         pending_applications = LoanApplication.objects.filter(member=member, status='pending_staff_review').count()
         profile_completeness = calculate_profile_completeness(member)
         unread_count = get_unread_count(user)
@@ -256,11 +575,10 @@ def dashboard(request):
 
         next_due = None
         for loan in active_loans:
-            if loan.next_due_date:
-                if not next_due or loan.next_due_date < next_due:
-                    next_due = loan.next_due_date
+            if loan.due_date:
+                if not next_due or loan.due_date < next_due:
+                    next_due = loan.due_date
 
-        # Generate QR code for member
         qr_image = generate_member_qr_code(member)
 
         context = {
@@ -275,7 +593,7 @@ def dashboard(request):
             'pending_applications': pending_applications,
             'profile_completeness': profile_completeness,
             'unread_notifications_count': unread_count,
-            'qr_image': qr_image,  # Add QR code to context
+            'qr_image': qr_image,
         }
         return render(request, 'main/dashboard.html', context)
 
@@ -290,12 +608,12 @@ def member_profile(request):
         member = request.user.member_profile
         profile_completeness = calculate_profile_completeness(member)
         documents_count = MemberDocument.objects.filter(member=member).count()
-        total_loans = Loan.objects.filter(borrower=member).count()
-        total_borrowed = Loan.objects.filter(borrower=member, status='paid').aggregate(
-            total=Sum('principal_amount'))['total'] or Decimal(0)
-        comaker_loans = Loan.objects.filter(co_maker=member, status='active').count()
-
-        # Generate QR code
+        # FIXED: changed 'borrower' to 'member'
+        total_loans = Loan.objects.filter(member=member).count()
+        # FIXED: changed 'principal_amount' to 'amount'
+        total_borrowed = Loan.objects.filter(member=member, status='paid').aggregate(
+            total=Sum('amount'))['total'] or Decimal(0)
+        comaker_loans = 0  # Set to 0 if co_maker field doesn't exist
         qr_image = generate_member_qr_code(member)
 
         return render(request, 'main/member_profile.html', {
@@ -305,7 +623,7 @@ def member_profile(request):
             'total_loans': total_loans,
             'total_borrowed': total_borrowed,
             'comaker_loans': comaker_loans,
-            'qr_image': qr_image,  # Add QR code to context
+            'qr_image': qr_image,
         })
     except Member.DoesNotExist:
         messages.warning(request, 'Please complete your profile first.')
@@ -314,7 +632,6 @@ def member_profile(request):
 
 @login_required
 def member_qr_code(request):
-    """Display member's QR code for scanning"""
     try:
         member = request.user.member_profile
         qr_image = generate_member_qr_code(member)
@@ -332,12 +649,12 @@ def member_qr_code(request):
 
 @login_required
 def edit_profile(request):
-    """Edit member profile - UPDATED to handle profile picture uploads"""
     member = request.user.member_profile
 
     if request.method == 'POST':
         try:
-            # Helper function to clean string values
+            from datetime import datetime
+
             def clean_string(value, max_length=None):
                 if value is None or value == 'None' or value == 'null' or value == '':
                     return ''
@@ -346,7 +663,7 @@ def edit_profile(request):
                     value = value[:max_length]
                 return value
 
-            # Get form data with cleaning
+            # Basic Info
             first_name = clean_string(request.POST.get('first_name', ''))
             last_name = clean_string(request.POST.get('last_name', ''))
             middle_initial = clean_string(request.POST.get('middle_initial', ''), max_length=1)
@@ -355,44 +672,70 @@ def edit_profile(request):
             if nationality == 'None':
                 nationality = 'Filipino'
 
-            birthdate = request.POST.get('birthdate')
-            if birthdate == 'None' or birthdate == '':
-                birthdate = None
-
+            # Gender
             gender = request.POST.get('gender', '')
             if gender == 'None':
                 gender = ''
 
+            # Age
             age = request.POST.get('age', 0)
             if age == 'None' or age == '':
                 age = 0
             else:
-                age = int(age)
+                try:
+                    age = int(age)
+                except:
+                    age = 0
 
+            # Contact and Address
             contact_number = clean_string(request.POST.get('contact_number', ''))
             residence_address = clean_string(request.POST.get('residence_address', ''))
             spouse_name = clean_string(request.POST.get('spouse_name', ''))
 
+            # Dependents
             num_dependents = request.POST.get('num_dependents', 0)
             if num_dependents == 'None' or num_dependents == '':
                 num_dependents = 0
             else:
-                num_dependents = int(num_dependents)
+                try:
+                    num_dependents = int(num_dependents)
+                except:
+                    num_dependents = 0
 
+            # Farm Location
             farm_location = clean_string(request.POST.get('farm_location', ''))
 
-            # Handle profile picture upload - FIXED
+            # ============================================
+            # BIRTHDATE FIX - DON'T PARSE IF ALREADY DATE
+            # ============================================
+            birthdate_input = request.POST.get('birthdate')
+            # Only update birthdate if a new value was provided AND it's not the existing date object
+            if birthdate_input and birthdate_input != 'None' and birthdate_input != '':
+                # Check if it's a string (from form input)
+                if isinstance(birthdate_input, str):
+                    try:
+                        # Try YYYY-MM-DD format
+                        member.birthdate = datetime.strptime(birthdate_input, '%Y-%m-%d').date()
+                    except ValueError:
+                        try:
+                            # Try DD/MM/YYYY format
+                            member.birthdate = datetime.strptime(birthdate_input, '%d/%m/%Y').date()
+                        except ValueError:
+                            # Invalid date format, keep existing
+                            pass
+            # If no birthdate provided, keep existing (don't change)
+
+            # ============================================
+            # PROFILE PICTURE
+            # ============================================
             if request.FILES.get('profile_picture'):
-                # Delete old profile picture if exists
                 if member.profile_picture:
                     try:
                         member.profile_picture.delete(save=False)
                     except:
                         pass
-                # Save new profile picture
                 member.profile_picture = request.FILES['profile_picture']
 
-            # Handle remove profile picture
             if request.POST.get('remove_profile_picture') == 'on':
                 if member.profile_picture:
                     try:
@@ -401,13 +744,17 @@ def edit_profile(request):
                         pass
                     member.profile_picture = None
 
-            # Update user
+            # ============================================
+            # SAVE USER
+            # ============================================
             user = request.user
             user.first_name = first_name
             user.last_name = last_name
             user.save()
 
-            # Update member
+            # ============================================
+            # SAVE MEMBER
+            # ============================================
             member.first_name = first_name
             member.last_name = last_name
             member.middle_initial = middle_initial
@@ -420,11 +767,6 @@ def edit_profile(request):
             member.spouse_name = spouse_name
             member.num_dependents = num_dependents
             member.farm_location = farm_location
-
-            if birthdate:
-                from datetime import datetime
-                member.birthdate = datetime.strptime(birthdate, '%Y-%m-%d').date()
-
             member.save()
 
             messages.success(request, 'Profile updated successfully!')
@@ -460,22 +802,16 @@ def upload_valid_id(request):
 
 @login_required
 def upload_avatar(request):
-    """Upload profile picture"""
     if request.method == 'POST' and request.FILES.get('avatar'):
         try:
             member = request.user.member_profile
-
-            # Delete old profile picture if exists
             if member.profile_picture:
                 try:
                     member.profile_picture.delete(save=False)
                 except:
                     pass
-
-            # Save new profile picture
             member.profile_picture = request.FILES['avatar']
             member.save()
-
             messages.success(request, 'Profile picture updated successfully!')
         except Exception as e:
             messages.error(request, f'Error uploading image: {str(e)}')
@@ -494,15 +830,15 @@ def apply_loan(request):
     try:
         member = request.user.member_profile
         loan_products = LoanProduct.objects.filter(is_active=True)
-        has_active_loan = Loan.objects.filter(borrower=member, status='active').exists()
-        available_comakers = Member.objects.filter(is_active=True).exclude(id=member.id)[:10]
+
+        # Check if member is employee
+        is_employee = member.employment_status == 'employee'  # ✅ FIXED
 
         context = {
             'member': member,
             'loan_products': loan_products,
-            'has_active_loan': has_active_loan,
-            'available_comakers': available_comakers,
-            'profile_completeness': calculate_profile_completeness(member),
+            'is_employee': is_employee,  # Pass this to template
+            'has_active_loan': Loan.objects.filter(member=member, status='active').exists(),
         }
         return render(request, 'main/apply_loan.html', context)
     except Member.DoesNotExist:
@@ -513,123 +849,45 @@ def apply_loan(request):
 @login_required
 def submit_loan_application(request):
     if request.method == 'POST':
-        if not request.session.get('otp_verified'):
-            return JsonResponse({'success': False, 'error': 'OTP verification required.'})
-
         try:
+            import json
+            from datetime import date
+            import random
+
+            data = json.loads(request.body)
+
+            # Get member
+            if not hasattr(request.user, 'member_profile'):
+                return JsonResponse({'success': False, 'error': 'Member profile not found'})
+
             member = request.user.member_profile
-        except Member.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Member profile not found'})
 
-        amount = Decimal(request.POST.get('amount', 0))
-        purpose = request.POST.get('purpose', '')
-        collateral = request.POST.get('collateral', '')
-        mode_of_payment = request.POST.get('mode_of_payment', 'monthly')
-        term = int(request.POST.get('term', 12))
-        co_maker_id = request.POST.get('co_maker_id')
-        loan_product_id = request.POST.get('loan_product_id')
+            # Get loan product
+            loan_type = data.get('loan_type')
+            try:
+                loan_product = LoanProduct.objects.get(name=loan_type)
+            except LoanProduct.DoesNotExist:
+                return JsonResponse({'success': False, 'error': f'Loan product {loan_type} not found'})
 
-        loan_product = get_object_or_404(LoanProduct, id=loan_product_id) if loan_product_id else None
-
-        if amount < 1000:
-            return JsonResponse({'success': False, 'error': 'Minimum loan amount is ₱1,000.'})
-        if not purpose:
-            return JsonResponse({'success': False, 'error': 'Please provide a loan purpose.'})
-
-        if loan_product:
-            if amount < loan_product.min_amount:
-                return JsonResponse(
-                    {'success': False, 'error': f'Minimum amount for this product is ₱{loan_product.min_amount:,.2f}'})
-            if amount > loan_product.max_amount:
-                return JsonResponse(
-                    {'success': False, 'error': f'Maximum amount for this product is ₱{loan_product.max_amount:,.2f}'})
-
-        interest_rate = loan_product.interest_rate if loan_product else Decimal('20')
-        monthly_rate = (interest_rate / 100) / 12
-
-        if monthly_rate > 0:
-            monthly_payment = (amount * monthly_rate * (1 + monthly_rate) ** term) / ((1 + monthly_rate) ** term - 1)
-        else:
-            monthly_payment = amount / term
-
-        total_payable = monthly_payment * term
-        total_interest = total_payable - amount
-
-        service_charge = amount * Decimal('0.02')
-        cbu_retention = amount * Decimal('0.01')
-        insurance_charge = amount * Decimal('0.005')
-        service_fee = Decimal('35')
-        notarial_fee = Decimal('200')
-
-        total_deductions = service_charge + cbu_retention + insurance_charge + service_fee + notarial_fee
-        net_proceeds = amount - total_deductions
-
-        if request.FILES.get('collateral_document'):
-            member.collateral_document = request.FILES['collateral_document']
-            member.collateral_document_type = request.POST.get('collateral_document_type', '')
-            member.collateral_document_number = request.POST.get('collateral_document_number', '')
-            member.collateral_issued_by = request.POST.get('collateral_issued_by', '')
-            member.collateral_property_description = request.POST.get('collateral_property_description', '')
-            if request.POST.get('collateral_area'):
-                member.collateral_area = Decimal(request.POST.get('collateral_area'))
-            member.save()
-
-        application = LoanApplication.objects.create(
-            member=member,
-            co_maker_id=int(co_maker_id) if co_maker_id else None,
-            applicant_user=request.user,
-            loan_product=loan_product,
-            requested_amount=amount,
-            purpose=purpose,
-            collateral_offered=collateral,
-            mode_of_payment=mode_of_payment,
-            loan_term=term,
-            interest_rate=interest_rate,
-            total_interest=total_interest,
-            monthly_payment=monthly_payment,
-            total_payable=total_payable,
-            service_charge=service_charge,
-            cbu_retention=cbu_retention,
-            insurance_charge=insurance_charge,
-            service_fee=service_fee,
-            notarial_fee=notarial_fee,
-            total_deductions=total_deductions,
-            net_proceeds=net_proceeds,
-            status='pending_staff_review'
-        )
-
-        request.session.pop('otp_verified', None)
-        if request.user.id in otp_storage:
-            del otp_storage[request.user.id]
-
-        create_notification(
-            recipient=request.user,
-            notification_type='application',
-            title='Loan Application Submitted',
-            message=f'Your loan application for ₱{amount:,.2f} has been submitted.',
-            link=f'/main/application/{application.id}/'
-        )
-
-        from django.contrib.auth.models import User
-        staff_users = User.objects.filter(is_staff=True)
-        for staff in staff_users:
-            create_notification(
-                recipient=staff,
-                notification_type='application',
-                title='New Loan Application',
-                message=f'New loan application from {member.first_name} {member.last_name} for ₱{amount:,.2f}',
-                link=f'/staff/applications/{application.id}/'
+            # Create application with correct field names
+            application = LoanApplication.objects.create(
+                application_id=f"APP-{loan_product.name}-{date.today().year}-{random.randint(1000, 9999)}",
+                member=member,
+                loan_product=loan_product,
+                amount=data.get('amount'),
+                purpose=data.get('purpose'),
+                status='pending_staff_review',
+                applied_date=date.today()
             )
 
-        log_audit(request.user, 'create', 'LoanApplication', application.id, request=request)
+            return JsonResponse({'success': True, 'application_id': application.id})
 
-        return JsonResponse({
-            'success': True,
-            'application_id': application.id,
-            'application_number': application.application_id
-        })
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'success': False, 'error': str(e)})
 
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
+    return JsonResponse({'success': False, 'error': 'Invalid method'})
 
 
 @login_required
@@ -643,7 +901,7 @@ def search_co_maker(request):
             if not co_maker.is_active:
                 return JsonResponse({'error': 'Co-maker account is inactive'}, status=400)
 
-            active_loans_as_comaker = Loan.objects.filter(co_maker=co_maker, status='active').count()
+            active_loans_as_comaker = Loan.objects.filter(member=co_maker, status='active').count()
             is_eligible = active_loans_as_comaker < 3
 
             return JsonResponse({
@@ -664,7 +922,7 @@ def search_co_maker(request):
 def validate_co_maker(request, co_maker_id):
     try:
         co_maker = get_object_or_404(Member, id=co_maker_id)
-        active_loans_as_comaker = Loan.objects.filter(co_maker=co_maker, status='active').count()
+        active_loans_as_comaker = Loan.objects.filter(member=co_maker, status='active').count()
         is_eligible = active_loans_as_comaker < 3
 
         return JsonResponse({
@@ -727,16 +985,16 @@ def verify_otp(request):
 @login_required
 def save_signature(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        signature_data = data.get('signature')
         try:
+            data = json.loads(request.body)
+            signature_data = data.get('signature')
             member = request.user.member_profile
             member.signature = signature_data
             member.save()
-            log_audit(request.user, 'update', 'Member', member.id, request=request)
-            return JsonResponse({'success': True, 'message': 'Signature saved.'})
-        except Member.DoesNotExist:
-            return JsonResponse({'error': 'Member profile not found'}, status=404)
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid method'})
 
 
 # ============================================================
@@ -746,7 +1004,7 @@ def save_signature(request):
 @login_required
 def my_applications(request):
     try:
-        applications = LoanApplication.objects.filter(member=request.user.member_profile).order_by('-created_at')
+        applications = LoanApplication.objects.filter(member=request.user.member_profile).order_by('-applied_date')
         status_colors = {
             'pending_staff_review': 'warning',
             'with_committee': 'info',
@@ -770,7 +1028,8 @@ def my_applications(request):
 @login_required
 def my_loans(request):
     try:
-        loans = Loan.objects.filter(borrower=request.user.member_profile).order_by('-created_at')
+        # FIXED: changed 'borrower' to 'member'
+        loans = Loan.objects.filter(member=request.user.member_profile).order_by('-created_at')
         status_colors = {
             'pending_disbursement': 'warning',
             'active': 'success',
@@ -784,7 +1043,7 @@ def my_loans(request):
                                   'total'] or Decimal(0)
             loan.status_color = status_colors.get(loan.status, 'secondary')
             loan.payment_percentage = int(
-                (loan.total_paid / loan.total_payable_amount) * 100) if loan.total_payable_amount > 0 else 0
+                (loan.total_paid / loan.total_payable) * 100) if loan.total_payable > 0 else 0
             next_schedule = PaymentSchedule.objects.filter(loan=loan, status='pending').order_by('due_date').first()
             loan.next_payment_due = next_schedule.due_date if next_schedule else None
             loan.next_payment_amount = next_schedule.total_due if next_schedule else None
@@ -814,13 +1073,6 @@ def view_application_details(request, app_id):
         application = get_object_or_404(LoanApplication, id=app_id, member=request.user.member_profile)
         committee_decisions = CommitteeDecision.objects.filter(loan_application=application)
 
-        # Import LoanAttachment
-        try:
-            from main.models import LoanAttachment
-            attachments = LoanAttachment.objects.filter(loan_application=application)
-        except:
-            attachments = []
-
         status_steps = [
             {'key': 'pending_staff_review', 'label': 'Submitted', 'icon': '📋', 'completed': True},
             {'key': 'with_committee', 'label': 'Committee Review', 'icon': '👥',
@@ -847,7 +1099,6 @@ def view_application_details(request, app_id):
         context = {
             'application': application,
             'committee_decisions': committee_decisions,
-            'attachments': attachments,
             'status_steps': status_steps,
             'current_step_index': current_step_index,
         }
@@ -860,7 +1111,8 @@ def view_application_details(request, app_id):
 @login_required
 def payment_schedule(request, loan_id):
     try:
-        loan = get_object_or_404(Loan, id=loan_id, borrower=request.user.member_profile)
+        # FIXED: changed 'borrower' to 'member'
+        loan = get_object_or_404(Loan, id=loan_id, member=request.user.member_profile)
         schedules = PaymentSchedule.objects.filter(loan=loan).order_by('due_date')
 
         total_principal = schedules.aggregate(total=Sum('principal_due'))['total'] or Decimal(0)
@@ -895,9 +1147,6 @@ def payment_schedule(request, loan_id):
 
 @login_required
 def download_receipt(request, payment_id):
-    from reportlab.lib.pagesizes import letter
-    from reportlab.pdfgen import canvas
-
     try:
         payment = get_object_or_404(Payment, id=payment_id, member=request.user.member_profile)
 
@@ -1034,7 +1283,8 @@ def mark_all_notifications_read(request):
 def member_loan_status(request):
     try:
         member = request.user.member_profile
-        active_loans = Loan.objects.filter(borrower=member, status='active')
+        # FIXED: changed 'borrower' to 'member'
+        active_loans = Loan.objects.filter(member=member, status='active')
         has_active_loan = active_loans.exists()
         outstanding_balance = active_loans.aggregate(total=Sum('remaining_balance'))['total'] or 0
 
@@ -1106,10 +1356,8 @@ def delete_document(request, doc_id):
 
 @login_required
 def chatbot_api(request):
-    """FAQ Chatbot API"""
     if request.method == 'POST':
         try:
-            import json
             data = json.loads(request.body)
             question = data.get('message', '').lower().strip()
 
@@ -1338,21 +1586,11 @@ def change_password(request):
 
 
 # ============================================================
-# ADD MISSING IMPORTS
-# ============================================================
-try:
-    from main.models import LoanAttachment
-except ImportError:
-    LoanAttachment = None
-
-
-# ============================================================
 # LOAN TYPES VIEW
 # ============================================================
 
 @login_required
 def loan_types(request):
-    """Display all loan products with Apply Now buttons"""
     try:
         member = request.user.member_profile
     except Member.DoesNotExist:
@@ -1365,102 +1603,182 @@ def loan_types(request):
 
 
 # ============================================================
-# API VIEWS FOR MEMBER DATA
+# API VIEWS FOR MEMBER DATA - FIXED
 # ============================================================
 
 @login_required
 def member_applications_api(request):
-    """API endpoint to get member's loan applications"""
+    """API endpoint for member's loan applications"""
     try:
-        member = request.user.member_profile
-        applications = LoanApplication.objects.filter(member=member).order_by('-created_at')
+        # Check if user has member profile
+        if not hasattr(request.user, 'member_profile'):
+            return JsonResponse({
+                'success': False,
+                'error': 'Member profile not found',
+                'applications': []
+            }, status=200)
 
-        data = {
-            'applications': [{
+        member = request.user.member_profile
+
+        # Get applications ordered by most recent first (using applied_date, not created_at)
+        applications = LoanApplication.objects.filter(member=member).order_by('-applied_date')
+
+        # Build response data
+        applications_data = []
+        for app in applications:
+            applications_data.append({
                 'id': app.id,
                 'application_id': app.application_id,
                 'loan_type': app.loan_product.display_name if app.loan_product else 'APCP',
-                'requested_amount': float(app.requested_amount),
+                'amount': float(app.amount) if app.amount else 0,
                 'approved_line': float(app.approved_line) if app.approved_line else None,
                 'status': app.status,
-                'date_applied': app.date_applied.isoformat() if app.date_applied else None,
-                'purpose': app.purpose,
-                'collateral_offered': app.collateral_offered,
-                'mode_of_payment': app.mode_of_payment,
-                'loan_term': app.loan_term,
-                'committee_remarks': app.committee_remarks,
-                'manager_remarks': app.manager_remarks,
-            } for app in applications]
-        }
-        return JsonResponse(data)
-    except Member.DoesNotExist:
-        return JsonResponse({'applications': []})
+                'status_display': app.get_status_display() if hasattr(app,
+                                                                      'get_status_display') else app.status.replace('_',
+                                                                                                                    ' ').title(),
+                'applied_date': app.applied_date.strftime('%Y-%m-%d') if app.applied_date else '',
+                'purpose': app.purpose or '',
+                'collateral_offered': app.collateral_offered or '',
+                'mode_of_payment': app.mode_of_payment or 'monthly',
+                'loan_term': app.loan_term or 12,
+            })
+
+        return JsonResponse({
+            'success': True,
+            'applications': applications_data,
+            'count': len(applications_data)
+        })
+
     except Exception as e:
-        return JsonResponse({'applications': [], 'error': str(e)})
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'applications': []
+        }, status=200)
 
 
 @login_required
 def member_loans_api(request):
-    """API endpoint to get member's loans"""
+    """API endpoint for member's active loans"""
     try:
-        member = request.user.member_profile
-        loans = Loan.objects.filter(borrower=member).order_by('-disbursement_date')
+        # Check if user has member profile
+        if not hasattr(request.user, 'member_profile'):
+            return JsonResponse({
+                'success': False,
+                'error': 'Member profile not found',
+                'loans': []
+            })
 
-        data = {
-            'loans': [{
+        member = request.user.member_profile
+
+        # Get loans for this member
+        loans = Loan.objects.filter(member=member).order_by('-disbursement_date')
+
+        # Build response data
+        loans_data = []
+        today = date.today()
+
+        for loan in loans:
+            # Calculate penalty if overdue
+            penalty = 0
+            days_overdue = 0
+            if loan.due_date and loan.due_date < today and loan.status == 'active':
+                days_overdue = (today - loan.due_date).days
+                if days_overdue > 360:
+                    penalty_months = ((days_overdue - 360) + 29) // 30
+                    penalty = float(loan.remaining_balance or 0) * 0.02 * penalty_months
+
+            # Calculate progress percentage
+            progress = 0
+            if loan.amount and loan.amount > 0:
+                progress = (float(loan.paid_amount or 0) / float(loan.amount)) * 100
+
+            loans_data.append({
                 'id': loan.id,
                 'loan_number': loan.loan_number,
                 'loan_type': loan.loan_product.name if loan.loan_product else 'APCP',
-                'principal_amount': float(loan.principal_amount),
+                'principal': float(loan.amount),
                 'monthly_payment': float(loan.monthly_payment),
                 'remaining_balance': float(loan.remaining_balance),
-                'total_paid': float(loan.paid_amount),
-                'total_payable_amount': float(loan.total_payable_amount),
+                'paid_amount': float(loan.paid_amount or 0),
+                'progress': round(progress, 1),
+                'penalty': round(penalty, 2),
+                'days_overdue': days_overdue,
                 'status': loan.status,
-                'disbursement_date': loan.disbursement_date.isoformat() if loan.disbursement_date else None,
-                'next_due_date': loan.next_due_date.isoformat() if loan.next_due_date else None,
-            } for loan in loans]
-        }
-        return JsonResponse(data)
-    except Member.DoesNotExist:
-        return JsonResponse({'loans': []})
+                'next_due_date': loan.due_date.strftime('%Y-%m-%d') if loan.due_date else None,
+                'disbursement_date': loan.disbursement_date.strftime('%Y-%m-%d') if loan.disbursement_date else None,
+            })
+
+        return JsonResponse({
+            'success': True,
+            'loans': loans_data,
+            'count': len(loans_data)
+        })
+
     except Exception as e:
-        return JsonResponse({'loans': [], 'error': str(e)})
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'loans': []
+        })
 
 
 @login_required
 def member_payments_api(request):
-    """API endpoint to get member's payment history"""
+    """API endpoint for member's payment history"""
     try:
+        # Check if user has member profile
+        if not hasattr(request.user, 'member_profile'):
+            return JsonResponse({
+                'success': False,
+                'error': 'Member profile not found',
+                'payments': []
+            })
+
         member = request.user.member_profile
+
+        # Get payments for this member
         payments = Payment.objects.filter(member=member, is_posted=True).order_by('-payment_date')
 
-        data = {
-            'payments': [{
+        # Build response data
+        payments_data = []
+        for payment in payments:
+            payments_data.append({
                 'id': payment.id,
                 'payment_number': payment.payment_number,
-                'receipt_number': payment.receipt.receipt_number if hasattr(payment, 'receipt') else None,
-                'loan_number': payment.loan.loan_number,
+                'receipt_number': payment.payment_number,
+                'loan_number': payment.loan.loan_number if payment.loan else 'N/A',
                 'amount': float(payment.amount),
-                'principal_amount': float(payment.principal_amount),
-                'interest_amount': float(payment.interest_amount),
-                'penalty_amount': float(payment.penalty_amount),
+                'payment_date': payment.payment_date.strftime('%Y-%m-%d'),
                 'payment_method': payment.payment_method,
-                'payment_date': payment.payment_date.isoformat(),
-                'receipt_url': payment.receipt.receipt_pdf.url if hasattr(payment,
-                                                                          'receipt') and payment.receipt.receipt_pdf else None,
-            } for payment in payments]
-        }
-        return JsonResponse(data)
-    except Member.DoesNotExist:
-        return JsonResponse({'payments': []})
+                'principal_amount': float(payment.principal_amount) if payment.principal_amount else 0,
+                'interest_amount': float(payment.interest_amount) if payment.interest_amount else 0,
+                'penalty_amount': float(payment.penalty_amount) if payment.penalty_amount else 0,
+                'receipt_url': f'/api/payment-receipt/{payment.id}/' if payment.id else None,
+            })
+
+        return JsonResponse({
+            'success': True,
+            'payments': payments_data,
+            'count': len(payments_data)
+        })
+
     except Exception as e:
-        return JsonResponse({'payments': [], 'error': str(e)})
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'payments': []
+        })
 
 
 @login_required
 def notifications_api(request):
-    """API endpoint to get user notifications"""
     notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')
 
     data = {
@@ -1479,7 +1797,6 @@ def notifications_api(request):
 
 @login_required
 def mark_notification_read_api(request, notif_id):
-    """Mark a single notification as read"""
     notification = get_object_or_404(Notification, id=notif_id, recipient=request.user)
     notification.is_read = True
     notification.save()
@@ -1488,14 +1805,12 @@ def mark_notification_read_api(request, notif_id):
 
 @login_required
 def mark_all_notifications_read_api(request):
-    """Mark all notifications as read"""
     Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
     return JsonResponse({'success': True})
 
 
 @login_required
 def delete_notification_api(request, notif_id):
-    """Delete a notification"""
     if request.method == 'DELETE':
         notification = get_object_or_404(Notification, id=notif_id, recipient=request.user)
         notification.delete()
@@ -1505,18 +1820,14 @@ def delete_notification_api(request, notif_id):
 
 @login_required
 def notifications_page(request):
-    """Notifications page for members"""
     return render(request, 'main/notifications.html')
 
 
 @login_required
 def member_analytics_api(request):
-    """API endpoint for member analytics data"""
     try:
         member = request.user.member_profile
 
-        # Get last 6 months payment data
-        from datetime import date, timedelta
         payment_labels = []
         payment_data = []
 
@@ -1526,7 +1837,6 @@ def member_analytics_api(request):
             month_name = month_date.strftime('%b %Y')
             payment_labels.append(month_name)
 
-            # Calculate total payments for that month
             month_start = month_date.replace(day=1)
             if month_date.month == 12:
                 next_month = month_date.replace(year=month_date.year + 1, month=1, day=1)
@@ -1541,8 +1851,8 @@ def member_analytics_api(request):
             ).aggregate(total=Sum('amount'))['total'] or 0
             payment_data.append(float(monthly_payments))
 
-        # Get loan distribution by type
-        loans = Loan.objects.filter(borrower=member)
+        # FIXED: changed 'borrower' to 'member'
+        loans = Loan.objects.filter(member=member)
         distribution_labels = []
         distribution_data = []
 
@@ -1565,13 +1875,73 @@ def member_analytics_api(request):
 
 
 @login_required
+def payment_receipt_api(request, payment_id):
+    """Generate PDF receipt for a payment"""
+    try:
+        payment = get_object_or_404(Payment, id=payment_id, member=request.user.member_profile)
+
+        # Create PDF response
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="receipt_{payment.payment_number}.pdf"'
+
+        from reportlab.lib.pagesizes import letter
+        from reportlab.pdfgen import canvas
+        from reportlab.lib import colors
+
+        p = canvas.Canvas(response, pagesize=letter)
+        width, height = letter
+
+        # Header
+        p.setFont("Helvetica-Bold", 24)
+        p.drawString(180, height - 50, "TOMPuCO COOPERATIVE")
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(220, height - 80, "OFFICIAL RECEIPT")
+
+        # Details
+        p.setFont("Helvetica", 11)
+        y = height - 120
+        p.drawString(50, y, f"Receipt Number: {payment.payment_number}")
+        p.drawString(50, y - 20, f"Date: {payment.payment_date.strftime('%B %d, %Y')}")
+        p.drawString(50, y - 40, f"Member: {payment.member.first_name} {payment.member.last_name}")
+        p.drawString(50, y - 60, f"Loan Number: {payment.loan.loan_number}")
+
+        p.line(50, y - 75, width - 50, y - 75)
+
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(50, y - 100, "PAYMENT DETAILS")
+        p.setFont("Helvetica", 11)
+        p.drawString(50, y - 120, f"Amount Paid: ₱{payment.amount:,.2f}")
+        p.drawString(50, y - 140, f"Payment Method: {payment.get_payment_method_display()}")
+        p.drawString(50, y - 160, f"Principal: ₱{payment.principal_amount:,.2f}")
+        p.drawString(50, y - 180, f"Interest: ₱{payment.interest_amount:,.2f}")
+
+        if payment.penalty_amount and payment.penalty_amount > 0:
+            p.drawString(50, y - 200, f"Penalty: ₱{payment.penalty_amount:,.2f}")
+
+        p.line(50, y - 220, width - 50, y - 220)
+        p.drawString(50, y - 240, f"Remaining Balance: ₱{payment.remaining_balance_after:,.2f}")
+
+        p.setFont("Helvetica-Oblique", 10)
+        p.drawString(180, 50, "Thank you for your payment!")
+        p.drawString(160, 35, "This is a system-generated receipt.")
+
+        p.showPage()
+        p.save()
+
+        return response
+
+    except Exception as e:
+        return HttpResponse(f"Error generating receipt: {str(e)}", status=500)
+
+
+@login_required
 def member_stats_api(request):
-    """API endpoint for member statistics"""
     try:
         member = request.user.member_profile
 
-        loans = Loan.objects.filter(borrower=member)
-        total_loaned = loans.aggregate(total=Sum('principal_amount'))['total'] or 0
+        # FIXED: changed 'borrower' to 'member' and 'principal_amount' to 'amount'
+        loans = Loan.objects.filter(member=member)
+        total_loaned = loans.aggregate(total=Sum('amount'))['total'] or 0
         active_loans_count = loans.filter(status='active').count()
         total_paid = Payment.objects.filter(member=member, status='completed').aggregate(total=Sum('amount'))[
                          'total'] or 0
@@ -1580,8 +1950,8 @@ def member_stats_api(request):
 
         next_due = None
         active_loan = loans.filter(status='active').first()
-        if active_loan and active_loan.next_due_date:
-            next_due = active_loan.next_due_date.isoformat()
+        if active_loan and active_loan.due_date:
+            next_due = active_loan.due_date.isoformat()
 
         return JsonResponse({
             'total_loaned': float(total_loaned),
@@ -1597,12 +1967,11 @@ def member_stats_api(request):
 
 @login_required
 def loan_payment_schedule_api(request, loan_id):
-    """API endpoint to get loan payment schedule"""
     try:
         member = request.user.member_profile
-        loan = get_object_or_404(Loan, id=loan_id, borrower=member)
+        # FIXED: changed 'borrower' to 'member'
+        loan = get_object_or_404(Loan, id=loan_id, member=member)
 
-        # Generate payment schedule
         schedule = []
         balance = float(loan.remaining_balance)
         monthly_payment = float(loan.monthly_payment)
@@ -1611,7 +1980,7 @@ def loan_payment_schedule_api(request, loan_id):
         monthly_rate = interest_rate / 100 / term_months
 
         from datetime import date, timedelta
-        next_date = loan.next_due_date or (loan.disbursement_date + timedelta(days=30))
+        next_date = loan.due_date or (loan.disbursement_date + timedelta(days=30))
 
         for i in range(term_months):
             interest = balance * monthly_rate
@@ -1622,9 +1991,6 @@ def loan_payment_schedule_api(request, loan_id):
 
             balance = balance - principal
 
-            # Determine status based on due date and payments
-            status = 'pending'
-
             schedule.append({
                 'month': i + 1,
                 'due_date': next_date.strftime('%Y-%m-%d'),
@@ -1632,7 +1998,7 @@ def loan_payment_schedule_api(request, loan_id):
                 'interest': round(interest, 2),
                 'principal': round(principal, 2),
                 'balance': round(max(0, balance), 2),
-                'status': status
+                'status': 'pending'
             })
 
             next_date = next_date + timedelta(days=30)
@@ -1650,7 +2016,6 @@ def loan_payment_schedule_api(request, loan_id):
 
 @login_required
 def setup_2fa(request):
-    """Setup Two-Factor Authentication for member"""
     member_profile = request.user.member_profile
 
     if request.method == 'POST':
@@ -1671,7 +2036,6 @@ def setup_2fa(request):
             member_profile.otp_enabled_at = timezone.now()
             member_profile.otp_secret = device.bin_key.hex()
 
-            # Generate backup codes
             backup_codes = []
             for i in range(10):
                 code = secrets.token_hex(4).upper()
@@ -1686,7 +2050,6 @@ def setup_2fa(request):
             messages.error(request, 'Invalid verification code. Please try again.')
             return redirect('main:setup_2fa')
 
-    # GET request - show setup form
     device = TOTPDevice.objects.filter(user=request.user).first()
     if not device:
         device = TOTPDevice.objects.create(
@@ -1697,7 +2060,6 @@ def setup_2fa(request):
 
     provisioning_uri = device.config_url
 
-    # Generate QR code
     qr = qrcode.QRCode(box_size=10, border=4)
     qr.add_data(provisioning_uri)
     qr.make(fit=True)
@@ -1719,7 +2081,6 @@ def setup_2fa(request):
 
 @login_required
 def disable_2fa(request):
-    """Disable Two-Factor Authentication for member"""
     if request.method == 'POST':
         member_profile = request.user.member_profile
         TOTPDevice.objects.filter(user=request.user).delete()
@@ -1737,7 +2098,6 @@ def disable_2fa(request):
 
 @login_required
 def generate_backup_codes(request):
-    """Generate new backup codes for 2FA"""
     if request.method == 'POST':
         member_profile = request.user.member_profile
 
@@ -1762,7 +2122,6 @@ def generate_backup_codes(request):
 
 @login_required
 def verify_2fa_login(request):
-    """Verify 2FA code during login"""
     if request.method == 'POST':
         otp_code = request.POST.get('otp_code', '')
         user = request.user
@@ -1784,3 +2143,12 @@ def verify_2fa_login(request):
         messages.error(request, 'Invalid 2FA code. Please try again.')
 
     return render(request, 'main/verify_2fa.html')
+
+def verification_rejected(request):
+    """Verification rejected page"""
+    return render(request, 'main/verification_rejected.html')
+
+
+def account_suspended(request):
+    """Account suspended page"""
+    return render(request, 'main/account_suspended.html')

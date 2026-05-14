@@ -1,11 +1,11 @@
-﻿{% extends 'staff/base_staff.html' %}
+{% extends 'staff/base_staff.html' %}
 {% block page_title %}Review Application{% endblock %}
 {% block content %}
 <div class="card">
     <div class="card-body">
         <h4>Application: {{ application.application_id }}</h4>
         <p>Member: {{ application.member_name }}</p>
-        <p>Amount: ₱{{ application.requested_amount }}</p>
+        <p>Amount: ?{{ application.requested_amount }}</p>
         <p>Purpose: {{ application.purpose }}</p>
         <p>Status: {{ application.get_status_display }}</p>
         <a href="{% url 'staff:staff_applications' %}" class="btn btn-secondary">Back</a>

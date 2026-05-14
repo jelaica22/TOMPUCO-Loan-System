@@ -1,0 +1,489 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Verify Member - {{ member.user.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .member-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0 auto 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .member-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .detail-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #0d6e6e;
+    }
+
+    .detail-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .detail-value {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #212529;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .document-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .document-card:hover {
+        background: #e9ecef;
+        transform: translateY(-3px);
+    }
+
+    .document-icon {
+        font-size: 2rem;
+        color: #0d6e6e;
+        margin-bottom: 10px;
+    }
+
+    .verification-options {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .option-box {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .option-box:hover {
+        border-color: #0d6e6e;
+        background: #f0f9f9;
+    }
+
+    .option-box.selected {
+        border-color: #0d6e6e;
+        background: #e6f3f3;
+    }
+
+    .option-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+
+    .option-verify .option-icon { color: #10b981; }
+    .option-reject .option-icon { color: #ef4444; }
+    .option-suspend .option-icon { color: #f59e0b; }
+
+    .btn-verify { background: #10b981; border: none; }
+    .btn-verify:hover { background: #059669; }
+
+    .btn-reject { background: #ef4444; border: none; }
+    .btn-reject:hover { background: #dc2626; }
+
+    .btn-suspend { background: #f59e0b; border: none; }
+    .btn-suspend:hover { background: #d97706; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="mb-1"><i class="bi bi-person-check"></i> Verify Member</h4>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0">
+                            <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'admin_panel:members_list' %}">Members</a></li>
+                            <li class="breadcrumb-item active">Verify Member</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <span class="status-badge status-pending">
+                        <i class="bi bi-hourglass-split"></i> Pending Verification
+                    </span>
+                </div>
+            </div>
+
+            <!-- Main Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-person-vcard"></i> Member Verification</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Member Profile Section -->
+                    <div class="row">
+                        <!-- Avatar Column -->
+                        <div class="col-md-3 text-center">
+                            <div class="member-avatar">
+                                {% if member.profile_picture %}
+                                    <img src="{{ member.profile_picture.url }}" alt="{{ member.first_name }}">
+                                {% else %}
+                                    {{ member.first_name|first }}{{ member.last_name|first }}
+                                {% endif %}
+                            </div>
+                            <h6 class="mt-2 mb-0">{{ member.first_name }} {{ member.last_name }}</h6>
+                            <small class="text-muted">Member since {{ member.created_at|date:"M Y" }}</small>
+                            <hr>
+                            <div class="text-start">
+                                <div class="mb-2">
+                                    <i class="bi bi-person-badge text-muted"></i>
+                                    <strong> Member ID:</strong><br>
+                                    <span>{{ member.membership_number }}</span>
+                                </div>
+                                <div class="mb-2">
+                                    <i class="bi bi-calendar-check text-muted"></i>
+                                    <strong> Status:</strong><br>
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Member Details Column -->
+                        <div class="col-md-9">
+                            <ul class="nav nav-tabs" id="memberTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab">
+                                        <i class="bi bi-person"></i> Personal Info
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="farm-tab" data-bs-toggle="tab" data-bs-target="#farm" type="button" role="tab">
+                                        <i class="bi bi-tree"></i> Farm Info
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">
+                                        <i class="bi bi-files"></i> Documents
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="account-tab" data-bs-toggle="tab" data-bs-target="#account" type="button" role="tab">
+                                        <i class="bi bi-gear"></i> Account
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content mt-3">
+                                <!-- Personal Information Tab -->
+                                <div class="tab-pane fade show active" id="personal" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-person"></i> Full Name</div>
+                                                <div class="detail-value">{{ member.first_name }} {{ member.middle_initial|default:'' }} {{ member.last_name }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-calendar"></i> Birthdate</div>
+                                                <div class="detail-value">{{ member.birthdate|date:"F d, Y"|default:"Not provided" }} (Age: {{ member.age|default:"N/A" }})</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-telephone"></i> Contact Number</div>
+                                                <div class="detail-value">{{ member.contact_number|default:"Not provided" }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-gender-ambiguous"></i> Gender</div>
+                                                <div class="detail-value">{{ member.get_gender_display|default:"Not specified" }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-house"></i> Residence Address</div>
+                                                <div class="detail-value">{{ member.residence_address|default:"Not provided" }}</div>
+                                            </div>
+                                        </div>
+                                        {% if member.spouse_name %}
+                                        <div class="col-12">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-heart"></i> Spouse Name</div>
+                                                <div class="detail-value">{{ member.spouse_name }}</div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Farm Information Tab -->
+                                <div class="tab-pane fade" id="farm" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-geo-alt"></i> Farm Location</div>
+                                                <div class="detail-value">{{ member.farm_location|default:"Not provided" }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-tree"></i> Farm Ownership</div>
+                                                <div class="detail-value">Owned: {{ member.farm_owned_hectares|default:"0" }} ha | Leased: {{ member.farm_leased_hectares|default:"0" }} ha</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-seedling"></i> Area Planted</div>
+                                                <div class="detail-value">{{ member.area_planted|default:"0" }} hectares</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-crops"></i> New Plant / Ratoon</div>
+                                                <div class="detail-value">New: {{ member.new_plant|default:"0" }} ha | Ratoon: {{ member.ratoon_crops|default:"0" }} ha</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Documents Tab -->
+                                <div class="tab-pane fade" id="documents" role="tabpanel">
+                                    <div class="row">
+                                        {% if member.uploaded_id %}
+                                        <div class="col-md-6">
+                                            <div class="document-card" onclick="window.open('{{ member.uploaded_id.url }}', '_blank')">
+                                                <div class="document-icon"><i class="bi bi-file-earmark-image"></i></div>
+                                                <strong>Valid ID</strong>
+                                                <div class="small text-muted">Click to view</div>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <div class="col-12">
+                                            <div class="alert alert-warning">
+                                                <i class="bi bi-exclamation-triangle"></i> No valid ID uploaded yet.
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if member.profile_picture %}
+                                        <div class="col-md-6">
+                                            <div class="document-card" onclick="window.open('{{ member.profile_picture.url }}', '_blank')">
+                                                <div class="document-icon"><i class="bi bi-person-circle"></i></div>
+                                                <strong>Profile Picture</strong>
+                                                <div class="small text-muted">Click to view</div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Account Information Tab -->
+                                <div class="tab-pane fade" id="account" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-person"></i> Username</div>
+                                                <div class="detail-value">{{ member.user.username }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-envelope"></i> Email</div>
+                                                <div class="detail-value">{{ member.user.email|default:"Not provided" }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-calendar-plus"></i> Date Joined</div>
+                                                <div class="detail-value">{{ member.user.date_joined|date:"F d, Y" }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="detail-card">
+                                                <div class="detail-label"><i class="bi bi-cash"></i> Monthly Income</div>
+                                                <div class="detail-value">₱{{ member.monthly_income|floatformat:2|default:"0" }}</div>
+                                            </div>
+                                        </div>
+                                        {% if member.is_employee %}
+                                        <div class="col-12">
+                                            <div class="detail-card bg-info bg-opacity-10">
+                                                <div class="detail-label"><i class="bi bi-briefcase"></i> Employee Information</div>
+                                                <div class="detail-value">
+                                                    <strong>Position:</strong> {{ member.position|default:"Not specified" }}<br>
+                                                    <strong>Employee ID:</strong> {{ member.employee_id|default:"Not assigned" }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Verification Action Form -->
+                    <form method="post" id="verificationForm">
+                        {% csrf_token %}
+
+                        <div class="verification-options mt-4">
+                            <h6 class="mb-3"><i class="bi bi-shield-check"></i> Verification Decision</h6>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="option-box option-verify" data-action="verify">
+                                        <div class="option-icon"><i class="bi bi-check-circle-fill"></i></div>
+                                        <h6>Approve & Verify</h6>
+                                        <p class="small text-muted mb-0">Approve the member registration</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="option-box option-reject" data-action="reject">
+                                        <div class="option-icon"><i class="bi bi-x-circle-fill"></i></div>
+                                        <h6>Reject</h6>
+                                        <p class="small text-muted mb-0">Reject the member registration</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="option-box option-suspend" data-action="suspend">
+                                        <div class="option-icon"><i class="bi bi-ban-fill"></i></div>
+                                        <h6>Suspend</h6>
+                                        <p class="small text-muted mb-0">Temporarily suspend the member</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="action" id="selectedAction" value="">
+
+                            <!-- Reason Field (shown for reject/suspend) -->
+                            <div class="mt-3" id="reasonField" style="display: none;">
+                                <label class="form-label"><i class="bi bi-chat-text"></i> Reason for Rejection/Suspension</label>
+                                <textarea name="rejection_reason" class="form-control" rows="3" placeholder="Please provide a reason..."></textarea>
+                                <div class="form-text text-muted">This will be shared with the member.</div>
+                            </div>
+
+                            <!-- Suspension Until Field -->
+                            <div class="mt-3" id="suspensionUntilField" style="display: none;">
+                                <label class="form-label"><i class="bi bi-calendar"></i> Suspension End Date</label>
+                                <input type="date" name="restricted_until" class="form-control">
+                                <div class="form-text text-muted">Optional. Leave empty for indefinite suspension.</div>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'admin_panel:members_list' %}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-verify" id="submitBtn">
+                                    <i class="bi bi-check-circle"></i> Submit Verification
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const optionBoxes = document.querySelectorAll('.option-box');
+    const selectedActionInput = document.getElementById('selectedAction');
+    const reasonField = document.getElementById('reasonField');
+    const suspensionUntilField = document.getElementById('suspensionUntilField');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Handle option box selection
+    optionBoxes.forEach(box => {
+        box.addEventListener('click', function() {
+            // Remove selected class from all
+            optionBoxes.forEach(b => b.classList.remove('selected'));
+            // Add selected class to clicked
+            this.classList.add('selected');
+
+            const action = this.dataset.action;
+            selectedActionInput.value = action;
+
+            // Update button style based on action
+            submitBtn.className = 'btn';
+            if (action === 'verify') {
+                submitBtn.classList.add('btn-verify');
+                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Approve & Verify Member';
+                reasonField.style.display = 'none';
+                suspensionUntilField.style.display = 'none';
+            } else if (action === 'reject') {
+                submitBtn.classList.add('btn-reject');
+                submitBtn.innerHTML = '<i class="bi bi-x-circle"></i> Reject Member';
+                reasonField.style.display = 'block';
+                suspensionUntilField.style.display = 'none';
+            } else if (action === 'suspend') {
+                submitBtn.classList.add('btn-suspend');
+                submitBtn.innerHTML = '<i class="bi bi-ban"></i> Suspend Member';
+                reasonField.style.display = 'block';
+                suspensionUntilField.style.display = 'block';
+            }
+        });
+    });
+
+    // Form validation before submit
+    document.getElementById('verificationForm').addEventListener('submit', function(e) {
+        const action = selectedActionInput.value;
+        const reason = document.querySelector('textarea[name="rejection_reason"]');
+
+        if (!action) {
+            e.preventDefault();
+            alert('Please select a verification action.');
+            return false;
+        }
+
+        if ((action === 'reject' || action === 'suspend') && reason && !reason.value.trim()) {
+            e.preventDefault();
+            alert('Please provide a reason for rejection/suspension.');
+            reason.focus();
+            return false;
+        }
+    });
+</script>
+{% endblock %}

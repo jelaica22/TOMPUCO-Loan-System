@@ -1,17 +1,15 @@
 ﻿{% extends 'committee/base_committee.html' %}
 {% load static %}
 
-{% block title %}Review Application - Committee{% endblock %}
-{% block page_title %}Review Loan Application{% endblock %}
+{% block title %}Committee Review - Approve Line{% endblock %}
+{% block page_title %}Committee Decision{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Main Layout */
     .review-container {
         padding-top: 10px;
     }
 
-    /* Application Details Card */
     .info-card {
         background: var(--bg-card);
         border-radius: 20px;
@@ -39,7 +37,6 @@
         padding: 24px;
     }
 
-    /* Info Grid */
     .info-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -80,7 +77,12 @@
         font-weight: 800;
     }
 
-    /* Full width item */
+    .info-value.requested {
+        color: #f59e0b;
+        font-size: 1.5rem;
+        font-weight: 800;
+    }
+
     .info-full {
         margin-top: 10px;
     }
@@ -96,7 +98,6 @@
         margin-top: 5px;
     }
 
-    /* Decision Card */
     .decision-card {
         background: var(--bg-card);
         border-radius: 20px;
@@ -125,7 +126,6 @@
         padding: 24px;
     }
 
-    /* Form Elements */
     .form-group {
         margin-bottom: 20px;
     }
@@ -140,18 +140,19 @@
         display: block;
     }
 
-    .form-select-custom, .form-control-custom {
+    .form-control-custom {
         width: 100%;
-        padding: 10px 14px;
-        border: 1.5px solid var(--border-color);
+        padding: 14px 16px;
+        border: 2px solid var(--border-color);
         border-radius: 12px;
-        font-size: 0.9rem;
+        font-size: 1.1rem;
+        font-weight: 600;
         background: var(--bg-card);
         color: var(--text-primary);
         transition: all 0.2s;
     }
 
-    .form-select-custom:focus, .form-control-custom:focus {
+    .form-control-custom:focus {
         border-color: #0d6e6e;
         outline: none;
         box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
@@ -160,9 +161,10 @@
     textarea.form-control-custom {
         resize: vertical;
         min-height: 80px;
+        font-size: 0.9rem;
+        font-weight: normal;
     }
 
-    /* Amount Buttons */
     .amount-suggestions {
         display: flex;
         gap: 10px;
@@ -174,9 +176,9 @@
         background: transparent;
         border: 1.5px solid #0d6e6e;
         color: #0d6e6e;
-        padding: 6px 14px;
+        padding: 8px 16px;
         border-radius: 20px;
-        font-size: 0.7rem;
+        font-size: 0.8rem;
         font-weight: 600;
         transition: all 0.2s;
         cursor: pointer;
@@ -188,145 +190,109 @@
         transform: translateY(-2px);
     }
 
-    [data-theme="dark"] .btn-suggest {
-        border-color: #1a8a8a;
-        color: #1a8a8a;
-    }
-
-    [data-theme="dark"] .btn-suggest:hover {
-        background: #1a8a8a;
-        color: white;
-    }
-
-    /* Submit Button */
-    .btn-submit {
-        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
-        color: white;
-        border: none;
-        padding: 12px 24px;
+    .rule-box {
+        background: #f0fdf4;
+        border: 1px solid #10b981;
         border-radius: 12px;
+        padding: 12px 16px;
+        margin-top: 16px;
+    }
+
+    .rule-box .rule-title {
+        font-size: 0.7rem;
         font-weight: 700;
-        font-size: 0.9rem;
-        width: 100%;
-        transition: all 0.2s;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    .btn-submit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
-    }
-
-    /* Current Votes Section */
-    .votes-card {
-        background: var(--bg-card);
-        border-radius: 20px;
-        border: 1px solid var(--border-color);
-        margin-top: 24px;
-    }
-
-    .votes-header {
-        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
-        padding: 15px 20px;
-        color: white;
-    }
-
-    .votes-header h6 {
-        margin: 0;
-        font-weight: 600;
-        font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .votes-body {
-        padding: 20px;
-    }
-
-    .vote-progress {
-        margin-bottom: 15px;
-    }
-
-    .vote-stats {
-        display: flex;
-        justify-content: space-between;
+        text-transform: uppercase;
+        color: #10b981;
         margin-bottom: 8px;
+    }
+
+    .rule-box .rule-text {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .applicant-status {
+        background: #e0f2fe;
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+    }
+
+    .applicant-status .status-item {
+        display: inline-block;
+        margin-right: 20px;
         font-size: 0.8rem;
     }
 
-    .vote-bar {
-        height: 8px;
-        background: var(--border-color);
-        border-radius: 4px;
-        overflow: hidden;
+    .badge-head {
+        background: #f59e0b;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        margin-left: 8px;
     }
 
-    .vote-bar-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #10b981, #059669);
-        border-radius: 4px;
-        transition: width 0.3s ease;
-    }
-
-    .vote-list {
+    /* Button group styling */
+    .button-group {
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 15px;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 20px;
     }
 
-    .vote-item {
+    .btn-action {
+        width: 100%;
+        padding: 14px 20px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 5px 12px;
-        background: var(--bg-body);
-        border-radius: 20px;
-        font-size: 0.75rem;
+        justify-content: center;
+        gap: 10px;
     }
 
-    .vote-item.approved {
-        color: #10b981;
+    .btn-approve {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
     }
 
-    .vote-item.rejected {
-        color: #ef4444;
+    .btn-approve:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
     }
 
-    /* Responsive */
-    @media (max-width: 992px) {
-        .decision-card {
-            position: static;
-            margin-top: 24px;
-        }
+    .btn-revision {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
     }
 
-    /* Alert Styles */
-    .alert-info-custom {
-        background: linear-gradient(135deg, rgba(13, 110, 110, 0.1), rgba(26, 138, 138, 0.05));
-        border-left: 4px solid #0d6e6e;
+    .btn-revision:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-reject {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .btn-reject:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .alert-warning-custom {
+        background: linear-gradient(135deg, #fef3c7, #fffbeb);
+        border-left: 4px solid #f59e0b;
         border-radius: 12px;
         padding: 15px 20px;
         margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .alert-info-custom i {
-        font-size: 1.5rem;
-        color: #0d6e6e;
-    }
-
-    .alert-info-custom .alert-text {
-        flex: 1;
-        font-size: 0.85rem;
-        color: var(--text-secondary);
     }
 </style>
 {% endblock %}
@@ -336,10 +302,80 @@
     <div class="row g-4">
         <!-- Left Column - Application Details -->
         <div class="col-lg-7">
-            <!-- Application Info Card -->
+            <!-- Member Information Card -->
             <div class="info-card">
                 <div class="card-header-custom">
-                    <h5><i class="bi bi-file-text-fill"></i> Application Details</h5>
+                    <h5><i class="bi bi-person-fill"></i> Member Information</h5>
+                </div>
+                <div class="card-body-custom">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Full Name</span>
+                            <div class="info-value">{{ member.first_name }} {{ member.last_name }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Membership #</span>
+                            <div class="info-value">{{ member.membership_number|default:"-" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Birthdate / Age</span>
+                            <div class="info-value">{{ member.birthdate|date:"Y-m-d" }} / {{ member.age }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Gender</span>
+                            <div class="info-value">{{ member.gender|default:"Not specified" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Contact Number</span>
+                            <div class="info-value">{{ member.contact_number|default:"-" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Residence Address</span>
+                            <div class="info-value">{{ member.residence_address|truncatechars:50|default:"-" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Spouse Name</span>
+                            <div class="info-value">{{ member.spouse_name|default:"-" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Dependents</span>
+                            <div class="info-value">{{ member.num_dependents|default:"0" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Farm Information Card -->
+            <div class="info-card">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-tree-fill"></i> Farm Information</h5>
+                </div>
+                <div class="card-body-custom">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Farm Location</span>
+                            <div class="info-value">{{ member.farm_location|default:"-" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Owned (hectares)</span>
+                            <div class="info-value">{{ member.farm_owned_hectares|default:"0" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Leased (hectares)</span>
+                            <div class="info-value">{{ member.farm_leased_hectares|default:"0" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Area Planted</span>
+                            <div class="info-value">{{ member.area_planted|default:"-" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loan Application Details Card -->
+            <div class="info-card">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-file-text-fill"></i> Loan Application Details</h5>
                 </div>
                 <div class="card-body-custom">
                     <div class="info-grid">
@@ -349,15 +385,7 @@
                         </div>
                         <div class="info-item">
                             <span class="info-label">Date Applied</span>
-                            <div class="info-value">{{ application.created_at|date:"Y-m-d H:i" }}</div>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Member Name</span>
-                            <div class="info-value"><strong>{{ member.first_name }} {{ member.last_name }}</strong></div>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Membership #</span>
-                            <div class="info-value">{{ member.membership_number|default:"-" }}</div>
+                            <div class="info-value">{{ application.applied_date|date:"Y-m-d" }}</div>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Loan Product</span>
@@ -365,123 +393,180 @@
                         </div>
                         <div class="info-item">
                             <span class="info-label">Loan Term</span>
-                            <div class="info-value">{{ application.loan_term }} months</div>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Requested Amount</span>
-                            <div class="info-value amount">₱{{ application.requested_amount|floatformat:2 }}</div>
+                            <div class="info-value">{{ loan_product.term_months }} months</div>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Purpose</span>
-                            <div class="info-value">{{ application.purpose|truncatechars:50 }}</div>
+                            <div class="info-value">{{ application.purpose|truncatechars:50|default:"-" }}</div>
                         </div>
-                    </div>
-
-                    <div class="info-full">
-                        <span class="info-label">Collateral Offered</span>
-                        <div class="info-value">
-                            {{ application.collateral_offered|default:"No collateral provided" }}
+                        <div class="info-item">
+                            <span class="info-label">Collateral Offered</span>
+                            <div class="info-value">{{ application.collateral|default:"No collateral provided" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Mode of Payment</span>
+                            <div class="info-value">{{ application.preferred_payment_mode|default:"Monthly" }}</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Current Votes Status -->
-            <div class="votes-card">
-                <div class="votes-header">
-                    <h6><i class="bi bi-people-fill"></i> Committee Votes Status</h6>
+            <!-- Co-maker Information Card -->
+            {% if co_maker %}
+            <div class="info-card">
+                <div class="card-header-custom">
+                    <h5><i class="bi bi-person-check-fill"></i> Co-maker Information</h5>
                 </div>
-                <div class="votes-body">
-                    <div class="vote-progress">
-                        <div class="vote-stats">
-                            <span><i class="bi bi-check-circle-fill text-success"></i> Approved: {{ votes_approved|default:0 }}</span>
-                            <span><i class="bi bi-x-circle-fill text-danger"></i> Rejected: {{ votes_rejected|default:0 }}</span>
-                            <span><i class="bi bi-clock"></i> Pending: {{ votes_pending|default:0 }}</span>
+                <div class="card-body-custom">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Co-maker Name</span>
+                            <div class="info-value">{{ co_maker.first_name }} {{ co_maker.last_name }}</div>
                         </div>
-                        <div class="vote-bar">
-                            <div class="vote-bar-fill" style="width: {% widthratio votes_approved|default:0 total_votes|default:1 100 %}%"></div>
+                        <div class="info-item">
+                            <span class="info-label">Membership #</span>
+                            <div class="info-value">{{ co_maker.membership_number|default:"-" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Contact Number</span>
+                            <div class="info-value">{{ co_maker.contact_number|default:"-" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Employer</span>
+                            <div class="info-value">{{ co_maker.employer_name|default:"-" }}</div>
                         </div>
                     </div>
-                    <div class="vote-list">
-                        {% for vote in committee_votes %}
-                        <div class="vote-item {% if vote.decision == 'approved' %}approved{% elif vote.decision == 'rejected' %}rejected{% endif %}">
-                            <i class="bi {% if vote.decision == 'approved' %}bi-check-circle-fill{% elif vote.decision == 'rejected' %}bi-x-circle-fill{% else %}bi-clock{% endif %}"></i>
-                            <span>{{ vote.committee_member.user.get_full_name|default:vote.committee_member.user.username }}</span>
-                        </div>
-                        {% empty %}
-                        <div class="text-muted small">No votes cast yet</div>
-                        {% endfor %}
-                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Applicant Status (Auto-Detected) -->
+            <div class="applicant-status">
+                <div class="small text-muted mb-2">
+                    <i class="bi bi-robot"></i> APPLICANT STATUS (System Detected - No manual input)
+                </div>
+                <div>
+                    <span class="status-item">
+                        {% if is_new_applicant %}☑{% else %}☐{% endif %} New Applicant
+                    </span>
+                    <span class="status-item">
+                        {% if is_existing_borrower %}☑{% else %}☐{% endif %} Existing Borrower
+                    </span>
+                    <span class="status-item">
+                        {% if has_outstanding_balance %}☑{% else %}☐{% endif %} Old with O/S Balance
+                    </span>
+                    <span class="status-item">
+                        {% if has_paid_loans %}☑{% else %}☐{% endif %} Old but fully paid
+                    </span>
+                    <span class="status-item">
+                        {% if is_restructured %}☑{% else %}☐{% endif %} Restructured
+                    </span>
                 </div>
             </div>
         </div>
 
-        <!-- Right Column - Decision Form -->
+        <!-- Right Column - Committee Decision -->
         <div class="col-lg-5">
             <div class="decision-card">
                 <div class="decision-header">
                     <h5><i class="bi bi-check-circle"></i> Committee Decision</h5>
                 </div>
                 <div class="decision-body">
-                    {% if has_voted %}
-                    <div class="alert-info-custom">
-                        <i class="bi bi-info-circle-fill"></i>
-                        <div class="alert-text">
-                            <strong>You have already voted on this application.</strong><br>
-                            Your decision has been recorded. You cannot change your vote.
+                    <!-- Requested Amount Display -->
+                    <div class="alert-warning-custom">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-currency-dollar"></i>
+                            <strong class="small">MEMBER REQUESTED AMOUNT:</strong>
+                        </div>
+                        <div class="text-center">
+                            <span class="info-value requested">₱{{ requested_amount|floatformat:2 }}</span>
                         </div>
                     </div>
-                    {% endif %}
 
-                    <form method="post">
+                    <!-- Committee Decision Form -->
+                    <form method="post" id="committeeDecisionForm">
                         {% csrf_token %}
 
                         <div class="form-group">
-                            <label class="form-label">Decision Action</label>
-                            <select name="action" class="form-select-custom" id="actionSelect" {% if has_voted %}disabled{% endif %} required>
-                                <option value="">Select Decision</option>
-                                <option value="approve">✅ Approve Application</option>
-                                <option value="reject">❌ Reject Application</option>
-                                <option value="request_revision">📝 Request Revision</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group" id="approvedLineGroup" style="display: none;">
-                            <label class="form-label">Approved Line Amount (₱)</label>
-                            <input type="number" name="approved_line" id="approvedLine" class="form-control-custom" step="0.01" placeholder="Enter approved amount">
+                            <label class="form-label">
+                                <i class="bi bi-pencil-square"></i> APPROVED LINE <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">₱</span>
+                                <input type="number"
+                                       name="approved_line"
+                                       id="approvedLine"
+                                       class="form-control-custom"
+                                       step="0.01"
+                                       placeholder="Enter approved amount"
+                                       value="{{ application.approved_line|default:'' }}"
+                                       required>
+                            </div>
                             <div class="amount-suggestions">
-                                <button type="button" class="btn-suggest" onclick="setAmount({{ suggested_full|floatformat:0 }})">
-                                    100% (₱{{ suggested_full|floatformat:0 }})
+                                <button type="button" class="btn-suggest" onclick="setAmount({{ requested_amount|floatformat:0 }})">
+                                    100% (₱{{ requested_amount|floatformat:0 }})
                                 </button>
-                                <button type="button" class="btn-suggest" onclick="setAmount({{ suggested_90|floatformat:0 }})">
-                                    90% (₱{{ suggested_90|floatformat:0 }})
+                                <button type="button" class="btn-suggest" onclick="setAmount({{ requested_amount|add:'-500'|floatformat:0 }})">
+                                    -₱500 (₱{{ requested_amount|add:'-500'|floatformat:0 }})
                                 </button>
-                                <button type="button" class="btn-suggest" onclick="setAmount({{ suggested_70|floatformat:0 }})">
-                                    70% (₱{{ suggested_70|floatformat:0 }})
+                                <button type="button" class="btn-suggest" onclick="setAmount({{ requested_amount|add:'-1000'|floatformat:0 }})">
+                                    -₱1,000 (₱{{ requested_amount|add:'-1000'|floatformat:0 }})
+                                </button>
+                                <button type="button" class="btn-suggest" onclick="setAmount({{ requested_amount|add:'-2000'|floatformat:0 }})">
+                                    -₱2,000 (₱{{ requested_amount|add:'-2000'|floatformat:0 }})
                                 </button>
                             </div>
-                            <small class="text-muted mt-2 d-block">⚠️ Note: All charges will be calculated based on this approved line amount</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-calendar"></i> DATE APPROVED <span class="text-danger">*</span>
+                            </label>
+                            <input type="date"
+                                   name="date_approved"
+                                   id="dateApproved"
+                                   class="form-control-custom"
+                                   value="{{ today|date:'Y-m-d' }}"
+                                   required>
                         </div>
 
                         <div class="form-group" id="reductionReasonGroup" style="display: none;">
-                            <label class="form-label">Reduction Reason <span class="text-muted">(if amount reduced)</span></label>
-                            <textarea name="reduction_reason" class="form-control-custom" rows="2" placeholder="Why was the amount reduced? (optional)"></textarea>
+                            <label class="form-label">
+                                <i class="bi bi-info-circle"></i> REASON FOR REDUCTION
+                            </label>
+                            <textarea name="reduction_reason"
+                                      id="reductionReason"
+                                      class="form-control-custom"
+                                      rows="3"
+                                      placeholder="Explain why the amount was reduced..."></textarea>
+                            <small class="text-muted">Required because approved amount is less than requested</small>
                         </div>
 
-                        <div class="form-group" id="reasonGroup" style="display: none;">
-                            <label class="form-label">Reason <span class="text-danger">*</span></label>
-                            <textarea name="reason" class="form-control-custom" rows="3" placeholder="Enter reason for rejection or revision request..."></textarea>
+                        <!-- Rules Box -->
+                        <div class="rule-box">
+                            <div class="rule-title">
+                                <i class="bi bi-exclamation-triangle-fill"></i> COMMITTEE RULES
+                            </div>
+                            <div class="rule-text">
+                                ✓ Committee can approve LESS than requested<br>
+                                ✗ Committee CANNOT approve MORE than requested<br>
+                                ✓ This Approved Line will become the LOAN PRINCIPAL<br>
+                                ✓ Staff will add charges based on this Approved Line
+                            </div>
                         </div>
 
-                        {% if not has_voted %}
-                        <button type="submit" class="btn-submit" id="submitBtn">
-                            <i class="bi bi-send-fill"></i> Submit Decision
-                        </button>
-                        {% else %}
-                        <a href="{% url 'committee:applications_list' %}" class="btn-submit" style="text-decoration: none; text-align: center;">
-                            <i class="bi bi-arrow-left"></i> Back to Applications
-                        </a>
-                        {% endif %}
+                        <!-- Action Buttons -->
+                        <div class="button-group">
+                            <button type="submit" name="action" value="approve" class="btn-action btn-approve" id="approveBtn">
+                                <i class="bi bi-check-lg"></i> APPROVE LINE
+                            </button>
+                            <button type="submit" name="action" value="revision" class="btn-action btn-revision">
+                                <i class="bi bi-arrow-return-left"></i> REQUEST REVISION
+                            </button>
+                            <button type="submit" name="action" value="reject" class="btn-action btn-reject">
+                                <i class="bi bi-x-lg"></i> REJECT APPLICATION
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -490,105 +575,101 @@
 </div>
 
 <script>
-    // Action select change handler
-    const actionSelect = document.getElementById('actionSelect');
-    const approvedLineGroup = document.getElementById('approvedLineGroup');
+    const requestedAmount = parseFloat("{{ requested_amount|floatformat:2 }}");
+    const approvedLineInput = document.getElementById('approvedLine');
     const reductionReasonGroup = document.getElementById('reductionReasonGroup');
-    const reasonGroup = document.getElementById('reasonGroup');
-    const submitBtn = document.getElementById('submitBtn');
-    const approvedLine = document.getElementById('approvedLine');
-    const maxAmount = {{ application.requested_amount|floatformat:0 }};
-
-    function updateFormVisibility() {
-        const value = actionSelect ? actionSelect.value : '';
-
-        if (value === 'approve') {
-            if (approvedLineGroup) approvedLineGroup.style.display = 'block';
-            if (reductionReasonGroup) reductionReasonGroup.style.display = 'block';
-            if (reasonGroup) reasonGroup.style.display = 'none';
-            // Make approved line required for approve action
-            if (approvedLine) approvedLine.required = true;
-        } else if (value === 'reject' || value === 'request_revision') {
-            if (approvedLineGroup) approvedLineGroup.style.display = 'none';
-            if (reductionReasonGroup) reductionReasonGroup.style.display = 'none';
-            if (reasonGroup) reasonGroup.style.display = 'block';
-            if (approvedLine) approvedLine.required = false;
-        } else {
-            if (approvedLineGroup) approvedLineGroup.style.display = 'none';
-            if (reductionReasonGroup) reductionReasonGroup.style.display = 'none';
-            if (reasonGroup) reasonGroup.style.display = 'none';
-            if (approvedLine) approvedLine.required = false;
-        }
-    }
+    const reductionReasonTextarea = document.getElementById('reductionReason');
 
     function setAmount(amount) {
-        if (approvedLine) {
-            approvedLine.value = amount;
-            // Add visual feedback
-            approvedLine.style.borderColor = '#10b981';
+        if (approvedLineInput) {
+            approvedLineInput.value = amount;
+            approvedLineInput.style.borderColor = '#10b981';
             setTimeout(() => {
-                approvedLine.style.borderColor = '';
+                approvedLineInput.style.borderColor = '';
             }, 500);
+            checkAmountReduction(amount);
         }
     }
 
-    // Form validation
-    if (submitBtn) {
-        submitBtn.addEventListener('click', function(e) {
-            const action = actionSelect ? actionSelect.value : '';
-
-            if (action === 'approve') {
-                const approvedValue = approvedLine ? parseFloat(approvedLine.value) : 0;
-                if (!approvedValue || approvedValue <= 0) {
-                    e.preventDefault();
-                    alert('Please enter the approved line amount');
-                    if (approvedLine) approvedLine.focus();
-                    return;
-                }
-                if (approvedValue > maxAmount) {
-                    e.preventDefault();
-                    alert(`Approved amount cannot exceed the requested amount of ₱${maxAmount.toLocaleString()}`);
-                    if (approvedLine) approvedLine.focus();
-                    return;
-                }
+    function checkAmountReduction(amount) {
+        if (amount < requestedAmount) {
+            reductionReasonGroup.style.display = 'block';
+            if (reductionReasonTextarea) reductionReasonTextarea.required = true;
+        } else {
+            reductionReasonGroup.style.display = 'none';
+            if (reductionReasonTextarea) {
+                reductionReasonTextarea.required = false;
+                reductionReasonTextarea.value = '';
             }
+        }
+    }
 
-            if ((action === 'reject' || action === 'request_revision') && reasonGroup) {
-                const reasonTextarea = reasonGroup.querySelector('textarea');
-                if (reasonTextarea && !reasonTextarea.value.trim()) {
-                    e.preventDefault();
-                    alert('Please provide a reason for your decision');
-                    reasonTextarea.focus();
-                    return;
-                }
-            }
+    // Validate approved line before submit
+    const approveBtn = document.getElementById('approveBtn');
+    if (approveBtn) {
+        approveBtn.addEventListener('click', function(e) {
+            const value = parseFloat(approvedLineInput.value);
 
-            if (!action) {
+            if (isNaN(value) || value <= 0) {
                 e.preventDefault();
-                alert('Please select a decision action');
-                return;
+                alert('❌ Please enter a valid Approved Line amount');
+                approvedLineInput.focus();
+                return false;
+            }
+
+            if (value > requestedAmount) {
+                e.preventDefault();
+                alert(`❌ ERROR: Approved Line (₱${value.toLocaleString()}) cannot exceed Requested Amount (₱${requestedAmount.toLocaleString()})`);
+                approvedLineInput.focus();
+                return false;
+            }
+
+            let confirmMessage = `COMMITTEE APPROVAL CONFIRMATION\n`;
+            confirmMessage += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+            confirmMessage += `Requested Amount:  ₱${requestedAmount.toLocaleString()}\n`;
+            confirmMessage += `Approved Line:     ₱${value.toLocaleString()}\n`;
+            if (value < requestedAmount) {
+                confirmMessage += `⚠️ AMOUNT REDUCED by ₱${(requestedAmount - value).toLocaleString()}\n`;
+            }
+            confirmMessage += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+            confirmMessage += `Confirm this approval?`;
+
+            if (!confirm(confirmMessage)) {
+                e.preventDefault();
+                return false;
             }
         });
     }
 
-    // Initialize on load
-    if (actionSelect) {
-        actionSelect.addEventListener('change', updateFormVisibility);
-        updateFormVisibility();
-    }
+    // Validate approved line on input
+    if (approvedLineInput) {
+        approvedLineInput.addEventListener('input', function() {
+            let value = parseFloat(this.value);
 
-    // Validate approved line against requested amount
-    if (approvedLine) {
-        approvedLine.addEventListener('input', function() {
-            const value = parseFloat(this.value);
-            if (value > maxAmount) {
+            if (isNaN(value)) {
                 this.style.borderColor = '#ef4444';
-                this.setCustomValidity(`Amount cannot exceed ₱${maxAmount.toLocaleString()}`);
+                this.setCustomValidity('Please enter a valid amount');
+            } else if (value > requestedAmount) {
+                this.style.borderColor = '#ef4444';
+                this.setCustomValidity(`Approved Line cannot exceed requested amount of ₱${requestedAmount.toLocaleString()}`);
+            } else if (value <= 0) {
+                this.style.borderColor = '#ef4444';
+                this.setCustomValidity('Amount must be greater than 0');
             } else {
                 this.style.borderColor = '#10b981';
                 this.setCustomValidity('');
+                checkAmountReduction(value);
             }
         });
+    }
+
+    // Initialize reduction reason visibility
+    if (approvedLineInput && approvedLineInput.value) {
+        const currentValue = parseFloat(approvedLineInput.value);
+        if (!isNaN(currentValue) && currentValue < requestedAmount) {
+            reductionReasonGroup.style.display = 'block';
+            if (reductionReasonTextarea) reductionReasonTextarea.required = true;
+        }
     }
 </script>
 {% endblock %}

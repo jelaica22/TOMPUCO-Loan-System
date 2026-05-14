@@ -6,14 +6,12 @@
 
 {% block extra_css %}
 <style>
-    /* Review Container */
     .review-container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
     }
 
-    /* Main Card */
     .review-card {
         background: var(--bg-card);
         border-radius: 20px;
@@ -41,7 +39,6 @@
         padding: 24px;
     }
 
-    /* Status Banner */
     .status-banner {
         background: var(--bg-body);
         border-radius: 16px;
@@ -74,7 +71,6 @@
         font-weight: 700;
     }
 
-    /* Status Badge */
     .status-badge-large {
         display: inline-flex;
         align-items: center;
@@ -103,7 +99,6 @@
     [data-theme="dark"] .status-badge-large.rejected { background: #7f1d1d; color: #fecaca; }
     [data-theme="dark"] .status-badge-large.revision { background: #78350f; color: #fde68a; }
 
-    /* Section Styles */
     .info-section {
         margin-bottom: 28px;
     }
@@ -127,7 +122,6 @@
         font-size: 1.1rem;
     }
 
-    /* Info Grid */
     .info-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -170,7 +164,6 @@
         color: #10b981;
     }
 
-    /* Applicant Status Cards */
     .status-card-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -194,8 +187,8 @@
     .status-check-item {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 10px 0;
+        justify-content: space-between;
+        padding: 12px 0;
         border-bottom: 1px solid var(--border-light);
     }
 
@@ -203,20 +196,28 @@
         border-bottom: none;
     }
 
+    .status-check-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+    }
+
     .status-check-icon {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
 
-    .status-check-icon.warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
     .status-check-icon.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .status-check-icon.info { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
     .status-check-icon.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .status-check-icon.warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .status-check-icon.info { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .status-check-icon.secondary { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
 
     .status-check-text {
         flex: 1;
@@ -226,6 +227,7 @@
         font-weight: 600;
         color: var(--text-primary);
         margin-bottom: 2px;
+        font-size: 0.9rem;
     }
 
     .status-check-desc {
@@ -233,7 +235,33 @@
         color: var(--text-secondary);
     }
 
-    /* Alert Messages */
+    .badge-yes {
+        background: #10b981;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .badge-no {
+        background: #6b7280;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .badge-warning {
+        background: #f59e0b;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
     .alert-custom {
         border-radius: 16px;
         padding: 16px 20px;
@@ -287,7 +315,6 @@
         color: #fde68a;
     }
 
-    /* ACTION BUTTONS - VISIBLE IN LIGHT MODE */
     .action-buttons {
         display: flex;
         gap: 12px;
@@ -402,7 +429,6 @@
         text-decoration: none;
     }
 
-    /* Modal Styles */
     .modal-content-custom {
         background: var(--bg-card);
         border-radius: 20px;
@@ -428,7 +454,6 @@
 
 {% block content %}
 <div class="review-container">
-    <!-- Main Review Card -->
     <div class="review-card">
         <div class="card-header-custom">
             <h5>
@@ -463,7 +488,7 @@
                     </div>
                 </div>
                 <div>
-                    <small class="text-muted">Application Date: {{ application.date_applied|date:"F d, Y" }}</small>
+                    <small class="text-muted">Application Date: {{ application.applied_date|date:"F d, Y" }}</small>
                 </div>
             </div>
 
@@ -471,61 +496,84 @@
             <div class="status-card-grid">
                 <div class="status-check-card">
                     <div class="status-check-item">
-                        <div class="status-check-icon {% if applicant_status.is_new %}success{% else %}warning{% endif %}">
-                            <i class="bi bi-{% if applicant_status.is_new %}person-plus{% else %}person{% endif %}"></i>
-                        </div>
-                        <div class="status-check-text">
-                            <div class="status-check-title">New Applicant</div>
-                            <div class="status-check-desc">First time borrower</div>
+                        <div class="status-check-left">
+                            <div class="status-check-icon {% if applicant_status.is_new %}success{% else %}secondary{% endif %}">
+                                <i class="bi bi-{% if applicant_status.is_new %}person-plus{% else %}person{% endif %}"></i>
+                            </div>
+                            <div class="status-check-text">
+                                <div class="status-check-title">New Applicant</div>
+                                <div class="status-check-desc">First time borrower</div>
+                            </div>
                         </div>
                         {% if applicant_status.is_new %}
-                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <span class="badge-yes">YES</span>
                         {% else %}
-                            <i class="bi bi-x-circle-fill text-muted"></i>
+                            <span class="badge-no">NO</span>
                         {% endif %}
                     </div>
+
                     <div class="status-check-item">
-                        <div class="status-check-icon {% if applicant_status.has_active %}info{% else %}success{% endif %}">
-                            <i class="bi bi-{% if applicant_status.has_active %}bank{% else %}check-lg{% endif %}"></i>
-                        </div>
-                        <div class="status-check-text">
-                            <div class="status-check-title">Existing Borrower</div>
-                            <div class="status-check-desc">Has active loan records</div>
+                        <div class="status-check-left">
+                            <div class="status-check-icon {% if applicant_status.has_active %}info{% else %}success{% endif %}">
+                                <i class="bi bi-{% if applicant_status.has_active %}bank{% else %}check-lg{% endif %}"></i>
+                            </div>
+                            <div class="status-check-text">
+                                <div class="status-check-title">Existing Borrower</div>
+                                <div class="status-check-desc">Has active loan records</div>
+                            </div>
                         </div>
                         {% if applicant_status.has_active %}
-                            <i class="bi bi-check-circle-fill text-info"></i>
+                            <span class="badge-warning">YES</span>
                         {% else %}
-                            <i class="bi bi-x-circle-fill text-muted"></i>
+                            <span class="badge-no">NO</span>
                         {% endif %}
                     </div>
                 </div>
+
                 <div class="status-check-card">
                     <div class="status-check-item">
-                        <div class="status-check-icon {% if applicant_status.has_overdue %}danger{% else %}success{% endif %}">
-                            <i class="bi bi-{% if applicant_status.has_overdue %}exclamation-triangle{% else %}check-lg{% endif %}"></i>
-                        </div>
-                        <div class="status-check-text">
-                            <div class="status-check-title">Overdue Balance</div>
-                            <div class="status-check-desc">Has unpaid overdue payments</div>
+                        <div class="status-check-left">
+                            <div class="status-check-icon {% if applicant_status.has_overdue %}danger{% else %}success{% endif %}">
+                                <i class="bi bi-{% if applicant_status.has_overdue %}exclamation-triangle{% else %}check-lg{% endif %}"></i>
+                            </div>
+                            <div class="status-check-text">
+                                <div class="status-check-title">
+                                    {% if applicant_status.has_overdue %}
+                                        Overdue Balance
+                                    {% else %}
+                                        No Overdue Balance
+                                    {% endif %}
+                                </div>
+                                <div class="status-check-desc">
+                                    {% if applicant_status.has_overdue %}
+                                        Has unpaid overdue payments
+                                    {% else %}
+                                        No overdue payments - Good standing
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
                         {% if applicant_status.has_overdue %}
-                            <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                            <span class="badge-warning">YES</span>
                         {% else %}
-                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <span class="badge-yes">NO</span>
                         {% endif %}
                     </div>
+
                     <div class="status-check-item">
-                        <div class="status-check-icon {% if applicant_status.has_restructured %}warning{% else %}success{% endif %}">
-                            <i class="bi bi-{% if applicant_status.has_restructured %}arrow-repeat{% else %}check-lg{% endif %}"></i>
-                        </div>
-                        <div class="status-check-text">
-                            <div class="status-check-title">Previously Restructured</div>
-                            <div class="status-check-desc">Has restructured loans in the past</div>
+                        <div class="status-check-left">
+                            <div class="status-check-icon {% if applicant_status.has_restructured %}warning{% else %}secondary{% endif %}">
+                                <i class="bi bi-{% if applicant_status.has_restructured %}arrow-repeat{% else %}check-lg{% endif %}"></i>
+                            </div>
+                            <div class="status-check-text">
+                                <div class="status-check-title">Previously Restructured</div>
+                                <div class="status-check-desc">Has restructured loans in the past</div>
+                            </div>
                         </div>
                         {% if applicant_status.has_restructured %}
-                            <i class="bi bi-check-circle-fill text-warning"></i>
+                            <span class="badge-warning">YES</span>
                         {% else %}
-                            <i class="bi bi-x-circle-fill text-muted"></i>
+                            <span class="badge-no">NO</span>
                         {% endif %}
                     </div>
                 </div>
@@ -552,7 +600,7 @@
                     </div>
                     <div class="info-item">
                         <div class="info-label">Email Address</div>
-                        <div class="info-value">{{ application.member.email|default:"—" }}</div>
+                        <div class="info-value">{{ application.member.user.email|default:"—" }}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Residence Address</div>
@@ -560,7 +608,7 @@
                     </div>
                     <div class="info-item">
                         <div class="info-label">Employment Status</div>
-                        <div class="info-value">{% if application.member.is_employee %}Employee{% else %}Regular Member{% endif %}</div>
+                        <div class="info-value">{% if application.member.is_employee %}Employee Member{% else %}Regular Member{% endif %}</div>
                     </div>
                 </div>
             </div>
@@ -578,7 +626,7 @@
                     </div>
                     <div class="info-item">
                         <div class="info-label">Requested Amount</div>
-                        <div class="info-value amount amount-positive">₱{{ application.requested_amount|floatformat:2 }}</div>
+                        <div class="info-value amount amount-positive">₱{{ application.amount|floatformat:2 }}</div>
                     </div>
                     {% if application.approved_line %}
                     <div class="info-item">
@@ -592,17 +640,17 @@
                     </div>
                     <div class="info-item">
                         <div class="info-label">Collateral Offered</div>
-                        <div class="info-value">{{ application.collateral_offered|default:"—" }}</div>
+                        <div class="info-value">{{ application.collateral|default:"—" }}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Mode of Payment</div>
-                        <div class="info-value">{{ application.mode_of_payment|title|default:"Monthly" }}</div>
+                        <div class="info-value">Monthly</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Staff Remarks (if any) -->
-            {% if application.staff_remarks %}
+            <!-- Staff Remarks -->
+            {% if application.remarks %}
             <div class="info-section">
                 <div class="section-title">
                     <i class="bi bi-chat-text"></i>
@@ -610,15 +658,13 @@
                 </div>
                 <div class="alert-custom alert-custom-info">
                     <i class="bi bi-chat-dots"></i>
-                    <div>{{ application.staff_remarks }}</div>
+                    <div>{{ application.remarks }}</div>
                 </div>
             </div>
             {% endif %}
 
-            <!-- ACTION BUTTONS - Based on Status -->
+            <!-- ACTION BUTTONS -->
             <div class="action-buttons">
-
-                <!-- CASE 1: Pending Staff Review - Show Review Actions -->
                 {% if application.status == 'pending_staff_review' %}
                     <button type="button" class="btn-forward" data-bs-toggle="modal" data-bs-target="#forwardModal">
                         <i class="bi bi-send"></i> Forward to Committee
@@ -632,8 +678,6 @@
                     <a href="{% url 'staff:staff_applications' %}" class="btn-back">
                         <i class="bi bi-arrow-left"></i> Back to List
                     </a>
-
-                <!-- CASE 2: Manager Approved - Show "Add Charges" button -->
                 {% elif application.status == 'manager_approved' %}
                     <div class="alert-custom alert-custom-success w-100">
                         <i class="bi bi-check-circle-fill"></i>
@@ -646,8 +690,6 @@
                     <a href="{% url 'staff:staff_applications' %}" class="btn-primary-custom">
                         <i class="bi bi-arrow-left"></i> Back to Applications List
                     </a>
-
-                <!-- CASE 3: Ready for Disbursement - Show "Create Loan" button -->
                 {% elif application.status == 'ready_for_disbursement' %}
                     <div class="alert-custom alert-custom-info w-100">
                         <i class="bi bi-info-circle-fill"></i>
@@ -660,8 +702,6 @@
                     <a href="{% url 'staff:staff_applications' %}" class="btn-primary-custom">
                         <i class="bi bi-arrow-left"></i> Back to Applications List
                     </a>
-
-                <!-- CASE 4: Disbursed - Loan already created -->
                 {% elif application.status == 'disbursed' %}
                     <div class="alert-custom alert-custom-success w-100">
                         <i class="bi bi-bank"></i>
@@ -676,8 +716,6 @@
                     <a href="{% url 'staff:staff_applications' %}" class="btn-back">
                         <i class="bi bi-arrow-left"></i> Back to List
                     </a>
-
-                <!-- CASE 5: Needs Revision -->
                 {% elif application.status == 'needs_revision' %}
                     <div class="alert-custom alert-custom-warning w-100">
                         <i class="bi bi-pencil-fill"></i>
@@ -689,26 +727,22 @@
                     <a href="{% url 'staff:staff_applications' %}" class="btn-back">
                         <i class="bi bi-arrow-left"></i> Back to Applications List
                     </a>
-
-                <!-- CASE 6: Rejected -->
                 {% elif application.status == 'rejected' %}
                     <div class="alert-custom alert-custom-warning w-100">
                         <i class="bi bi-x-circle-fill"></i>
                         <div>
                             <strong>Application has been rejected.</strong><br>
-                            {% if application.staff_remarks %}Reason: {{ application.staff_remarks }}{% endif %}
+                            {% if application.remarks %}Reason: {{ application.remarks }}{% endif %}
                         </div>
                     </div>
                     <a href="{% url 'staff:staff_applications' %}" class="btn-back">
                         <i class="bi bi-arrow-left"></i> Back to Applications List
                     </a>
-
-                <!-- CASE 7: Other Statuses - View Only -->
                 {% else %}
                     <div class="alert-custom alert-custom-secondary w-100">
                         <i class="bi bi-info-circle-fill"></i>
                         <div>
-                            This application is currently <strong>{{ application.get_status_display }}</strong>.
+                            This application is currently <strong>{{ application.status|title|default:"In Progress" }}</strong>.
                             No action required at this time.
                         </div>
                     </div>
@@ -716,13 +750,12 @@
                         <i class="bi bi-arrow-left"></i> Back to Applications List
                     </a>
                 {% endif %}
-
             </div>
         </div>
     </div>
 </div>
 
-<!-- Forward to Committee Modal -->
+<!-- Forward Modal -->
 <div class="modal fade" id="forwardModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px;">

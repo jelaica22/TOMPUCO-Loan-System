@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'django_otp',
     'django_otp.plugins.otp_totp',
     'django_otp.plugins.otp_static',
+    'channels',
     # Your apps
     'main',
     'staff',
@@ -49,7 +50,12 @@ MIDDLEWARE = [
     'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'main.middleware.VerificationMiddleware',
 ]
+
+# Unverified member restrictions
+UNVERIFIED_MAX_LOAN_AMOUNT = 10000
+UNVERIFIED_MAX_ACTIVE_LOANS = 0
 
 ROOT_URLCONF = 'tompuco.urls'
 
@@ -74,7 +80,21 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'tompuco.wsgi.application'
+WSGI_APPLICATION = 'tompuco.wsgi.application'  # Keep this for HTTP
+ASGI_APPLICATION = 'tompuco.asgi.application'  # ADD THIS for WebSockets
+
+
+# Channel layers for real-time notifications
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',  # For development
+        # For production, use Redis:
+        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        # 'CONFIG': {
+        #     "hosts": [('127.0.0.1', 6379)],
+        # },
+    },
+}
 
 # ============================================
 # DATABASE - POSTGRESQL FOR RENDER
@@ -151,3 +171,5 @@ PENALTY_RATE = 0.02  # 2% per month
 
 # Email backend
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+LOGIN_REDIRECT_URL = '/dashboard/redirect/'

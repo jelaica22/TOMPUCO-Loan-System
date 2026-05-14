@@ -15,6 +15,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 # tompuco/urls.py
+"""
+URL configuration for tompuco project.
+"""
 from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
@@ -25,6 +28,7 @@ urlpatterns = [
     path('cashier/', include('cashier.urls')),
     path('committee/', include('committee.urls')),
     path('manager/', include('manager.urls')),
+
     # Django admin (keep at different URL)
     path('django-admin/', admin.site.urls),
 
@@ -37,7 +41,7 @@ urlpatterns = [
     # Reports
     path('reports/', include('reports.urls')),
 
-    # Member Portal
+    # Member Portal (includes verification-pending/)
     path('', include('main.urls')),
 
     # Staff Portal
@@ -47,8 +51,3 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-# Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

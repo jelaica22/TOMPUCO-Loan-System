@@ -1,4 +1,4 @@
-﻿{% extends 'staff/base_staff.html' %}
+{% extends 'staff/base_staff.html' %}
 
 {% block page_title %}Create Custom Payment Schedule{% endblock %}
 
@@ -99,7 +99,7 @@
             <div class="col-md-3">
                 <div class="alert alert-info text-center">
                     <small>Principal</small>
-                    <h4>₱{{ application.approved_line|default:application.requested_amount|floatformat:2 }}</h4>
+                    <h4>?{{ application.approved_line|default:application.requested_amount|floatformat:2 }}</h4>
                 </div>
             </div>
             <div class="col-md-3">
@@ -117,7 +117,7 @@
             <div class="col-md-3">
                 <div class="alert alert-success text-center">
                     <small>Monthly Payment (if standard)</small>
-                    <h4 id="monthlyPayment">₱0</h4>
+                    <h4 id="monthlyPayment">?0</h4>
                 </div>
             </div>
         </div>
@@ -125,12 +125,12 @@
         <div class="row mt-3">
             <div class="col-md-6">
                 <div class="alert alert-secondary">
-                    <strong>Total Interest (12 months):</strong> <span id="totalInterest">₱0</span>
+                    <strong>Total Interest (12 months):</strong> <span id="totalInterest">?0</span>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="alert alert-secondary">
-                    <strong>Total Payable:</strong> <span id="totalPayable">₱0</span>
+                    <strong>Total Payable:</strong> <span id="totalPayable">?0</span>
                 </div>
             </div>
         </div>
@@ -176,9 +176,9 @@
             var totalPayable = emi * months;
             var totalInterest = totalPayable - principal;
             
-            document.getElementById('monthlyPayment').innerHTML = '₱' + emi.toFixed(2);
-            document.getElementById('totalInterest').innerHTML = '₱' + totalInterest.toFixed(2);
-            document.getElementById('totalPayable').innerHTML = '₱' + totalPayable.toFixed(2);
+            document.getElementById('monthlyPayment').innerHTML = '?' + emi.toFixed(2);
+            document.getElementById('totalInterest').innerHTML = '?' + totalInterest.toFixed(2);
+            document.getElementById('totalPayable').innerHTML = '?' + totalPayable.toFixed(2);
         }
     }
     

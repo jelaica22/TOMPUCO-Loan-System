@@ -6,27 +6,8 @@
 {% block extra_css %}
 <style>
     /* ============================================================
-       MEMBERS MANAGEMENT - FORCED VISIBILITY FOR LIGHT MODE
+       MEMBERS MANAGEMENT STYLES
     ============================================================ */
-
-    /* LIGHT MODE DEFAULT - EXPLICIT COLORS */
-    :root {
-        --primary-dark: #0a5a5a;
-        --primary: #0d6e6e;
-        --primary-light: #1a8a8a;
-        --primary-gradient: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
-        --success: #10b981;
-        --danger: #ef4444;
-        --warning: #f59e0b;
-        --info: #3b82f6;
-        --purple: #8b5cf6;
-        --pink: #ec4899;
-    }
-
-    /* FORCE LIGHT MODE STYLES - NO VARIABLES DEPENDENCY */
-    body.light-mode-active .members-section {
-        /* Ensure proper background */
-    }
 
     /* Stats Grid */
     .stats-grid {
@@ -65,6 +46,7 @@
     .stat-card.total::before { background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%); }
     .stat-card.active::before { background: #10b981; }
     .stat-card.inactive::before { background: #ef4444; }
+    .stat-card.pending::before { background: #f59e0b; }
     .stat-card.income::before { background: #f59e0b; }
 
     .stat-label {
@@ -82,7 +64,7 @@
         line-height: 1.2;
     }
 
-    /* Filter Section - EXPLICIT LIGHT MODE COLORS */
+    /* Filter Section */
     .filter-section {
         background: #ffffff;
         border-radius: 20px;
@@ -119,17 +101,13 @@
         font-size: 0.85rem;
         width: 100%;
     }
-    .filter-select option {
-        color: #1f2937;
-        background: #ffffff;
-    }
     .filter-select:focus, .filter-input:focus {
         outline: none;
         border-color: #0d6e6e;
         box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
     }
 
-    /* Quick Filters - EXPLICIT LIGHT MODE COLORS */
+    /* Quick Filters */
     .quick-filters {
         display: flex;
         gap: 10px;
@@ -200,7 +178,7 @@
         border-radius: 20px;
     }
 
-    /* Professional Table */
+    /* Table */
     .table-container {
         overflow-x: auto;
         width: 100%;
@@ -227,9 +205,6 @@
         border-bottom: 1px solid #f3f4f6;
         color: #1f2937;
     }
-    .members-table tbody tr {
-        transition: background 0.2s ease;
-    }
     .members-table tbody tr:hover {
         background: #f9fafb;
     }
@@ -253,17 +228,10 @@
         align-items: center;
         gap: 12px;
     }
-    .member-details {
-        line-height: 1.4;
-    }
     .member-name {
         font-weight: 700;
         color: #1f2937;
         font-size: 0.85rem;
-    }
-    .member-initial {
-        font-size: 0.65rem;
-        color: #6b7280;
     }
     .member-code {
         font-family: monospace;
@@ -280,7 +248,7 @@
         color: #0d6e6e;
     }
 
-    /* Professional Status Badges - LIGHT MODE */
+    /* Status Badges */
     .status-badge {
         display: inline-flex;
         align-items: center;
@@ -300,15 +268,22 @@
         background: rgba(239, 68, 68, 0.12);
         color: #991b1b;
     }
+    .badge-pending {
+        background: rgba(245, 158, 11, 0.12);
+        color: #92400e;
+    }
+    .badge-verified {
+        background: rgba(13, 110, 110, 0.12);
+        color: #0a5a5a;
+    }
 
-    /* ACTION BUTTONS - EXPLICIT LIGHT MODE VISIBLE */
+    /* Action Buttons */
     .action-buttons {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
         justify-content: flex-start;
     }
-
     .member-btn-view {
         display: inline-flex !important;
         align-items: center !important;
@@ -329,7 +304,6 @@
         box-shadow: 0 4px 12px rgba(13, 110, 110, 0.4) !important;
         color: #ffffff !important;
     }
-
     .member-btn-edit {
         display: inline-flex !important;
         align-items: center !important;
@@ -350,7 +324,26 @@
         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
         color: #ffffff !important;
     }
-
+    .member-btn-verify {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: #10b981 !important;
+        color: #ffffff !important;
+    }
+    .member-btn-verify:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+        color: #ffffff !important;
+    }
     .member-btn-delete {
         display: inline-flex !important;
         align-items: center !important;
@@ -371,7 +364,6 @@
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
         color: #ffffff !important;
     }
-
     .btn-add-member {
         background: linear-gradient(135deg, #10b981, #059669) !important;
         color: white !important;
@@ -380,7 +372,6 @@
         font-weight: 600 !important;
         border-radius: 12px !important;
         font-size: 0.8rem !important;
-        transition: all 0.2s !important;
         display: inline-flex !important;
         align-items: center !important;
         gap: 8px !important;
@@ -391,52 +382,26 @@
         box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
         color: white !important;
     }
-
     .btn-apply, .btn-reset {
         padding: 10px 20px;
         font-weight: 600;
         border-radius: 12px;
         font-size: 0.8rem;
-        transition: all 0.2s;
     }
     .btn-apply {
         background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
         color: white;
         border: none;
     }
-    .btn-apply:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.35);
-    }
     .btn-reset {
         background: #f9fafb;
         border: 1.5px solid #e5e7eb;
         color: #4b5563;
     }
-    .btn-reset:hover {
-        background: #e5e7eb;
-        transform: translateY(-2px);
-    }
 
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-    }
-    .empty-state i {
-        font-size: 3.5rem;
-        color: #6b7280;
-        margin-bottom: 15px;
-    }
-    .empty-state p {
-        color: #6b7280;
-        margin-bottom: 20px;
-    }
-
-    /* MODAL STYLES - FULLY VISIBLE IN LIGHT MODE */
+    /* Modal Styles */
     .modal-custom .modal-content {
         background: #ffffff;
-        border: 1px solid #e5e7eb;
         border-radius: 24px;
         overflow: hidden;
     }
@@ -448,33 +413,7 @@
     .modal-custom .modal-header .modal-title {
         color: white !important;
         font-weight: 700 !important;
-        font-size: 1.1rem !important;
     }
-    .modal-custom .modal-header .btn-close-white {
-        filter: brightness(0) invert(1);
-    }
-    .modal-custom .modal-body {
-        padding: 24px;
-        background: #ffffff;
-    }
-    .modal-custom .modal-footer {
-        padding: 16px 24px;
-        border-top: 1px solid #e5e7eb;
-        background: #f9fafb;
-    }
-    .modal-custom .btn-reset {
-        background: #e5e7eb;
-        border: 1px solid #d1d5db;
-        color: #374151;
-        padding: 8px 20px;
-        border-radius: 10px;
-        font-weight: 600;
-    }
-    .modal-custom .btn-reset:hover {
-        background: #d1d5db;
-    }
-
-    /* DETAIL GRID - EXPLICIT LIGHT MODE COLORS */
     .detail-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -483,14 +422,10 @@
     @media (max-width: 576px) {
         .detail-grid { grid-template-columns: 1fr; }
     }
-    .detail-section {
-        margin-bottom: 0;
-    }
     .detail-label {
         font-size: 0.65rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
         color: #6b7280;
         margin-bottom: 12px;
     }
@@ -500,11 +435,6 @@
         border-bottom: 1px solid #e5e7eb;
         color: #1f2937;
     }
-    .detail-value strong {
-        color: #0d6e6e;
-        font-weight: 700;
-    }
-
     .profile-placeholder {
         width: 100px;
         height: 100px;
@@ -516,116 +446,43 @@
         color: white;
         font-size: 2.5rem;
         font-weight: 700;
-        border: 3px solid #1a8a8a;
     }
-
-    .loading-state {
+    .empty-state {
         text-align: center;
-        padding: 40px 20px;
+        padding: 60px 20px;
     }
-    .loading-state p {
+    .empty-state i {
+        font-size: 3.5rem;
         color: #6b7280;
+        margin-bottom: 15px;
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .stat-card, .main-card, .filter-section {
-        animation: fadeIn 0.4s ease forwards;
-    }
-
-    /* FORCE DARK MODE OVERRIDES - When dark theme is active */
+    /* Dark Mode Overrides */
     [data-theme="dark"] .stat-card,
     [data-theme="dark"] .filter-section,
     [data-theme="dark"] .main-card,
-    [data-theme="dark"] .modal-custom .modal-content,
-    [data-theme="dark"] .modal-custom .modal-body {
+    [data-theme="dark"] .modal-custom .modal-content {
         background: #1e1e2a;
         border-color: #2a2a3a;
     }
-
     [data-theme="dark"] .stat-value,
     [data-theme="dark"] .member-name,
-    [data-theme="dark"] .detail-value,
-    [data-theme="dark"] .filter-select,
-    [data-theme="dark"] .filter-input {
+    [data-theme="dark"] .detail-value {
         color: #eef2ff;
     }
-
-    [data-theme="dark"] .stat-label,
-    [data-theme="dark"] .filter-label,
-    [data-theme="dark"] .filter-title,
-    [data-theme="dark"] .members-table th,
-    [data-theme="dark"] .detail-label {
-        color: #9ca3af;
-    }
-
     [data-theme="dark"] .member-code,
     [data-theme="dark"] .filter-select,
     [data-theme="dark"] .filter-input {
         background: #15151f;
         border-color: #2a2a3a;
+        color: #eef2ff;
     }
-
-    [data-theme="dark"] .filter-chip {
-        background: #15151f;
-        border-color: #2a2a3a;
-        color: #9ca3af;
-    }
-
     [data-theme="dark"] .members-table td {
         color: #eef2ff;
         border-bottom-color: #252536;
     }
-
     [data-theme="dark"] .members-table th {
         background: #15151f;
-        border-bottom-color: #2a2a3a;
-    }
-
-    [data-theme="dark"] .badge-active {
-        background: rgba(16, 185, 129, 0.2);
-        color: #34d399;
-    }
-
-    [data-theme="dark"] .badge-inactive {
-        background: rgba(239, 68, 68, 0.2);
-        color: #f87171;
-    }
-
-    [data-theme="dark"] .detail-value {
-        border-bottom-color: #374151;
-        color: #eef2ff;
-    }
-
-    [data-theme="dark"] .modal-custom .modal-footer {
-        background: #15151f;
-        border-top-color: #2a2a3a;
-    }
-
-    [data-theme="dark"] .modal-custom .btn-reset {
-        background: #374151;
-        border-color: #4b5563;
-        color: #e5e7eb;
-    }
-
-    [data-theme="dark"] .modal-custom .btn-reset:hover {
-        background: #4b5563;
-    }
-
-    [data-theme="dark"] .btn-reset {
-        background: #374151;
-        border-color: #4b5563;
-        color: #e5e7eb;
-    }
-
-    [data-theme="dark"] .btn-reset:hover {
-        background: #4b5563;
-    }
-
-    [data-theme="dark"] .loading-state p,
-    [data-theme="dark"] .empty-state p {
         color: #9ca3af;
     }
 </style>
@@ -636,7 +493,7 @@
 <div class="stats-grid">
     <div class="stat-card total" onclick="applyFilter('all')">
         <div class="stat-label">Total Members</div>
-        <div class="stat-value">{{ members|length }}</div>
+        <div class="stat-value">{{ total_members|default:members|length }}</div>
     </div>
     <div class="stat-card active" onclick="applyFilter('active')">
         <div class="stat-label">Active</div>
@@ -646,9 +503,9 @@
         <div class="stat-label">Inactive</div>
         <div class="stat-value">{{ inactive_count|default:0 }}</div>
     </div>
-    <div class="stat-card income">
-        <div class="stat-label">Total Monthly Income</div>
-        <div class="stat-value">₱{{ total_income|floatformat:0|default:0 }}</div>
+    <div class="stat-card pending" onclick="applyFilter('pending')">
+        <div class="stat-label">Pending Verification</div>
+        <div class="stat-value">{{ pending_count|default:0 }}</div>
     </div>
 </div>
 
@@ -667,6 +524,7 @@
                     <option value="all" {% if not request.GET.status or request.GET.status == 'all' %}selected{% endif %}>All Members</option>
                     <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active Only</option>
                     <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive Only</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending Verification</option>
                 </select>
             </div>
             <div class="col-12 col-md-3">
@@ -695,6 +553,7 @@
     <div class="filter-chip {% if not request.GET.status or request.GET.status == 'all' %}active{% endif %}" data-filter="all">👥 All Members</div>
     <div class="filter-chip {% if request.GET.status == 'active' %}active{% endif %}" data-filter="active">🟢 Active</div>
     <div class="filter-chip {% if request.GET.status == 'inactive' %}active{% endif %}" data-filter="inactive">🔴 Inactive</div>
+    <div class="filter-chip {% if request.GET.status == 'pending' %}active{% endif %}" data-filter="pending">⏳ Pending</div>
 </div>
 
 <!-- Main Members Table -->
@@ -719,13 +578,13 @@
                     <th>Contact</th>
                     <th width="120">Income</th>
                     <th width="100">Status</th>
-                    <th width="220">Actions</th>
+                    <th width="280">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for member in members %}
                 <tr>
-                    <td><strong class="text-primary">{{ member.id }}</strong></td>
+                    <td><strong class="text-primary">{{ member.id }}</strong></div>
                     <td>
                         <div class="member-info">
                             <div class="member-avatar">
@@ -738,10 +597,12 @@
                         </div>
                     </div>
                     <td><span class="member-code">{{ member.membership_number|default:"-" }}</span></div>
-                    <td>{{ member.contact_number|default:"<span class='text-muted'>-</span>"|safe }}</div>
+                    <td>{{ member.contact_number|default:"-" }}</div>
                     <td class="income-value">₱{{ member.monthly_income|floatformat:2 }}</div>
                     <td>
-                        {% if member.is_active %}
+                        {% if member.verification_status == 'pending' %}
+                            <span class="status-badge badge-pending"><i class="bi bi-hourglass-split"></i> Pending</span>
+                        {% elif member.is_active %}
                             <span class="status-badge badge-active"><i class="bi bi-check-circle-fill"></i> Active</span>
                         {% else %}
                             <span class="status-badge badge-inactive"><i class="bi bi-x-circle-fill"></i> Inactive</span>
@@ -755,6 +616,11 @@
                             <a href="{% url 'admin_panel:member_edit' member.id %}" class="member-btn-edit">
                                 <i class="bi bi-pencil"></i> Edit
                             </a>
+                            {% if member.verification_status == 'pending' %}
+                            <button class="member-btn-verify" onclick="verifyMember({{ member.id }}, '{{ member.first_name }} {{ member.last_name }}')">
+                                <i class="bi bi-check-circle"></i> Verify
+                            </button>
+                            {% endif %}
                             <button class="member-btn-delete" onclick="deleteMember({{ member.id }}, '{{ member.first_name }} {{ member.last_name }}')">
                                 <i class="bi bi-trash"></i> Delete
                             </button>
@@ -828,18 +694,40 @@ function applyFilter(status) {
     document.getElementById('filterForm').submit();
 }
 
+// ============================================================
+// VERIFY MEMBER FUNCTION
+// ============================================================
+function verifyMember(memberId, memberName) {
+    if(confirm(`✅ Verify ${memberName}?\n\nThey will be able to access all loan features.`)) {
+        fetch(`/superadmin/members/${memberId}/verify/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                alert(`✅ ${memberName} has been verified successfully!`);
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    }
+}
+
 // View Member Details
 async function viewMember(memberId) {
     const modal = new bootstrap.Modal(document.getElementById('viewMemberModal'));
     const modalBody = document.getElementById('viewMemberContent');
 
-    modalBody.innerHTML = `
-        <div class="loading-state">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p>Loading member details...</p>
-        </div>
-    `;
-
+    modalBody.innerHTML = `<div class="loading-state"><div class="spinner-border text-primary" role="status"></div><p>Loading member details...</p></div>`;
     modal.show();
 
     try {
@@ -862,42 +750,21 @@ async function viewMember(memberId) {
                 <div class="detail-section">
                     <div class="detail-label"><i class="bi bi-person me-1"></i> Personal Information</div>
                     <div class="detail-value"><strong>Member #:</strong> ${data.membership_number || '-'}</div>
-                    <div class="detail-value"><strong>Full Name:</strong> ${escapeHtml(data.first_name || '')} ${escapeHtml(data.last_name || '')} ${data.middle_initial ? data.middle_initial + '.' : ''}</div>
-                    <div class="detail-value"><strong>Birthdate:</strong> ${data.birthdate || '-'}</div>
+                    <div class="detail-value"><strong>Full Name:</strong> ${escapeHtml(data.first_name || '')} ${escapeHtml(data.last_name || '')}</div>
                     <div class="detail-value"><strong>Contact:</strong> ${data.contact_number || '-'}</div>
+                    <div class="detail-value"><strong>Status:</strong> ${data.is_active ? '<span class="status-badge badge-active">Active</span>' : '<span class="status-badge badge-inactive">Inactive</span>'}</div>
                 </div>
                 <div class="detail-section">
                     <div class="detail-label"><i class="bi bi-geo-alt me-1"></i> Address & Financial</div>
                     <div class="detail-value"><strong>Address:</strong> ${escapeHtml(data.residence_address) || '-'}</div>
                     <div class="detail-value"><strong>Monthly Income:</strong> <span class="income-value">₱${parseFloat(data.monthly_income || 0).toLocaleString()}</span></div>
-                    <div class="detail-value"><strong>Status:</strong> ${data.is_active ? '<span class="status-badge badge-active"><i class="bi bi-check-circle-fill"></i> Active</span>' : '<span class="status-badge badge-inactive"><i class="bi bi-x-circle-fill"></i> Inactive</span>'}</div>
+                    <div class="detail-value"><strong>Verification:</strong> ${data.verification_status || 'pending'}</div>
                 </div>
             </div>
         `;
     } catch (error) {
-        console.error('Error:', error);
         const data = getMemberDataFromTemplate(memberId);
-        const initials = (data.first_name ? data.first_name.charAt(0) : '') + (data.last_name ? data.last_name.charAt(0) : '');
-
-        modalBody.innerHTML = `
-            <div class="text-center mb-4">
-                <div class="profile-placeholder">${initials.toUpperCase()}</div>
-            </div>
-            <div class="detail-grid">
-                <div class="detail-section">
-                    <div class="detail-label"><i class="bi bi-person me-1"></i> Personal Information</div>
-                    <div class="detail-value"><strong>Member #:</strong> ${data.membership_number || '-'}</div>
-                    <div class="detail-value"><strong>Full Name:</strong> ${escapeHtml(data.first_name || '')} ${escapeHtml(data.last_name || '')}</div>
-                    <div class="detail-value"><strong>Contact:</strong> ${data.contact_number || '-'}</div>
-                </div>
-                <div class="detail-section">
-                    <div class="detail-label"><i class="bi bi-geo-alt me-1"></i> Address & Financial</div>
-                    <div class="detail-value"><strong>Address:</strong> ${escapeHtml(data.residence_address) || '-'}</div>
-                    <div class="detail-value"><strong>Monthly Income:</strong> <span class="income-value">₱${parseFloat(data.monthly_income || 0).toLocaleString()}</span></div>
-                    <div class="detail-value"><strong>Status:</strong> ${data.is_active ? '<span class="status-badge badge-active"><i class="bi bi-check-circle-fill"></i> Active</span>' : '<span class="status-badge badge-inactive"><i class="bi bi-x-circle-fill"></i> Inactive</span>'}</div>
-                </div>
-            </div>
-        `;
+        modalBody.innerHTML = `<div class="text-center py-4"><i class="bi bi-exclamation-triangle fs-1 text-warning"></i><p class="mt-3">Error loading member details</p></div>`;
     }
 }
 
@@ -911,27 +778,15 @@ function getMemberDataFromTemplate(memberId) {
                 membership_number: row.cells[2]?.innerText.trim() || '-',
                 first_name: row.cells[1]?.querySelector('.member-name')?.innerText.split(' ')[0] || 'Unknown',
                 last_name: row.cells[1]?.querySelector('.member-name')?.innerText.split(' ')[1] || 'Member',
-                middle_initial: '',
                 contact_number: row.cells[3]?.innerText.trim() || '-',
                 residence_address: '-',
                 monthly_income: parseFloat(row.cells[4]?.innerText.replace('₱', '').replace(/,/g, '')) || 0,
                 is_active: row.cells[5]?.innerText.includes('Active'),
-                birthdate: '-'
+                verification_status: row.cells[5]?.innerText.includes('Pending') ? 'pending' : 'verified'
             };
         }
     }
-    return {
-        id: memberId,
-        membership_number: 'M-' + String(memberId).padStart(5, '0'),
-        first_name: 'Member',
-        last_name: String(memberId),
-        middle_initial: '',
-        contact_number: '-',
-        residence_address: '-',
-        monthly_income: 0,
-        is_active: true,
-        birthdate: '-'
-    };
+    return { membership_number: '-', first_name: 'Member', last_name: String(memberId), contact_number: '-', residence_address: '-', monthly_income: 0, is_active: true, verification_status: 'pending' };
 }
 
 // Delete Member
@@ -939,14 +794,10 @@ function deleteMember(memberId, memberName) {
     currentDeleteId = memberId;
     currentDeleteName = memberName;
     document.getElementById('deleteMemberContent').innerHTML = `
-        <div class="mb-3">
-            <div class="empty-icon" style="margin: 0 auto; width: 70px; height: 70px; background: rgba(239, 68, 68, 0.12); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                <i class="bi bi-trash" style="font-size: 2rem; color: #ef4444;"></i>
-            </div>
-        </div>
-        <h5 class="mb-2" style="color: #1f2937;">Delete Member?</h5>
-        <p style="color: #6b7280;">Are you sure you want to delete <strong>${escapeHtml(memberName)}</strong>?</p>
-        <p class="text-danger small" style="color: #991b1b;">⚠️ This action cannot be undone! All associated data will be permanently removed.</p>
+        <div class="mb-3"><div class="empty-icon" style="margin: 0 auto; width: 70px; height: 70px; background: rgba(239, 68, 68, 0.12); border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="bi bi-trash" style="font-size: 2rem; color: #ef4444;"></i></div></div>
+        <h5 class="mb-2">Delete Member?</h5>
+        <p>Are you sure you want to delete <strong>${escapeHtml(memberName)}</strong>?</p>
+        <p class="text-danger small">⚠️ This action cannot be undone!</p>
     `;
     new bootstrap.Modal(document.getElementById('deleteMemberModal')).show();
 }
@@ -956,13 +807,11 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', function(
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = `/superadmin/members/${currentDeleteId}/delete/`;
-
         const csrfInput = document.createElement('input');
         csrfInput.type = 'hidden';
         csrfInput.name = 'csrfmiddlewaretoken';
         csrfInput.value = getCSRFToken();
         form.appendChild(csrfInput);
-
         document.body.appendChild(form);
         form.submit();
     }

@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -889,7 +889,7 @@
             <button class="mobile-menu-btn" id="mobileMenuBtn">
                 <i class="bi bi-list"></i>
             </button>
-            <a class="navbar-brand" href="{% url 'staff:staff_dashboard' %}">
+            <a class="navbar-brand" href="{% url 'staff:dashboard' %}">
                 <img class="brand-logo" src="{% static 'images/logo.png' %}" alt="TOMPuCO Logo">
                 <div class="brand-text">
                     <span class="brand-title">TOMPUCO</span>
@@ -944,7 +944,7 @@
             <div class="nav-section">
                 <div class="nav-section-title">MAIN MENU</div>
                 <div class="nav-item">
-                    <a class="nav-link" href="{% url 'staff:staff_dashboard' %}" data-nav="dashboard">
+                    <a class="nav-link" href="{% url 'staff:dashboard' %}" data-nav="dashboard">
                         <i class="bi bi-speedometer2"></i>
                         <span>Dashboard</span>
                     </a>
