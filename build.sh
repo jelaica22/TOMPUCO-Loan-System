@@ -4,22 +4,27 @@ echo "========================================="
 echo "TOMPUCO Loan Management System - Build"
 echo "========================================="
 
+# Install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
+
+# Create directories
 mkdir -p staticfiles media
 
-# Run comprehensive migration fixes
-python fix_all_migrations.py
-python fix_loan_table.py
-python add_columns.py
+# APPLY DIRECT FIX FIRST (most important)
+echo "Applying direct database fixes..."
+python apply_direct_fix.py
+
+# Then run migrations
+python manage.py makemigrations
+python manage.py migrate --noinput
 
 # Collect static files
 python manage.py collectstatic --noinput
 
-# Run migrations
-python manage.py migrate --noinput
-
 # Create superuser
 python create_superuser.py
 
+echo "========================================="
 echo "Build completed!"
+echo "========================================="
