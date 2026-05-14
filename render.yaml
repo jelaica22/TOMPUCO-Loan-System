@@ -1,9 +1,32 @@
-services:
+﻿services:
   - type: web
     name: tompuco-loan-system
     runtime: python
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    plan: free
+    buildCommand: chmod +x build.sh && ./build.sh
     startCommand: daphne -b 0.0.0.0 -p 10000 tompuco.asgi:application
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: tompuco.settings
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: PYTHONUNBUFFERED
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tompuco-db
+          property: connectionString
+    staticPats:
+      - static
+      - staticfiles
+      - media
+
+databases:
+  - name: tompuco-db
+    plan: free
+    databaseName: tompuco_db
+    user: tompuco_user

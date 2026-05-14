@@ -5,6 +5,7 @@ Django settings for tompuco project.
 from pathlib import Path
 import os
 import dj_database_url
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-your-secret-key-here-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
@@ -80,33 +81,35 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'tompuco.wsgi.application'  # Keep this for HTTP
-ASGI_APPLICATION = 'tompuco.asgi.application'  # ADD THIS for WebSockets
-
+WSGI_APPLICATION = 'tompuco.wsgi.application'
+ASGI_APPLICATION = 'tompuco.asgi.application'
 
 # Channel layers for real-time notifications
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',  # For development
-        # For production, use Redis:
+        # For production with Redis:
         # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
         # 'CONFIG': {
-        #     "hosts": [('127.0.0.1', 6379)],
+        #     "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
         # },
     },
 }
 
 # ============================================
-# DATABASE - POSTGRESQL FOR RENDER
+# DATABASE - PRODUCTION READY
 # ============================================
 
 # Check if running on Render (has DATABASE_URL)
 if os.environ.get('DATABASE_URL'):
     DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            ssl_require=True
+        )
     }
 # Check if running on PythonAnywhere
-elif 'PYTHONANYWHERE_DOMAIN' in os.environ:
+elif os.environ.get('PYTHONANYWHERE_DOMAIN'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
@@ -118,7 +121,7 @@ elif 'PYTHONANYWHERE_DOMAIN' in os.environ:
         }
     }
 else:
-    # Local development with SQLite (simple and works everywhere)
+    # Local development with SQLite
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -173,3 +176,11 @@ PENALTY_RATE = 0.02  # 2% per month
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 LOGIN_REDIRECT_URL = '/dashboard/redirect/'
+
+# Security settings for production
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
