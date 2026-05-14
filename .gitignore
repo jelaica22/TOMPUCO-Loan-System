@@ -1,52 +1,48 @@
-﻿# Render
-render_db.sqlite3
-*.log
-
-# Environment
-.env
-.env.local
-
-# Database
-*.sqlite3
-*.db
-
-# Media
-media/
-
-# Logs
-logs/
-*.log
-
-# Python
+﻿# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-.venv/
-venv/
 env/
+venv/
+.venv/
 ENV/
-.venv1/
+env.bak/
+venv.bak/
+
+# Django
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.production
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.ropeproject
 
-# Static files
-staticfiles/
-/static/
-
-# Django
-*.log
-db.sqlite3
-db.sqlite3-journal
-coverage/
+# Testing
+.coverage
 htmlcov/
 .tox/
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pyre/
+.pytest_cache/
+
+# Render
+.venv/
+*.pid
+*.seed
+*.pid.lock
