@@ -2,12 +2,8 @@
   - type: web
     name: tompuco-loan-system
     runtime: python
-    plan: free
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-      python manage.py collectstatic --noinput
-    startCommand: daphne -b 0.0.0.0 -p 10000 tompuco.asgi:application
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt && python full_reset.py && python manage.py collectstatic --noinput && python -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tompuco.settings'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@tompuco.com', 'admin123') if not User.objects.filter(username='admin').exists() else print('Superuser exists')"
+    startCommand: gunicorn tompuco.wsgi:application --bind 0.0.0.0:10000
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.0
@@ -17,8 +13,3 @@
         generateValue: true
       - key: DEBUG
         value: "False"
-      - key: PYTHONUNBUFFERED
-        value: "true"
-    staticPats:
-      - static
-      - staticfiles
