@@ -2,31 +2,13 @@
 
 
 def member_profile(request):
-    """Add member profile to context if user is a member"""
     context = {}
 
     if request.user.is_authenticated:
         try:
-            # Check if the user has a member profile
             if hasattr(request.user, 'member_profile'):
                 member = request.user.member_profile
                 context['member'] = member
-
-                # Safely get attributes with fallback
-                try:
-                    context['civil_status'] = member.civil_status
-                except:
-                    context['civil_status'] = None
-
-                try:
-                    context['nickname'] = member.nickname
-                except:
-                    context['nickname'] = None
-
-                try:
-                    context['middle_initial'] = member.middle_initial
-                except:
-                    context['middle_initial'] = None
         except Exception as e:
             print(f"Member profile error: {e}")
 

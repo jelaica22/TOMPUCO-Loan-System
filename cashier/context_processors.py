@@ -1,13 +1,14 @@
-# cashier/context_processors.py
-
 def cashier_profile(request):
-    """Make cashier/staff profile available to all templates"""
+    context = {}
+
     if request.user.is_authenticated:
-        # Try to get the profile from different possible sources
-        if hasattr(request.user, 'staff_profile'):
-            return {'user_profile': request.user.staff_profile}
-        elif hasattr(request.user, 'cashier_profile'):
-            return {'user_profile': request.user.cashier_profile}
-        elif hasattr(request.user, 'member_profile'):
-            return {'user_profile': request.user.member_profile}
-    return {'user_profile': None}
+        try:
+            if hasattr(request.user, 'staff_profile'):
+                profile = request.user.staff_profile
+                if hasattr(profile, 'position') and profile.position == 'cashier':
+                    context['is_cashier'] = True
+                    context['cashier_profile'] = profile
+        except Exception as e:
+            print(f"Cashier profile error: {e}")
+
+    return context
