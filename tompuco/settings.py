@@ -42,6 +42,11 @@ if not DEBUG:
     CSRF_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SAMESITE = 'Lax'
 
+    # Only for testing!
+    CSRF_COOKIE_SECURE = False
+    CSRF_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_SECURE = False
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
