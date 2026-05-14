@@ -3,6 +3,26 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from main.models import Member
 from datetime import date
+from django.contrib.auth.forms import AuthenticationForm
+from django_recaptcha.fields import ReCaptchaField
+from django_recaptcha.widgets import ReCaptchaV2Checkbox
+
+
+class CustomLoginForm(AuthenticationForm):
+    """Login form with reCAPTCHA protection"""
+    captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Optional: Style your fields
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Enter your username'
+        })
+        self.fields['password'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Enter your password'
+        })
 
 
 class MemberRegistrationForm(UserCreationForm):
@@ -67,6 +87,9 @@ class MemberRegistrationForm(UserCreationForm):
     password2 = forms.CharField(widget=forms.PasswordInput, required=True)
     birthdate = forms.DateField(required=True, widget=forms.DateInput(attrs={'type': 'date'}))
     gender = forms.ChoiceField(choices=[('M', 'Male'), ('F', 'Female')], required=True)
+
+    # ✅ ADD THIS reCAPTCHA FIELD
+    captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox)
 
     class Meta:
         model = User

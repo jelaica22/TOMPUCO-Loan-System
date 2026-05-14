@@ -1,4 +1,5 @@
 ﻿from django.db import connection
+from django.conf import settings  # ✅ ADD THIS IMPORT
 
 
 def member_profile(request):
@@ -74,3 +75,14 @@ def admin_profile(request):
         context['is_admin'] = True
 
     return context
+
+
+# ✅ ADD THIS NEW FUNCTION AT THE BOTTOM
+def recaptcha_site_key(request):
+    """
+    Add reCAPTCHA site key to all templates.
+    This makes {{ RECAPTCHA_SITE_KEY }} available globally.
+    """
+    return {
+        'RECAPTCHA_SITE_KEY': settings.RECAPTCHA_PUBLIC_KEY
+    }

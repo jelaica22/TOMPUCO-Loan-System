@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.urls import reverse_lazy
+from .forms import CustomLoginForm
 from decimal import Decimal
 from django.contrib.auth.models import User
 from django.db import IntegrityError
@@ -149,6 +150,7 @@ def staff_login(request):
 class CustomLoginView(LoginView):
     template_name = 'main/login.html'
     redirect_authenticated_user = True
+    form_class = CustomLoginForm  # ← ADD THIS LINE
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -202,9 +204,9 @@ class CustomLoginView(LoginView):
         if user.is_superuser:
             return reverse_lazy('admin_panel:dashboard')
 
-        # Staff/Loan Officer redirect - FIXED: changed 'staff_dashboard' to 'dashboard'
+        # Staff/Loan Officer redirect
         if hasattr(user, 'staff_profile'):
-            return reverse_lazy('staff:dashboard')  # ← CHANGE THIS LINE
+            return reverse_lazy('staff:dashboard')
 
         # Cashier redirect
         if hasattr(user, 'cashier_profile'):
@@ -226,9 +228,9 @@ class CustomLoginView(LoginView):
         if user.groups.filter(name='Cashier').exists():
             return reverse_lazy('cashier:dashboard')
 
-        # Staff flag - FIXED: changed 'staff_dashboard' to 'dashboard'
+        # Staff flag
         if user.is_staff:
-            return reverse_lazy('staff:dashboard')  # ← CHANGE THIS LINE
+            return reverse_lazy('staff:dashboard')
 
         # Regular member
         if hasattr(user, 'member_profile'):
