@@ -332,6 +332,20 @@
             font-size: 1.5rem;
         }
     }
+
+    /* ADD THIS - reCAPTCHA container styling */
+    .recaptcha-container {
+        margin: 1.5rem 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    .recaptcha-error {
+        text-align: center;
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: #dc2626;
+    }
 </style>
 {% endblock %}
 
@@ -403,6 +417,13 @@
                             <div id="passwordFeedback" class="invalid-feedback"></div>
                         </div>
 
+                        <!-- ✅ ADD reCAPTCHA HERE -->
+                        <div class="recaptcha-container">
+                            <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}" data-callback="onRecaptchaSuccess"></div>
+                        </div>
+                        <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+                        <div id="recaptchaError" class="recaptcha-error" style="display: none;">Please complete the reCAPTCHA verification</div>
+
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
@@ -429,7 +450,26 @@
     </div>
 </div>
 
+<!-- ✅ Add reCAPTCHA API script -->
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
 <script>
+    // ✅ reCAPTCHA success callback
+    function onRecaptchaSuccess(token) {
+        document.getElementById('g-recaptcha-response').value = token;
+        document.getElementById('recaptchaError').style.display = 'none';
+    }
+
+    // ✅ Function to check if reCAPTCHA is completed
+    function isRecaptchaCompleted() {
+        const token = document.getElementById('g-recaptcha-response').value;
+        if (!token) {
+            document.getElementById('recaptchaError').style.display = 'block';
+            return false;
+        }
+        return true;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // Password visibility toggle
         const togglePassword = document.getElementById('togglePassword');
@@ -445,7 +485,7 @@
             });
         }
 
-        // Form validation
+        // Form validation with reCAPTCHA check
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
 
@@ -467,6 +507,11 @@
                     isValid = false;
                 } else {
                     clearValidationError(password);
+                }
+
+                // ✅ Check reCAPTCHA
+                if (!isRecaptchaCompleted()) {
+                    isValid = false;
                 }
 
                 if (!isValid) {

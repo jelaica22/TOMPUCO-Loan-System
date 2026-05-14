@@ -6,6 +6,11 @@ from pathlib import Path
 import os
 import dj_database_url
 
+# reCAPTCHA Configuration
+RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_SITE_KEY', '')
+RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -50,6 +55,7 @@ INSTALLED_APPS = [
     'manager',
     'admin_panel',
     'reports',
+    'django_recaptcha',
 ]
 
 MIDDLEWARE = [
@@ -89,6 +95,8 @@ TEMPLATES = [
                 'manager.context_processors.manager_profile',
                 'main.context_processors.member_profile',
                 'cashier.context_processors.cashier_profile',
+                # ✅ ADD THIS LINE - reCAPTCHA context processor
+                'main.context_processors.recaptcha_site_key',
             ],
         },
     },
