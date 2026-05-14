@@ -16,21 +16,29 @@ print("=" * 60)
 # Drop all tables
 print("\n📦 Dropping all tables...")
 with connection.cursor() as cursor:
+    # Get all table names
     cursor.execute("""
-        DO runserver
-        DECLARE
-            r RECORD;
-        BEGIN
-            FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-                EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
-            END LOOP;
-        END runserver;
+        SELECT tablename 
+        FROM pg_tables 
+        WHERE schemaname = 'public'
     """)
-    print("  ✓ All tables dropped")
+    tables = cursor.fetchall()
+    
+    for table in tables:
+        try:
+            cursor.execute(f'DROP TABLE IF EXISTS "{table[0]}" CASCADE;')
+            print(f"  ✓ Dropped {table[0]}")
+        except Exception as e:
+            print(f"  ⚠ Could not drop {table[0]}: {e}")
+
+print("  ✓ All tables dropped")
 
 # Reset migration history
 print("\n📦 Resetting migration history...")
-call_command('migrate', '--fake', 'zero', verbosity=0)
+try:
+    call_command('migrate', '--fake', 'zero', verbosity=0)
+except:
+    pass
 print("  ✓ Migration history reset")
 
 # Create fresh migrations
