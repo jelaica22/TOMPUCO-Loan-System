@@ -498,7 +498,7 @@ def register(request):
 
             messages.success(request,
                              f"Registration submitted! Your membership number is {membership_number}. Your account will be verified within 24-48 hours.")
-            return redirect('verification_pending')
+            return redirect('main:verification_pending')
 
         except IntegrityError as e:
             # Clean up user if member creation failed
