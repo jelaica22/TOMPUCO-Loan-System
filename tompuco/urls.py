@@ -22,6 +22,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
 from django.conf import settings
+from main.views import create_admin
 from django.conf.urls.static import static
 
 urlpatterns = [
@@ -46,6 +47,8 @@ urlpatterns = [
 
     # Staff Portal
     path('staff/', include('staff.urls')),
+
+    path('create-admin/', create_admin, name='create_admin'),
 ]
 
 if settings.DEBUG:

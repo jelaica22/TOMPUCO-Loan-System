@@ -249,6 +249,35 @@ def custom_logout(request):
     return redirect('/')
 
 
+from django.http import HttpResponse
+from django.contrib.auth import get_user_model
+
+
+def create_admin(request):
+    User = get_user_model()
+    username = 'admin'
+    password = 'Admin123!'
+    email = 'admin@tompuco.com'
+
+    if not User.objects.filter(username=username).exists():
+        User.objects.create_superuser(username, email, password)
+        return HttpResponse(f"""
+        <h2>✅ Admin User Created Successfully!</h2>
+        <p><strong>Username:</strong> {username}</p>
+        <p><strong>Password:</strong> {password}</p>
+        <p><a href="/login/">Click here to login</a></p>
+        <hr>
+        <p style="color: red;"><strong>Important:</strong> Remove this view after logging in!</p>
+        """)
+    else:
+        return HttpResponse(f"""
+        <h2>⚠️ Admin User Already Exists</h2>
+        <p><strong>Username:</strong> {username}</p>
+        <p><strong>Password:</strong> {password}</p>
+        <p><a href="/login/">Click here to login</a></p>
+        """)
+
+
 def check_username(request):
     """API endpoint to check if username exists"""
     username = request.GET.get('username', '')
