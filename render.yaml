@@ -3,25 +3,22 @@
     name: tompuco-loan-system
     runtime: python
     plan: free
-    autoDeploy: true
-    buildCommand: ./build.sh
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
     startCommand: daphne -b 0.0.0.0 -p 10000 tompuco.asgi:application
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: tompuco.settings
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: DEBUG
-        value: false
-      - key: PYTHON_VERSION
-        value: 3.13.0
-      - key: ALLOWED_HOSTS
-        value: .onrender.com,tompuco-loan-system.onrender.com
-      - key: DISABLE_COLLECTSTATIC
-        value: 0
-    healthCheckPath: /login/
-
-databases:
-  - name: tompuco-db
-    plan: free
-    databaseName: tompuco_db
-    user: tompuco_user
-    ipAllowList: []
+        value: "False"
+      - key: PYTHONUNBUFFERED
+        value: "true"
+    staticPats:
+      - static
+      - staticfiles
