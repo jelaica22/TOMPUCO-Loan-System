@@ -276,57 +276,27 @@ def dashboard(request):
 
 @login_required
 @staff_required
-def application_list(request):
-    """List all loan applications with filters"""
+def applications_list(request):
+    """List all loan applications for staff"""
     staff_profile = request.user.staff_profile
 
-    search = request.GET.get('search', '')
-    status_filter = request.GET.get('status', 'all')
-    loan_type = request.GET.get('loan_type', 'all')
-    date_from = request.GET.get('date_from', '')
-    date_to = request.GET.get('date_to', '')
+    # Get all applications with related data
+    applications = LoanApplication.objects.select_related('member', 'loan_product').order_by('-applied_date')
 
-    applications = LoanApplication.objects.select_related('member', 'loan_product').all()
-
-    if search:
-        applications = applications.filter(
-            Q(application_id__icontains=search) |
-            Q(member__first_name__icontains=search) |
-            Q(member__last_name__icontains=search)
-        )
-
-    if status_filter != 'all':
-        applications = applications.filter(status=status_filter)
-
-    if loan_type != 'all':
-        applications = applications.filter(loan_product__name=loan_type)
-
-    if date_from:
-        applications = applications.filter(applied_date__gte=date_from)
-    if date_to:
-        applications = applications.filter(applied_date__lte=date_to)
-
+    # Debug - print to console to verify
+    print(f"Total applications: {applications.count()}")
     for app in applications:
-        app.loan_type = app.loan_product.name if app.loan_product else 'APCP'
-
-    total_applications = applications.count()
-    pending_count = applications.filter(status='pending_staff_review').count()
-    committee_count = applications.filter(status='with_committee').count()
-    line_approved_count = applications.filter(status='line_approved').count()
-    approved_count = applications.filter(status='manager_approved').count()
-    rejected_count = applications.filter(status='rejected').count()
+        print(f"App {app.id}: {app.application_id} - Amount: {app.amount} - Date: {app.applied_date}")
 
     context = {
         'staff_profile': staff_profile,
         'applications': applications,
-        'total_applications': total_applications,
-        'pending_count': pending_count,
-        'committee_count': committee_count,
-        'line_approved_count': line_approved_count,
-        'approved_count': approved_count,
-        'rejected_count': rejected_count,
+        'total_applications': applications.count(),
+        'pending_count': applications.filter(status='pending_staff_review').count(),
+        'committee_count': applications.filter(status='with_committee').count(),
+        'approved_count': applications.filter(status='manager_approved').count(),
+        'rejected_count': applications.filter(status='rejected').count(),
     }
-
     return render(request, 'staff/applications/list.html', context)
 
 
@@ -484,8 +454,9 @@ def add_charges(request, pk):
         total_auto = service_charge + cbu_retention + insurance + service_fee + notarial_fee
         total_optional = inspector_fee + trade_fert + ca_int
         total_deductions = total_auto + total_optional
-        net_proceeds = approved_line - total_deductions
+        net_proceeds = approved_line - total_deductions  # This calculates correctly
 
+        # Save all values
         application.service_charge = service_charge
         application.cbu_retention = cbu_retention
         application.insurance_charge = insurance
@@ -495,13 +466,14 @@ def add_charges(request, pk):
         application.trade_fert = trade_fert
         application.ca_int = ca_int
         application.total_deductions = total_deductions
-        application.net_proceeds = net_proceeds
+        application.net_proceeds = net_proceeds  # This should be saved
         application.status = 'ready_for_disbursement'
         application.save()
 
         messages.success(request, f'Charges added. Net Proceeds: ₱{net_proceeds:,.2f}')
         return redirect('staff:staff_applications')
 
+    # GET request - show form
     service_charge = approved_line * 0.03
     cbu_retention = approved_line * 0.02
     insurance = approved_line * 0.0132
@@ -523,7 +495,7 @@ def add_charges(request, pk):
         'net_proceeds': net_proceeds,
     }
 
-    return render(request, 'staff/applications/add_charges.html', context)
+    return render(request, 'staff/add_charges.html', context)
 
 
 @login_required

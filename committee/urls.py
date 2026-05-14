@@ -1,4 +1,4 @@
-﻿from django.urls import path
+from django.urls import path
 from . import views
 
 app_name = 'committee'
@@ -14,7 +14,7 @@ urlpatterns = [
     path('notifications/', views.notifications_list, name='notifications_list'),
     path('notifications/<int:notif_id>/', views.notification_detail, name='notification_detail'),
     path('notifications/api/count/', views.notification_count_api, name='notification_count_api'),
-    path('notifications/api/list/', views.notification_list_api, name='notification_list_api'),  # ADD THIS
+    # path('notifications/api/list/', views.notification_list_api, name='notification_list_api'),  # ADD THIS
     path('notifications/mark-read/<int:notif_id>/', views.mark_notification_read, name='mark_notification_read'),
     path('notifications/mark-all-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
     path('profile/', views.profile, name='profile'),

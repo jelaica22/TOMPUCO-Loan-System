@@ -1,4 +1,4 @@
-﻿from decimal import Decimal
+from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -7,13 +7,9 @@ from django.core.paginator import Paginator
 from django.utils import timezone
 from datetime import datetime
 from django.db.models import Q
-from django.contrib.auth.models import User
 
 from main.models import LoanApplication, CommitteeVote, Notification, Loan
 from .models import CommitteeProfile
-
-# Import real-time notification utility
-from main.notification_utils import send_realtime_notification, send_realtime_notification_to_group
 
 
 @login_required
@@ -136,7 +132,7 @@ def applications_list(request):
     for app in applications:
         app.has_voted = app.id in user_votes
         app.loan_type = app.loan_product.name if app.loan_product else 'N/A'
-        app.requested_amount_display = f"₱{app.amount:,.2f}"
+        app.requested_amount_display = f"?{app.amount:,.2f}"
 
     context = {
         'applications': applications,
@@ -177,7 +173,7 @@ def review_application(request, app_id):
 
                 if approved_line > requested_amount:
                     messages.error(request,
-                                   f'Approved Line (₱{approved_line:,.2f}) cannot exceed Requested Amount (₱{requested_amount:,.2f})')
+                                   f'Approved Line (?{approved_line:,.2f}) cannot exceed Requested Amount (?{requested_amount:,.2f})')
                     return redirect('committee:review_application', app_id=app_id)
 
                 if approved_line <= 0:
@@ -192,56 +188,32 @@ def review_application(request, app_id):
             application.approved_line = approved_line
             application.committee_approved_date = date_approved
             application.committee_reduction_reason = reduction_reason if approved_line < requested_amount else ''
-            application.status = 'line_approved'
+            application.status = 'line_approved'  # Move to next stage - staff adds charges
             application.save()
 
-            # Send REAL-TIME notifications to all STAFF
-            staff_users = User.objects.filter(groups__name='Staff') | User.objects.filter(is_staff=True)
-            staff_users = staff_users.exclude(username=request.user.username)
-
-            for staff in staff_users:
-                send_realtime_notification(
-                    staff,
-                    '✅ Application Approved by Committee',
-                    f'Application {application.application_id} has been approved with line amount ₱{approved_line:,.2f}. Please add charges.',
-                    f'/staff/applications/{application.id}/add-charges/',
-                    'committee'
-                )
-
-            # Send REAL-TIME notification to MEMBER
-            send_realtime_notification(
-                application.member.user,
-                '🎉 Your Loan Application Was Approved!',
-                f'Good news! Your application {application.application_id} has been approved by the committee for ₱{approved_line:,.2f}.',
-                f'/my-applications/{application.id}/',
-                'committee'
+            # Create notification for STAFF
+            Notification.objects.create(
+                recipient=request.user,  # TODO: Send to staff users
+                notification_type='committee',
+                title='Application Approved by Committee',
+                message=f'Application {application.application_id} has been approved with line amount ?{approved_line:,.2f}. Please add charges.',
+                link=f'/staff/applications/{application.id}/add-charges/'
             )
 
-            # Send REAL-TIME notification to MANAGERS
-            manager_users = User.objects.filter(groups__name='Manager') | User.objects.filter(is_superuser=True)
-            for manager in manager_users:
-                send_realtime_notification(
-                    manager,
-                    '📋 Application Ready for Manager Review',
-                    f'Application {application.application_id} has been approved by committee. Ready for your final approval.',
-                    f'/manager/approvals/{application.id}/',
-                    'committee'
-                )
-
-            messages.success(request, f'✅ Application approved! Approved Line: ₱{approved_line:,.2f}')
+            messages.success(request, f'? Application approved! Approved Line: ?{approved_line:,.2f}')
             return redirect('committee:applications_list')
 
         elif action == 'revision':
             application.status = 'needs_revision'
             application.save()
 
-            # Send REAL-TIME notification to MEMBER
-            send_realtime_notification(
-                application.member.user,
-                '📝 Application Needs Revision',
-                f'Your application {application.application_id} needs revision based on committee feedback. Please update and resubmit.',
-                f'/my-applications/{application.id}/edit/',
-                'committee'
+            # Create notification for MEMBER
+            Notification.objects.create(
+                recipient=application.member.user,
+                notification_type='committee',
+                title='Application Needs Revision',
+                message=f'Your application {application.application_id} needs revision. Please update and resubmit.',
+                link=f'/my-applications/{application.id}/edit/'
             )
 
             messages.info(request, 'Revision requested. Member will update the application.')
@@ -251,13 +223,13 @@ def review_application(request, app_id):
             application.status = 'rejected'
             application.save()
 
-            # Send REAL-TIME notification to MEMBER
-            send_realtime_notification(
-                application.member.user,
-                '❌ Your Loan Application Was Rejected',
-                f'We regret to inform you that your application {application.application_id} has been rejected by the committee.',
-                f'/my-applications/{application.id}/',
-                'committee'
+            # Create notification for MEMBER
+            Notification.objects.create(
+                recipient=application.member.user,
+                notification_type='committee',
+                title='Application Rejected',
+                message=f'Your application {application.application_id} has been rejected by the committee.',
+                link=f'/my-applications/{application.id}/'
             )
 
             messages.warning(request, 'Application rejected.')
@@ -266,6 +238,11 @@ def review_application(request, app_id):
     # ============================================================
     # GET REQUEST - Display the form
     # ============================================================
+
+    # DEBUG: Print the amount to console to see what's happening
+    print(f"Application ID: {application.id}")
+    print(f"Application Amount: {application.amount}")
+    print(f"Application Amount Type: {type(application.amount)}")
 
     # Get total committee members
     total_committee = CommitteeProfile.objects.filter(is_active=True).count()
@@ -279,27 +256,44 @@ def review_application(request, app_id):
     has_voted = committee_votes.filter(committee_member=request.user).exists()
 
     # ============================================================
-    # APPLICANT STATUS - AUTO DETECTED
+    # APPLICANT STATUS - AUTO DETECTED (NO MANUAL INPUT)
     # ============================================================
     member = application.member
+
+    # Get all loans for this member - use 'member' not 'borrower'
     member_loans = Loan.objects.filter(member=member)
 
+    # Check if new applicant (no loans ever)
     is_new_applicant = member_loans.count() == 0
+
+    # Check if existing borrower (has at least one loan)
     is_existing_borrower = member_loans.count() > 0
+
+    # Check if has outstanding balance (active or overdue with remaining balance > 0)
     has_outstanding_balance = member_loans.filter(
         Q(status='active') | Q(status='overdue'),
         remaining_balance__gt=0
     ).exists()
-    has_paid_loans = member_loans.filter(status='paid').exists()
-    is_restructured = application.is_restructuring if hasattr(application, 'is_restructuring') else False
 
-    # Calculate suggested amounts
+    # Check if has fully paid loans
+    has_paid_loans = member_loans.filter(status='paid').exists()
+
+    # Check if this is a restructuring application
+    is_restructured = application.is_restructuring if hasattr(application, 'is_restructuring') else False
+    # ============================================================
+    # END OF AUTO-DETECTED STATUS
+    # ============================================================
+
+    # Calculate suggested amounts based on requested amount
     try:
         requested = float(application.amount) if application.amount else 0
     except (TypeError, ValueError):
         requested = 0
 
+    # Get today's date for date approved field
     today = timezone.now().date()
+
+    # Get co-maker if exists
     co_maker = application.co_maker if hasattr(application, 'co_maker') else None
 
     context = {
@@ -314,36 +308,33 @@ def review_application(request, app_id):
         'total_committee': total_committee,
         'is_head': is_head,
         'today': today,
+        # Auto-detected applicant status
         'is_new_applicant': is_new_applicant,
         'is_existing_borrower': is_existing_borrower,
         'has_outstanding_balance': has_outstanding_balance,
         'has_paid_loans': has_paid_loans,
         'is_restructured': is_restructured,
+        # Pass the requested amount
         'requested_amount': requested,
     }
     return render(request, 'committee/review_application.html', context)
-
 
 @login_required
 def application_detail(request, app_id):
     """View application details"""
     application = get_object_or_404(LoanApplication, id=app_id)
-    committee_votes = CommitteeVote.objects.filter(application=application)
-
-    context = {
-        'application': application,
-        'committee_votes': committee_votes,
-    }
-    return render(request, 'committee/application_detail.html', context)
+    return render(request, 'committee/application_detail.html', {'application': application})
 
 
 @login_required
 def decision_history(request):
     """View user's decision/voting history"""
+    # Get all votes by this committee member
     votes = CommitteeVote.objects.filter(
         committee_member=request.user
     ).order_by('-voted_at').select_related('application', 'application__member', 'application__loan_product')
 
+    # Convert votes to a list of applications with vote info
     applications = []
     for vote in votes:
         app = vote.application
@@ -359,6 +350,7 @@ def decision_history(request):
     approved_count = votes.filter(vote='approved').count()
     rejected_count = votes.filter(vote='rejected').count()
 
+    # Get pending applications count (applications in 'with_committee' status that user hasn't voted on yet)
     voted_application_ids = votes.values_list('application_id', flat=True)
     pending_applications_count = LoanApplication.objects.filter(
         status='with_committee'
@@ -372,7 +364,6 @@ def decision_history(request):
         'pending_applications_count': pending_applications_count,
     }
     return render(request, 'committee/decision_history.html', context)
-
 
 @login_required
 def reports(request):
@@ -426,6 +417,7 @@ def report_api(request, report_type):
         approved = votes.filter(vote='approved').count()
         approval_rate = int((approved / total * 100)) if total > 0 else 0
 
+        # Monthly data
         monthly_data = {}
         for vote in votes:
             month_key = vote.voted_at.strftime('%Y-%m')
@@ -468,13 +460,16 @@ def notification_detail(request, notif_id):
 
     notification = get_object_or_404(Notification, id=notif_id, recipient=request.user)
 
+    # Mark as read when viewed
     if not notification.is_read:
         notification.is_read = True
         notification.save()
 
+    # If the notification has a specific link, redirect there
     if notification.link:
         return redirect(notification.link)
 
+    # Otherwise, render a detail page
     context = {
         'notification': notification,
     }
@@ -486,6 +481,7 @@ def notifications_list(request):
     """View notifications"""
     notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')
 
+    # Pagination
     paginator = Paginator(notifications, 20)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
@@ -505,33 +501,6 @@ def notification_count_api(request):
     """API endpoint for notification count"""
     unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
     return JsonResponse({'unread_count': unread_count})
-
-
-@login_required
-def notification_list_api(request):
-    """API endpoint to get recent notifications for dropdown"""
-    notifications = Notification.objects.filter(
-        recipient=request.user
-    ).order_by('-created_at')[:10]
-
-    from django.utils.timesince import timesince
-
-    notification_data = []
-    for notif in notifications:
-        notification_data.append({
-            'id': notif.id,
-            'title': notif.title,
-            'message': notif.message,
-            'link': notif.link or '#',
-            'is_read': notif.is_read,
-            'time_ago': timesince(notif.created_at) + ' ago'
-        })
-
-    return JsonResponse({
-        'success': True,
-        'notifications': notification_data,
-        'unread_count': Notification.objects.filter(recipient=request.user, is_read=False).count()
-    })
 
 
 @login_required
@@ -558,14 +527,18 @@ def profile(request):
     except CommitteeProfile.DoesNotExist:
         committee_profile = CommitteeProfile.objects.create(user=request.user)
 
+    # Get voting statistics
     votes = CommitteeVote.objects.filter(committee_member=request.user)
     total_votes = votes.count()
     approved_votes = votes.filter(vote='approved').count()
     rejected_votes = votes.filter(vote='rejected').count()
     approval_rate = int((approved_votes / total_votes * 100)) if total_votes > 0 else 0
 
+    # Get monthly votes
     current_month = timezone.now().month
     monthly_votes = votes.filter(voted_at__month=current_month).count()
+
+    # Get recent votes
     recent_votes = votes.order_by('-voted_at')[:10]
 
     context = {
@@ -606,6 +579,7 @@ def update_profile(request):
         user.username = request.POST.get('username', '')
         user.save()
 
+        # Update committee profile
         committee_profile, created = CommitteeProfile.objects.get_or_create(user=user)
         committee_profile.contact_number = request.POST.get('contact_number', '')
         committee_profile.save()
@@ -675,6 +649,7 @@ def cast_vote(request, app_id):
     if request.method == 'POST':
         application = get_object_or_404(LoanApplication, id=app_id)
 
+        # Check if user already voted
         existing_vote = CommitteeVote.objects.filter(
             application=application,
             committee_member=request.user
@@ -691,6 +666,7 @@ def cast_vote(request, app_id):
             messages.error(request, 'Invalid vote value.')
             return redirect('committee:review_application', app_id=app_id)
 
+        # Create the vote
         CommitteeVote.objects.create(
             application=application,
             committee_member=request.user,
@@ -700,28 +676,16 @@ def cast_vote(request, app_id):
 
         messages.success(request, f'Your vote has been recorded: {vote_value.upper()}')
 
-        # Send notification to other committee members
-        other_committee_members = CommitteeProfile.objects.filter(is_active=True).exclude(
-            user=request.user
-        ).select_related('user')
-
-        for cm in other_committee_members:
-            send_realtime_notification(
-                cm.user,
-                f'🗳️ New Vote Cast on {application.application_id}',
-                f'{request.user.get_full_name()} voted {vote_value.upper()} on application {application.application_id}.',
-                f'/committee/applications/{application.id}/review/',
-                'committee'
-            )
-
         # Check if all committee members have voted
         total_committee = CommitteeProfile.objects.filter(is_active=True).count()
         votes_cast = CommitteeVote.objects.filter(application=application).count()
 
         if votes_cast >= total_committee:
+            # Process the final decision
             votes_approved = CommitteeVote.objects.filter(application=application, vote='approved').count()
             votes_rejected = CommitteeVote.objects.filter(application=application, vote='rejected').count()
 
+            # Check head committee vote
             head_vote = CommitteeVote.objects.filter(
                 application=application,
                 committee_member__committee_profile__is_head=True
@@ -729,52 +693,44 @@ def cast_vote(request, app_id):
 
             if head_vote and head_vote.vote == 'rejected':
                 application.status = 'rejected'
-
-                # Notify member
-                send_realtime_notification(
-                    application.member.user,
-                    '❌ Application Rejected by Head Committee',
-                    f'Your application {application.application_id} has been rejected by the Head Committee.',
-                    f'/my-applications/{application.id}/',
-                    'committee'
-                )
-
+                messages.info(request, 'Application rejected by Head Committee.')
             elif votes_approved > total_committee / 2:
                 application.status = 'line_approved'
-
-                # Notify staff
-                staff_users = User.objects.filter(groups__name='Staff') | User.objects.filter(is_staff=True)
-                for staff in staff_users:
-                    send_realtime_notification(
-                        staff,
-                        '✅ Application Ready for Line Approval',
-                        f'Application {application.application_id} has been approved by committee. Please input approved line.',
-                        f'/staff/applications/{application.id}/approve-line/',
-                        'committee'
-                    )
-
-                # Notify member
-                send_realtime_notification(
-                    application.member.user,
-                    '🎉 Your Application Has Been Approved!',
-                    f'Congratulations! Your application {application.application_id} has been approved by the committee.',
-                    f'/my-applications/{application.id}/',
-                    'committee'
-                )
+                messages.info(request, 'Application approved by committee! Waiting for line approval.')
             else:
                 application.status = 'rejected'
-
-                # Notify member
-                send_realtime_notification(
-                    application.member.user,
-                    '❌ Application Rejected by Committee',
-                    f'Your application {application.application_id} has been rejected by the committee vote.',
-                    f'/my-applications/{application.id}/',
-                    'committee'
-                )
+                messages.info(request, 'Application rejected by committee vote.')
 
             application.save()
 
         return redirect('committee:applications_list')
 
     return redirect('committee:review_application', app_id=app_id)
+
+
+@login_required
+def notification_list_api(request):
+    """API endpoint to get list of notifications"""
+    # Get all notifications for the current user
+    notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')
+
+    # Format the data for JSON response
+    data = {
+        'notifications': [
+            {
+                'id': notif.id,
+                'title': notif.title,
+                'message': notif.message,
+                'notification_type': notif.notification_type,
+                'link': notif.link,
+                'is_read': notif.is_read,
+                'created_at': notif.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'created_at_formatted': notif.created_at.strftime('%b %d, %Y %I:%M %p')
+            }
+            for notif in notifications
+        ],
+        'total_count': notifications.count(),
+        'unread_count': notifications.filter(is_read=False).count()
+    }
+
+    return JsonResponse(data)

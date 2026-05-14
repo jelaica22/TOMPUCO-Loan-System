@@ -1,4 +1,4 @@
-﻿# staff/urls.py
+# staff/urls.py
 from django.urls import path
 from . import views
 
@@ -10,7 +10,7 @@ urlpatterns = [
     path('', views.dashboard, name='index'),
 
     # Applications
-    path('applications/', views.application_list, name='staff_applications'),
+    path('applications/', views.applications_list, name='staff_applications'),
     path('applications/create/', views.create_application, name='create_application'),
     path('applications/<int:pk>/', views.application_review, name='review_application'),
     path('applications/<int:pk>/edit/', views.edit_application, name='edit_application'),
