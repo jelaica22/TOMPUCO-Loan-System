@@ -10,13 +10,15 @@ class Command(BaseCommand):
         self.stdout.write('=' * 60)
         
         with connection.cursor() as cursor:
-            # ALL possible columns for main_member table
+            # ALL columns for main_member table (comprehensive list)
             member_columns = [
                 'civil_status varchar(50) NULL',
                 'nickname varchar(100) NULL',
                 'middle_initial varchar(10) NULL',
                 'employment_status varchar(50) NULL',
                 'employee_id varchar(100) NULL',
+                'date_hired date NULL',
+                'years_with_employer int NULL',
                 'monthly_income decimal(12,2) NULL',
                 'employer_name varchar(200) NULL',
                 'employer_address text NULL',
@@ -37,9 +39,19 @@ class Command(BaseCommand):
                 'number_of_children int NULL',
                 'house_ownership varchar(100) NULL',
                 'monthly_rent decimal(12,2) NULL',
+                'contact_number varchar(20) NULL',
+                'alternate_contact varchar(20) NULL',
+                'emergency_contact varchar(20) NULL',
+                'emergency_contact_name varchar(200) NULL',
+                'membership_date date NULL',
+                'membership_status varchar(50) DEFAULT \'active\'',
+                'verification_status varchar(50) DEFAULT \'pending\'',
+                'verification_notes text NULL',
+                'last_login_ip varchar(50) NULL',
+                'registration_date timestamp NULL',
             ]
             
-            # ALL possible columns for main_loan table
+            # ALL columns for main_loan table
             loan_columns = [
                 'amount decimal(12,2) NULL',
                 'approved_line decimal(12,2) NULL',
@@ -50,6 +62,13 @@ class Command(BaseCommand):
                 'approval_date timestamp NULL',
                 'rejection_reason text NULL',
                 'notes text NULL',
+                'interest_rate decimal(5,2) NULL',
+                'term_months int NULL',
+                'monthly_payment decimal(12,2) NULL',
+                'total_payment decimal(12,2) NULL',
+                'paid_amount decimal(12,2) NULL',
+                'last_payment_date timestamp NULL',
+                'next_payment_date timestamp NULL',
             ]
             
             self.stdout.write('\n📦 Adding columns to main_loan table...')
@@ -80,8 +99,7 @@ class Command(BaseCommand):
             
             # Verify critical columns
             self.stdout.write('\n🔍 Verifying critical columns...')
-            
-            critical_columns = ['amount', 'employment_status', 'employee_id']
+            critical_columns = ['amount', 'employment_status', 'employee_id', 'date_hired', 'years_with_employer']
             for col_name in critical_columns:
                 cursor.execute(f"""
                     SELECT EXISTS (
@@ -92,7 +110,7 @@ class Command(BaseCommand):
                     );
                 """)
                 if cursor.fetchone()[0]:
-                    self.stdout.write(self.style.SUCCESS(f'  ✅ {col_name} exists in main_member'))
+                    self.stdout.write(self.style.SUCCESS(f'  ✅ {col_name} exists'))
                 else:
                     cursor.execute(f"""
                         SELECT EXISTS (
@@ -103,7 +121,7 @@ class Command(BaseCommand):
                         );
                     """)
                     if cursor.fetchone()[0]:
-                        self.stdout.write(self.style.SUCCESS(f'  ✅ {col_name} exists in main_loan'))
+                        self.stdout.write(self.style.SUCCESS(f'  ✅ {col_name} exists in loan table'))
                     else:
                         self.stdout.write(self.style.ERROR(f'  ❌ {col_name} still missing!'))
         
