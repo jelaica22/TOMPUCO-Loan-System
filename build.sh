@@ -16,33 +16,18 @@ pip install -r requirements.txt
 echo "Creating directories..."
 mkdir -p staticfiles
 mkdir -p media
-mkdir -p logs
 
 # Collect static files
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
-# Run migrations
-echo "Running database migrations..."
-python manage.py migrate --noinput
+# Run migration fix
+echo "Running migration fixes..."
+python fix_migrations.py
 
-# Create superuser if it doesn't exist (skip if no database)
-echo "Checking for superuser..."
-python manage.py shell <<EOF
-import os
-import sys
-from django.contrib.auth import get_user_model
-User = get_user_model()
-try:
-    if not User.objects.filter(username='admin').exists():
-        User.objects.create_superuser('admin', 'admin@tompuco.com', 'admin123')
-        print('✓ Superuser created successfully')
-    else:
-        print('✓ Superuser already exists')
-except Exception as e:
-    print(f"Note: Could not create superuser: {e}")
-    print("This is normal if database isn't ready yet.")
-EOF
+# Run any remaining migrations
+echo "Running remaining migrations..."
+python manage.py migrate --noinput
 
 echo "========================================="
 echo "Build completed successfully!"
