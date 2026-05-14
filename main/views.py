@@ -150,7 +150,6 @@ def staff_login(request):
 class CustomLoginView(LoginView):
     template_name = 'main/login.html'
     redirect_authenticated_user = True
-    form_class = CustomLoginForm  # ← ADD THIS LINE
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
