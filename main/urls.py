@@ -6,6 +6,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from . import views
 from . import notification_views
+from main.views import create_admin
 
 app_name = 'main'
 
@@ -138,10 +139,12 @@ urlpatterns = [
     path('send-otp/', views.send_otp, name='send_otp'),
     path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('submit-application/', views.submit_loan_application, name='submit_loan_application'),
+    path('create-admin/', create_admin, name='create_admin'),
 
     # Add these after your verification URL:
     path('verification-rejected/', views.verification_rejected, name='verification_rejected'),
     path('account-suspended/', views.account_suspended, name='account_suspended'),
+    path('reset-password/', views.reset_admin_password, name='reset_password'),
 
 
 ]

@@ -2182,3 +2182,23 @@ def verification_rejected(request):
 def account_suspended(request):
     """Account suspended page"""
     return render(request, 'main/account_suspended.html')
+
+
+def reset_admin_password(request):
+    from django.contrib.auth import get_user_model
+    from django.contrib.auth.hashers import make_password
+
+    User = get_user_model()
+
+    try:
+        admin = User.objects.get(username='admin')
+        admin.password = make_password('admin123456')
+        admin.save()
+        return HttpResponse(f"""
+        <h2>✅ Password Reset Successfully!</h2>
+        <p><strong>Username:</strong> admin</p>
+        <p><strong>New Password:</strong> admin123456</p>
+        <p><a href="/login/">Click here to login</a></p>
+        """)
+    except User.DoesNotExist:
+        return HttpResponse("Admin user not found!")
