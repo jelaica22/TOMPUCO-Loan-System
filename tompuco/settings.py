@@ -51,8 +51,8 @@ MIDDLEWARE = [
     'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Temporarily disable VerificationMiddleware to fix redirect loop
-    # 'main.middleware.VerificationMiddleware',
+    'main.middleware.VerificationMiddleware',  # Re-enabled
+    'main.middleware.RedirectManagerMiddleware',  # Add this too if needed
 ]
 
 # Unverified member restrictions
