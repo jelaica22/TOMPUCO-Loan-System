@@ -17,13 +17,14 @@ print("=" * 60)
 print("\n📦 Dropping all tables...")
 with connection.cursor() as cursor:
     cursor.execute("""
-        DO UTF8 DECLARE
+        DO runserver
+        DECLARE
             r RECORD;
         BEGIN
             FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
                 EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
             END LOOP;
-        END UTF8;
+        END runserver;
     """)
     print("  ✓ All tables dropped")
 
