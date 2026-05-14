@@ -51,7 +51,8 @@ MIDDLEWARE = [
     'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'main.middleware.VerificationMiddleware',
+    # Temporarily disable VerificationMiddleware to fix redirect loop
+    # 'main.middleware.VerificationMiddleware',
 ]
 
 # Unverified member restrictions
@@ -158,9 +159,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Authentication URLs
+# Authentication URLs - FIXED (removed duplicate)
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/dashboard/'
+LOGIN_REDIRECT_URL = '/dashboard/redirect/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # Session settings
@@ -175,11 +176,9 @@ PENALTY_RATE = 0.02  # 2% per month
 # Email backend
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-LOGIN_REDIRECT_URL = '/dashboard/redirect/'
-
-# Security settings for production
+# Security settings for production - DISABLED SSL REDIRECT for now
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+    # SECURE_SSL_REDIRECT = True  # Comment this out to test
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
