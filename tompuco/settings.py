@@ -6,11 +6,6 @@ from pathlib import Path
 import os
 import dj_database_url
 
-# reCAPTCHA Configuration
-RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_SITE_KEY', '')
-RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
-
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -18,21 +13,52 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-your-secret-key-here-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'  # Default to False for production safety
 
-# ALLOWED_HOSTS
+# ALLOWED_HOSTS - Production ready
 ALLOWED_HOSTS = [
     'tompuco-loan-system.onrender.com',
     'localhost',
     '127.0.0.1',
-    '*',  # Allow all during testing
 ]
 
-# CSRF Trusted Origins - FIXED (removed duplicates)
+# Add localhost for development only
+if DEBUG:
+    ALLOWED_HOSTS.extend(['0.0.0.0', '*'])
+
+# CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
     'https://tompuco-loan-system.onrender.com',
     'https://*.onrender.com',
 ]
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS.extend([
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+    ])
+
+# ============================================
+# reCAPTCHA Configuration - Production Ready
+# ============================================
+# Read from environment variables (set on Render)
+RECAPTCHA_SITE_KEY = os.environ.get('RECAPTCHA_SITE_KEY', '')
+RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
+RECAPTCHA_PUBLIC_KEY = RECAPTCHA_SITE_KEY
+RECAPTCHA_PRIVATE_KEY = RECAPTCHA_SECRET_KEY
+
+# ⚠️ IMPORTANT: Only use test keys in development, NEVER in production
+# The test keys will show "This reCAPTCHA is for testing purposes only"
+if DEBUG and not RECAPTCHA_SITE_KEY:
+    # Use test keys for local development only
+    RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+    RECAPTCHA_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+    RECAPTCHA_PUBLIC_KEY = RECAPTCHA_SITE_KEY
+    RECAPTCHA_PRIVATE_KEY = RECAPTCHA_SECRET_KEY
+    print("⚠️ Using Google test reCAPTCHA keys for DEVELOPMENT only")
+elif not DEBUG and not RECAPTCHA_SITE_KEY:
+    # This should NEVER happen in production - warn in logs
+    print("❌ ERROR: reCAPTCHA keys not set in production environment!")
 
 # Application definition
 INSTALLED_APPS = [
@@ -47,6 +73,9 @@ INSTALLED_APPS = [
     'django_otp.plugins.otp_totp',
     'django_otp.plugins.otp_static',
     'channels',
+    # reCAPTCHA
+    'django_recaptcha',
+    'captcha',
     # Your apps
     'main',
     'staff',
@@ -55,7 +84,6 @@ INSTALLED_APPS = [
     'manager',
     'admin_panel',
     'reports',
-    'django_recaptcha',
 ]
 
 MIDDLEWARE = [
@@ -68,14 +96,7 @@ MIDDLEWARE = [
     'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Temporarily disable custom middleware to debug 500 error
-    # 'main.middleware.VerificationMiddleware',
-    # 'main.middleware.RedirectManagerMiddleware',
 ]
-
-# Unverified member restrictions
-UNVERIFIED_MAX_LOAN_AMOUNT = 10000
-UNVERIFIED_MAX_ACTIVE_LOANS = 0
 
 ROOT_URLCONF = 'tompuco.urls'
 
@@ -90,12 +111,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'admin_panel.context_processors.admin_profile',
-                'main.context_processors.staff_profile_context',
-                'manager.context_processors.manager_profile',
-                'main.context_processors.member_profile',
-                'cashier.context_processors.cashier_profile',
-                # ✅ ADD THIS LINE - reCAPTCHA context processor
                 'main.context_processors.recaptcha_site_key',
             ],
         },
@@ -174,25 +189,52 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/redirect/'
 LOGOUT_REDIRECT_URL = '/login/'
 
-# Session settings
+# Session settings for "Remember Me" functionality
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_AGE = 3600
+SESSION_COOKIE_AGE = 2592000  # 30 days in seconds
+SESSION_SAVE_EVERY_REQUEST = True
 
 # Staff settings
 STAFF_SESSION_TIMEOUT = 1800
-PENALTY_START_DAYS = 360
-PENALTY_RATE = 0.02
+PENALTY_START_DAYS = 361  # Penalty starts at DAY 361 (after 360 days grace period)
+PENALTY_RATE = 0.02  # 2% per month penalty
 
-# Email backend
+# Email backend (for development)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# Security settings for production - CLEAN VERSION
+# Unverified member restrictions
+UNVERIFIED_MAX_LOAN_AMOUNT = 10000
+UNVERIFIED_MAX_ACTIVE_LOANS = 0
+
+# ============================================
+# SECURITY SETTINGS FOR PRODUCTION
+# ============================================
 if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    # HTTPS settings
     SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+    # Cookie security
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+    # Additional security headers
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
+    # HSTS (HTTP Strict Transport Security)
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # CSRF and Session
     CSRF_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SAMESITE = 'Lax'
+
+# ============================================
+# DEBUG PRINT (REMOVE IN PRODUCTION)
+# ============================================
+# Only print in development to avoid log clutter
+if DEBUG:
+    print(f"✅ reCAPTCHA Site Key: {'✓ Loaded' if RECAPTCHA_SITE_KEY else '✗ NOT SET'}")
+    print(f"🔧 DEBUG mode: {DEBUG}")

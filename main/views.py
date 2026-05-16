@@ -42,7 +42,7 @@ from reportlab.lib.enums import TA_CENTER
 # Django OTP
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
-# Main models (only what exists in main/models.py)
+# Main models
 from .models import (
     Member, Loan, LoanApplication, LoanProduct,
     Payment, PaymentSchedule, Notification, MemberDocument,
@@ -77,18 +77,16 @@ def role_based_redirect(request):
         return redirect('cashier:dashboard')
     elif hasattr(user, 'staff_profile'):
         return redirect('staff:dashboard')
-    if hasattr(user, 'committee_profile'):
+    elif hasattr(user, 'committee_profile'):
         return redirect('committee:dashboard')
     elif hasattr(user, 'manager_profile'):
         return redirect('manager:dashboard')
     elif user.is_superuser:
-        return redirect('admin_panel:dashboard')
+        return redirect('/superadmin/dashboard/')  # Direct URL path
     elif hasattr(user, 'member_profile'):
         return redirect('main:dashboard')
     else:
-        # Default fallback
         return redirect('main:dashboard')
-
 
 # ============================================================
 # QR CODE GENERATION FUNCTIONS
@@ -147,6 +145,13 @@ def staff_login(request):
     return render(request, 'main/staff_login.html')
 
 
+from django.contrib.auth.views import LoginView
+from django.shortcuts import redirect
+from django.contrib import messages
+import requests
+from django.conf import settings
+
+
 class CustomLoginView(LoginView):
     template_name = 'main/login.html'
     redirect_authenticated_user = True
@@ -155,9 +160,9 @@ class CustomLoginView(LoginView):
         if request.user.is_authenticated:
             user = request.user
 
-            # Superuser redirect
+            # Superuser redirect - USE DIRECT URL PATH
             if user.is_superuser:
-                return redirect('admin_panel:dashboard')
+                return redirect('/superadmin/dashboard/')  # Direct path, not namespace
 
             # Staff/Loan Officer redirect
             if hasattr(user, 'staff_profile'):
@@ -175,7 +180,7 @@ class CustomLoginView(LoginView):
             if hasattr(user, 'manager_profile'):
                 return redirect('manager:dashboard')
 
-            # Group redirects (fallback if profiles don't exist)
+            # Group redirects
             if user.groups.filter(name='Manager').exists():
                 return redirect('manager:dashboard')
             if user.groups.filter(name='Committee').exists():
@@ -183,7 +188,7 @@ class CustomLoginView(LoginView):
             if user.groups.filter(name='Cashier').exists():
                 return redirect('cashier:dashboard')
 
-            # Check for staff flag
+            # Staff flag
             if user.is_staff:
                 return redirect('staff:dashboard')
 
@@ -196,47 +201,82 @@ class CustomLoginView(LoginView):
 
         return super().dispatch(request, *args, **kwargs)
 
+    def form_valid(self, form):
+        """Handle Remember Me functionality and reCAPTCHA validation"""
+
+        recaptcha_response = self.request.POST.get('g-recaptcha-response')
+
+        if getattr(settings, 'RECAPTCHA_SITE_KEY', None) and not getattr(settings, 'DEBUG', False):
+            if not recaptcha_response:
+                messages.error(self.request, 'Please complete the reCAPTCHA verification.')
+                return self.form_invalid(form)
+
+            secret_key = getattr(settings, 'RECAPTCHA_SECRET_KEY', '')
+            verify_url = 'https://www.google.com/recaptcha/api/siteverify'
+
+            try:
+                result = requests.post(verify_url, data={
+                    'secret': secret_key,
+                    'response': recaptcha_response
+                }).json()
+
+                if not result.get('success'):
+                    messages.error(self.request, 'reCAPTCHA verification failed. Please try again.')
+                    return self.form_invalid(form)
+            except Exception:
+                messages.error(self.request, 'reCAPTCHA verification error. Please try again.')
+                return self.form_invalid(form)
+
+        response = super().form_valid(form)
+
+        if self.request.POST.get('rememberMe'):
+            self.request.session.set_expiry(2592000)
+        else:
+            self.request.session.set_expiry(0)
+
+        return response
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Invalid username or password. Please try again.')
+        return super().form_invalid(form)
+
     def get_success_url(self):
         user = self.request.user
 
-        # Superuser redirect
+        # Superuser redirect - USE DIRECT URL PATH
         if user.is_superuser:
-            return reverse_lazy('admin_panel:dashboard')
+            return '/superadmin/dashboard/'
 
         # Staff/Loan Officer redirect
         if hasattr(user, 'staff_profile'):
-            return reverse_lazy('staff:dashboard')
+            return '/staff/dashboard/'
 
         # Cashier redirect
         if hasattr(user, 'cashier_profile'):
-            return reverse_lazy('cashier:dashboard')
+            return '/cashier/dashboard/'
 
         # Committee redirect
         if hasattr(user, 'committee_profile'):
-            return reverse_lazy('committee:dashboard')
+            return '/committee/dashboard/'
 
         # Manager redirect
         if hasattr(user, 'manager_profile'):
-            return reverse_lazy('manager:dashboard')
+            return '/manager/dashboard/'
 
-        # Group redirects (fallback)
+        # Group redirects
         if user.groups.filter(name='Manager').exists():
-            return reverse_lazy('manager:dashboard')
+            return '/manager/dashboard/'
         if user.groups.filter(name='Committee').exists():
-            return reverse_lazy('committee:dashboard')
+            return '/committee/dashboard/'
         if user.groups.filter(name='Cashier').exists():
-            return reverse_lazy('cashier:dashboard')
+            return '/cashier/dashboard/'
 
         # Staff flag
         if user.is_staff:
-            return reverse_lazy('staff:dashboard')
+            return '/staff/dashboard/'
 
         # Regular member
-        if hasattr(user, 'member_profile'):
-            return reverse_lazy('main:dashboard')
-
-        # Default fallback
-        return reverse_lazy('main:dashboard')
+        return '/dashboard/'
 
 
 def landing_page(request):
@@ -293,7 +333,6 @@ def check_email(request):
 
 def verification_pending(request):
     """Verification pending page"""
-    # If user is already verified, redirect to dashboard
     if request.user.is_authenticated and hasattr(request.user, 'member_profile'):
         member = request.user.member_profile
         if member.verification_status == 'verified' and member.is_active:
@@ -301,11 +340,14 @@ def verification_pending(request):
     return render(request, 'main/verification_pending.html')
 
 
+from django.conf import settings
+import requests
+
+
 def register(request):
     if request.method == 'POST':
         from datetime import datetime
 
-        # Helper function for safe Decimal conversion
         def safe_decimal(value, default=0):
             if value and str(value).strip() and str(value) != '':
                 try:
@@ -321,6 +363,28 @@ def register(request):
                 except:
                     return default
             return default
+
+        # reCAPTCHA validation
+        recaptcha_response = request.POST.get('g-recaptcha-response')
+        if not recaptcha_response and not settings.DEBUG:
+            messages.error(request, "Please complete the reCAPTCHA verification.")
+            return render(request, 'registration/register.html')
+
+        secret_key = getattr(settings, 'RECAPTCHA_SECRET_KEY', None)
+
+        if secret_key and not settings.DEBUG:
+            verify_url = 'https://www.google.com/recaptcha/api/siteverify'
+            try:
+                result = requests.post(verify_url, data={
+                    'secret': secret_key,
+                    'response': recaptcha_response
+                }).json()
+                if not result.get('success'):
+                    messages.error(request, "reCAPTCHA verification failed. Please try again.")
+                    return render(request, 'registration/register.html')
+            except Exception:
+                messages.error(request, "reCAPTCHA verification error. Please try again.")
+                return render(request, 'registration/register.html')
 
         # Get basic account data
         username = request.POST.get('username')
@@ -352,21 +416,41 @@ def register(request):
         spouse_name = request.POST.get('spouse_name', '')
         num_dependents = safe_int(request.POST.get('num_dependents', 0))
 
+        # Contact number validation
+        contact_digits = ''.join(filter(str.isdigit, contact_number))
+        if len(contact_digits) != 11:
+            messages.error(request, "Contact number must be exactly 11 digits.")
+            return render(request, 'registration/register.html')
+
         # Farm data
         farm_location = request.POST.get('farm_location', '')
+        if farm_location in ['N/A', 'n/a', '']:
+            farm_location = ''
         farm_owned_hectares = safe_decimal(request.POST.get('farm_owned_hectares', 0))
         farm_leased_hectares = safe_decimal(request.POST.get('farm_leased_hectares', 0))
         area_planted = safe_decimal(request.POST.get('area_planted', 0))
         new_plant = safe_decimal(request.POST.get('new_plant', 0))
         ratoon_crops = safe_decimal(request.POST.get('ratoon_crops', 0))
         adjacent_farm = request.POST.get('adjacent_farm', '')
+        if adjacent_farm in ['N/A', 'n/a', '']:
+            adjacent_farm = ''
 
         # Income data
         monthly_income = safe_decimal(request.POST.get('monthly_income', 0))
+        other_income_sources = request.POST.get('other_income_sources', '')
+        if other_income_sources in ['N/A', 'n/a', '']:
+            other_income_sources = ''
+        other_loans = request.POST.get('other_loans', '')
+        if other_loans in ['N/A', 'n/a', '']:
+            other_loans = ''
 
         # Employee specific fields
         employee_position = request.POST.get('position', '')
+        if employee_position in ['N/A', 'n/a', '']:
+            employee_position = ''
         employee_id = request.POST.get('employee_id', '')
+        if employee_id in ['N/A', 'n/a', '']:
+            employee_id = ''
         date_hired_str = request.POST.get('date_hired', '')
 
         if date_hired_str and date_hired_str.strip() and user_type == 'employee':
@@ -377,13 +461,18 @@ def register(request):
         else:
             date_hired = None
 
-        # Validate
+        # Validation
         if user_type not in ['member', 'employee']:
             messages.error(request, "Invalid account type selected.")
             return render(request, 'registration/register.html')
 
-        if not all([username, password, email, last_name, first_name, contact_number, residence_address]):
+        required_fields = [username, password, email, last_name, first_name, contact_number, residence_address, monthly_income]
+        if not all(required_fields):
             messages.error(request, "Please fill in all required fields.")
+            return render(request, 'registration/register.html')
+
+        if monthly_income <= 0:
+            messages.error(request, "Monthly income must be greater than 0.")
             return render(request, 'registration/register.html')
 
         if User.objects.filter(username=username).exists():
@@ -392,6 +481,32 @@ def register(request):
 
         if User.objects.filter(email=email).exists():
             messages.error(request, "Email already registered.")
+            return render(request, 'registration/register.html')
+
+        # Password validation
+        if len(password) < 8:
+            messages.error(request, "Password must be at least 8 characters long.")
+            return render(request, 'registration/register.html')
+
+        if not any(c.isupper() for c in password):
+            messages.error(request, "Password must contain at least one uppercase letter.")
+            return render(request, 'registration/register.html')
+
+        if not any(c.islower() for c in password):
+            messages.error(request, "Password must contain at least one lowercase letter.")
+            return render(request, 'registration/register.html')
+
+        if not any(c.isdigit() for c in password):
+            messages.error(request, "Password must contain at least one number.")
+            return render(request, 'registration/register.html')
+
+        # Terms validation
+        terms = request.POST.get('terms')
+        data_privacy = request.POST.get('dataPrivacy')
+        agree_terms = request.POST.get('agreeTerms')
+
+        if not (terms and data_privacy and agree_terms):
+            messages.error(request, "You must agree to all terms and conditions.")
             return render(request, 'registration/register.html')
 
         try:
@@ -404,27 +519,11 @@ def register(request):
                 last_name=last_name
             )
 
-            # Generate UNIQUE membership number with retry logic
+            # Generate membership number
             import random
-            max_attempts = 10
-            membership_number = None
-
-            for attempt in range(max_attempts):
-                # Generate number like M-37897 (based on your pattern)
-                new_number = random.randint(10000, 99999)
-                test_number = f"M-{new_number}"
-
-                # Also check M-2026-XXXX format
-                test_number2 = f"M-{datetime.now().year}-{new_number:04d}"
-
-                if not Member.objects.filter(membership_number=test_number).exists() and \
-                        not Member.objects.filter(membership_number=test_number2).exists():
-                    membership_number = test_number
-                    break
-
-            # If all attempts failed, use timestamp
-            if not membership_number:
-                membership_number = f"M-{int(datetime.now().timestamp())}"
+            membership_number = f"M-{random.randint(10000, 99999)}"
+            while Member.objects.filter(membership_number=membership_number).exists():
+                membership_number = f"M-{random.randint(10000, 99999)}"
 
             # Create Member profile
             member = Member.objects.create(
@@ -450,9 +549,11 @@ def register(request):
                 ratoon_crops=ratoon_crops,
                 adjacent_farm=adjacent_farm if adjacent_farm else None,
                 monthly_income=monthly_income,
+                other_income_sources=other_income_sources if other_income_sources else None,
+                other_loans=other_loans if other_loans else None,
                 employment_status=user_type,
-                employee_id=employee_id if user_type == 'employee' else None,
-                position=employee_position if user_type == 'employee' else None,
+                employee_id=employee_id if user_type == 'employee' and employee_id else None,
+                position=employee_position if user_type == 'employee' and employee_position else None,
                 date_hired=date_hired,
                 salary_loan_eligible=(user_type == 'employee'),
                 max_regular_loan=Decimal('10000'),
@@ -465,7 +566,6 @@ def register(request):
             )
 
             # Notify admins
-            from main.notification_helper import create_notification
             for admin in User.objects.filter(is_superuser=True):
                 create_notification(
                     recipient=admin,
@@ -476,7 +576,6 @@ def register(request):
                 )
 
             # Notify staff
-            from staff.models import StaffProfile
             for staff_profile in StaffProfile.objects.filter(is_active=True):
                 create_notification(
                     recipient=staff_profile.user,
@@ -492,7 +591,7 @@ def register(request):
                 notification_type='system',
                 title='Registration Received',
                 message=f'Thank you for registering {first_name}! Your account is pending verification.',
-                link='/verification-pending/'  # ← CHANGE THIS
+                link='/verification-pending/'
             )
 
             messages.success(request,
@@ -500,7 +599,6 @@ def register(request):
             return redirect('main:verification_pending')
 
         except IntegrityError as e:
-            # Clean up user if member creation failed
             if User.objects.filter(username=username).exists():
                 User.objects.filter(username=username).delete()
             messages.error(request, f"Registration failed: {str(e)}")
@@ -554,53 +652,37 @@ def log_audit(user, action, entity_type, entity_id=None, old_values=None, new_va
 def dashboard(request):
     user = request.user
 
-    # Superuser redirect
+    # Role-based redirects
     if user.is_superuser:
-        return redirect('admin_panel:dashboard')
-
-    # Staff/Loan Officer redirect
+        return redirect('superadmin:dashboard')
     if hasattr(user, 'staff_profile'):
         return redirect('staff:dashboard')
-
-    # Cashier redirect
     if hasattr(user, 'cashier_profile'):
         return redirect('cashier:dashboard')
-
-    # Committee redirect
     if hasattr(user, 'committee_profile'):
         return redirect('committee:dashboard')
-
-    # Manager redirect
     if hasattr(user, 'manager_profile'):
         return redirect('manager:dashboard')
-
-    # Group redirects (fallback)
     if user.groups.filter(name='Manager').exists():
         return redirect('manager:dashboard')
     if user.groups.filter(name='Committee').exists():
         return redirect('committee:dashboard')
     if user.groups.filter(name='Cashier').exists():
         return redirect('cashier:dashboard')
-
-    # Staff flag
     if user.is_staff:
         return redirect('staff:dashboard')
 
     # Regular member dashboard
     try:
         member = user.member_profile
-        # FIXED: changed 'borrower' to 'member'
         loans = Loan.objects.filter(member=member)
-        # FIXED: changed 'principal_amount' to 'amount'
         total_loaned = loans.aggregate(total=Sum('amount'))['total'] or Decimal(0)
         active_loans = loans.filter(status='active')
         total_paid = Payment.objects.filter(member=member, status='completed').aggregate(total=Sum('amount'))['total'] or Decimal(0)
-        # FIXED: changed '-created_at' to '-applied_date' if needed
         applications = LoanApplication.objects.filter(member=member).order_by('-applied_date')[:5]
         pending_applications = LoanApplication.objects.filter(member=member, status='pending_staff_review').count()
         profile_completeness = calculate_profile_completeness(member)
         unread_count = get_unread_count(user)
-
         total_remaining = active_loans.aggregate(total=Sum('remaining_balance'))['total'] or Decimal(0)
 
         next_due = None
@@ -638,12 +720,9 @@ def member_profile(request):
         member = request.user.member_profile
         profile_completeness = calculate_profile_completeness(member)
         documents_count = MemberDocument.objects.filter(member=member).count()
-        # FIXED: changed 'borrower' to 'member'
         total_loans = Loan.objects.filter(member=member).count()
-        # FIXED: changed 'principal_amount' to 'amount'
         total_borrowed = Loan.objects.filter(member=member, status='paid').aggregate(
             total=Sum('amount'))['total'] or Decimal(0)
-        comaker_loans = 0  # Set to 0 if co_maker field doesn't exist
         qr_image = generate_member_qr_code(member)
 
         return render(request, 'main/member_profile.html', {
@@ -652,7 +731,6 @@ def member_profile(request):
             'documents_count': documents_count,
             'total_loans': total_loans,
             'total_borrowed': total_borrowed,
-            'comaker_loans': comaker_loans,
             'qr_image': qr_image,
         })
     except Member.DoesNotExist:
@@ -693,7 +771,6 @@ def edit_profile(request):
                     value = value[:max_length]
                 return value
 
-            # Basic Info
             first_name = clean_string(request.POST.get('first_name', ''))
             last_name = clean_string(request.POST.get('last_name', ''))
             middle_initial = clean_string(request.POST.get('middle_initial', ''), max_length=1)
@@ -702,12 +779,10 @@ def edit_profile(request):
             if nationality == 'None':
                 nationality = 'Filipino'
 
-            # Gender
             gender = request.POST.get('gender', '')
             if gender == 'None':
                 gender = ''
 
-            # Age
             age = request.POST.get('age', 0)
             if age == 'None' or age == '':
                 age = 0
@@ -717,12 +792,10 @@ def edit_profile(request):
                 except:
                     age = 0
 
-            # Contact and Address
             contact_number = clean_string(request.POST.get('contact_number', ''))
             residence_address = clean_string(request.POST.get('residence_address', ''))
             spouse_name = clean_string(request.POST.get('spouse_name', ''))
 
-            # Dependents
             num_dependents = request.POST.get('num_dependents', 0)
             if num_dependents == 'None' or num_dependents == '':
                 num_dependents = 0
@@ -732,32 +805,21 @@ def edit_profile(request):
                 except:
                     num_dependents = 0
 
-            # Farm Location
             farm_location = clean_string(request.POST.get('farm_location', ''))
 
-            # ============================================
-            # BIRTHDATE FIX - DON'T PARSE IF ALREADY DATE
-            # ============================================
+            # Birthdate
             birthdate_input = request.POST.get('birthdate')
-            # Only update birthdate if a new value was provided AND it's not the existing date object
             if birthdate_input and birthdate_input != 'None' and birthdate_input != '':
-                # Check if it's a string (from form input)
                 if isinstance(birthdate_input, str):
                     try:
-                        # Try YYYY-MM-DD format
                         member.birthdate = datetime.strptime(birthdate_input, '%Y-%m-%d').date()
                     except ValueError:
                         try:
-                            # Try DD/MM/YYYY format
                             member.birthdate = datetime.strptime(birthdate_input, '%d/%m/%Y').date()
                         except ValueError:
-                            # Invalid date format, keep existing
                             pass
-            # If no birthdate provided, keep existing (don't change)
 
-            # ============================================
-            # PROFILE PICTURE
-            # ============================================
+            # Profile picture
             if request.FILES.get('profile_picture'):
                 if member.profile_picture:
                     try:
@@ -774,17 +836,13 @@ def edit_profile(request):
                         pass
                     member.profile_picture = None
 
-            # ============================================
-            # SAVE USER
-            # ============================================
+            # Save user
             user = request.user
             user.first_name = first_name
             user.last_name = last_name
             user.save()
 
-            # ============================================
-            # SAVE MEMBER
-            # ============================================
+            # Save member
             member.first_name = first_name
             member.last_name = last_name
             member.middle_initial = middle_initial
@@ -860,14 +918,12 @@ def apply_loan(request):
     try:
         member = request.user.member_profile
         loan_products = LoanProduct.objects.filter(is_active=True)
-
-        # Check if member is employee
-        is_employee = member.employment_status == 'employee'  # ✅ FIXED
+        is_employee = member.employment_status == 'employee'
 
         context = {
             'member': member,
             'loan_products': loan_products,
-            'is_employee': is_employee,  # Pass this to template
+            'is_employee': is_employee,
             'has_active_loan': Loan.objects.filter(member=member, status='active').exists(),
         }
         return render(request, 'main/apply_loan.html', context)
@@ -886,20 +942,17 @@ def submit_loan_application(request):
 
             data = json.loads(request.body)
 
-            # Get member
             if not hasattr(request.user, 'member_profile'):
                 return JsonResponse({'success': False, 'error': 'Member profile not found'})
 
             member = request.user.member_profile
-
-            # Get loan product
             loan_type = data.get('loan_type')
+
             try:
                 loan_product = LoanProduct.objects.get(name=loan_type)
             except LoanProduct.DoesNotExist:
                 return JsonResponse({'success': False, 'error': f'Loan product {loan_type} not found'})
 
-            # Create application with correct field names
             application = LoanApplication.objects.create(
                 application_id=f"APP-{loan_product.name}-{date.today().year}-{random.randint(1000, 9999)}",
                 member=member,
@@ -1058,7 +1111,6 @@ def my_applications(request):
 @login_required
 def my_loans(request):
     try:
-        # FIXED: changed 'borrower' to 'member'
         loans = Loan.objects.filter(member=request.user.member_profile).order_by('-created_at')
         status_colors = {
             'pending_disbursement': 'warning',
@@ -1069,11 +1121,9 @@ def my_loans(request):
             'defaulted': 'danger',
         }
         for loan in loans:
-            loan.total_paid = Payment.objects.filter(loan=loan, status='completed').aggregate(total=Sum('amount'))[
-                                  'total'] or Decimal(0)
+            loan.total_paid = Payment.objects.filter(loan=loan, status='completed').aggregate(total=Sum('amount'))['total'] or Decimal(0)
             loan.status_color = status_colors.get(loan.status, 'secondary')
-            loan.payment_percentage = int(
-                (loan.total_paid / loan.total_payable) * 100) if loan.total_payable > 0 else 0
+            loan.payment_percentage = int((loan.total_paid / loan.total_payable) * 100) if loan.total_payable > 0 else 0
             next_schedule = PaymentSchedule.objects.filter(loan=loan, status='pending').order_by('due_date').first()
             loan.next_payment_due = next_schedule.due_date if next_schedule else None
             loan.next_payment_amount = next_schedule.total_due if next_schedule else None
@@ -1106,11 +1156,9 @@ def view_application_details(request, app_id):
         status_steps = [
             {'key': 'pending_staff_review', 'label': 'Submitted', 'icon': '📋', 'completed': True},
             {'key': 'with_committee', 'label': 'Committee Review', 'icon': '👥',
-             'completed': application.status in ['with_committee', 'line_approved', 'pending_manager_approval',
-                                                 'manager_approved', 'active', 'ready_for_disbursement', 'disbursed']},
+             'completed': application.status in ['with_committee', 'line_approved', 'pending_manager_approval', 'manager_approved', 'active', 'ready_for_disbursement', 'disbursed']},
             {'key': 'line_approved', 'label': 'Line Approved', 'icon': '✓',
-             'completed': application.status in ['line_approved', 'pending_manager_approval', 'manager_approved',
-                                                 'active', 'ready_for_disbursement', 'disbursed']},
+             'completed': application.status in ['line_approved', 'pending_manager_approval', 'manager_approved', 'active', 'ready_for_disbursement', 'disbursed']},
             {'key': 'pending_manager_approval', 'label': 'Manager Approval', 'icon': '👔',
              'completed': application.status in ['manager_approved', 'active', 'ready_for_disbursement', 'disbursed']},
             {'key': 'manager_approved', 'label': 'Approved', 'icon': '✅',
@@ -1141,7 +1189,6 @@ def view_application_details(request, app_id):
 @login_required
 def payment_schedule(request, loan_id):
     try:
-        # FIXED: changed 'borrower' to 'member'
         loan = get_object_or_404(Loan, id=loan_id, member=request.user.member_profile)
         schedules = PaymentSchedule.objects.filter(loan=loan).order_by('due_date')
 
@@ -1313,7 +1360,6 @@ def mark_all_notifications_read(request):
 def member_loan_status(request):
     try:
         member = request.user.member_profile
-        # FIXED: changed 'borrower' to 'member'
         active_loans = Loan.objects.filter(member=member, status='active')
         has_active_loan = active_loans.exists()
         outstanding_balance = active_loans.aggregate(total=Sum('remaining_balance'))['total'] or 0
@@ -1386,118 +1432,92 @@ def delete_document(request, doc_id):
 
 @login_required
 def chatbot_api(request):
+    """Enhanced chatbot API endpoint with multi-language support"""
     if request.method == 'POST':
         try:
+            import json
             data = json.loads(request.body)
             question = data.get('message', '').lower().strip()
+            language = data.get('language', 'en')
 
-            # Simple response logic
-            if 'hello' in question or 'hi' in question or 'hey' in question:
-                response = "👋 Hello! Welcome to ToMPuCo Assistant. How can I help you today?"
-            elif 'apply' in question or 'application' in question:
-                response = """📝 **How to Apply for a Loan:**
+            responses = {
+                'en': {
+                    'loan_req': "📋 **Loan Requirements:**\n\n✅ Valid Government ID\n✅ Proof of Income\n✅ Collateral Documents\n✅ Co-maker (for most loans)\n✅ Completed Application Form\n\n💡 Salary Loan does NOT require a co-maker!",
+                    'interest': "💰 **Interest Rates:**\n\n• NCL: 20% per annum\n• APCP: 15% per annum\n• Salary Loan: 8% per annum (for employees)\n• Collateral: 20% per annum\n• B2B: 20% per annum\n• Providential: 16% per annum\n• Trade: 18% per annum\n\n💡 Interest is diminishing - you pay interest only on remaining balance!",
+                    'payment': "💳 **How to Pay:**\n\n1️⃣ Go to STAFF - they issue Payment Instruction Slip\n2️⃣ Take slip to CASHIER\n3️⃣ Pay via Cash, Pesada (Scale Ticket), or Quedan (Sugar QS)\n\nYou can pay anytime, even before due date!",
+                    'status': "📌 **Application Status Meanings:**\n\n• Pending Review - Staff checking documents\n• With Committee - Committee reviewing\n• Line Approved - Amount approved\n• Pending Manager - Manager final approval\n• Active - Loan disbursed\n• Rejected - Application denied (reason provided)",
+                    'how_to_apply': "📝 **How to Apply:**\n\n1️⃣ Login to your account\n2️⃣ Click 'Apply for Loan'\n3️⃣ Fill out application form\n4️⃣ Upload required documents\n5️⃣ Provide co-maker details\n6️⃣ Draw digital signature\n7️⃣ Verify with OTP\n8️⃣ Submit!\n\n⏱️ Processing takes 24-48 hours.",
+                    'restructuring': "🔄 **Loan Restructuring:**\n\nIf you're having difficulty paying:\n• No penalty on old loan\n• Same interest rate\n• New payment schedule based on your capacity\n• NO additional cash released\n\nContact our staff to discuss options!",
+                    'salary_loan': "💼 **Salary Loan:**\n\n• Interest: 8% per annum (lowest!)\n• No co-maker required!\n• For employees only\n• Max amount: ₱500,000\n• Term: 360 days\n\n✅ Must be an active employee with regular salary!",
+                    'employee_benefits': "👔 **Employee Member Benefits:**\n\n✅ Salary Loan access (8% interest)\n✅ Higher loan limits\n✅ Faster processing\n✅ No co-maker for Salary Loan\n✅ Salary deduction option available",
+                    'contact': "📞 **Contact Us:**\n\n📱 Phone: (035) 123-4567\n📧 Email: info@tompuco.ph\n📍 Villareal, Bayawan City, Negros Oriental\n\n🕐 Mon-Fri: 8AM-5PM\n🕐 Sat: 9AM-12PM",
+                    'default': "🤖 I'm TOMPuCO Assistant!\n\nI can help you with:\n• Loan requirements 📋\n• Interest rates 💰\n• How to apply 📝\n• Payment methods 💵\n• Loan status 📊\n• Restructuring 🔄\n• Salary Loan 💼\n• Employee benefits 👔\n\nWhat would you like to know?",
+                    'greeting': "👋 Hello! Welcome to TOMPuCO Assistant! How can I help you today?",
+                    'thank_you': "🙏 You're welcome! Is there anything else I can help you with?",
+                    'goodbye': "👋 Thank you for chatting! Come back anytime if you have questions. Have a great day!"
+                },
+                'tl': {
+                    'loan_req': "📋 **Mga Kinakailangan sa Loan:**\n\n✅ Valid Government ID\n✅ Patunay ng Kita\n✅ Collateral Documents\n✅ Co-maker (sa karamihan ng loans)\n✅ Nakumpletong Application Form\n\n💡 Ang Salary Loan ay HINDI nangangailangan ng co-maker!",
+                    'interest': "💰 **Mga Interest Rates:**\n\n• NCL: 20% bawat taon\n• APCP: 15% bawat taon\n• Salary Loan: 8% bawat taon\n• Collateral: 20% bawat taon\n\n💡 Diminishing interest - interes lang sa natitirang balanse ang babayaran!",
+                    'payment': "💳 **Paano Magbayad:**\n\n1️⃣ Pumunta sa STAFF - kumuha ng Payment Instruction Slip\n2️⃣ Dalhin ang slip sa CASHIER\n3️⃣ Magbayad sa pamamagitan ng Cash, Pesada, o Quedan\n\nPwedeng magbayad kahit kailan, kahit bago ang due date!",
+                    'status': "📌 **Kahulugan ng Application Status:**\n\n• Pending Review - Sinusuri ng staff ang documents\n• With Committee - Sinusuri ng committee\n• Line Approved - Naaprubahan ang halaga\n• Active - Na-release na ang loan\n• Rejected - Hindi naaprubahan",
+                    'how_to_apply': "📝 **Paano Mag-apply:**\n\n1️⃣ Mag-login sa account\n2️⃣ I-click ang 'Apply for Loan'\n3️⃣ Punan ang application form\n4️⃣ Mag-upload ng requirements\n5️⃣ Magbigay ng co-maker details\n6️⃣ Gumuhit ng digital signature\n7️⃣ Mag-verify gamit ang OTP\n8️⃣ I-submit!\n\n⏱️ 24-48 hours ang processing.",
+                    'restructuring': "🔄 **Loan Restructuring:**\n\nKung nahihirapan kang magbayad:\n• Walang penalty sa lumang loan\n• Pareho ang interest rate\n• Bagong payment schedule ayon sa kakayahan\n• WALANG karagdagang cash na ilalabas\n\nMakipag-ugnayan sa aming staff!",
+                    'salary_loan': "💼 **Salary Loan:**\n\n• Interest: 8% bawat taon (pinakamababa!)\n• Hindi kailangan ng co-maker!\n• Para sa mga empleyado lamang\n• Max amount: ₱500,000\n\n✅ Aktibong empleyado na may regular na suweldo!",
+                    'employee_benefits': "👔 **Mga Benepisyo ng Employee Member:**\n\n✅ Salary Loan access (8% interest)\n✅ Mas mataas na loan limits\n✅ Mas mabilis na processing\n✅ Walang co-maker para sa Salary Loan\n✅ Opsyon ng salary deduction",
+                    'contact': "📞 **Makipag-ugnayan:**\n\n📱 Telepono: (035) 123-4567\n📧 Email: info@tompuco.ph\n📍 Villareal, Bayawan City, Negros Oriental\n\n🕐 Lunes-Biyernes: 8AM-5PM\n🕐 Sabado: 9AM-12PM",
+                    'default': "🤖 Ako si TOMPuCO Assistant!\n\nMaaari kitang tulungan sa:\n• Mga kinakailangan sa loan 📋\n• Interest rates 💰\n• Paano mag-apply 📝\n• Paraan ng pagbabayad 💵\n• Status ng loan 📊\n• Restructuring 🔄\n• Salary Loan 💼\n• Employee benefits 👔\n\nAno ang gusto mong malaman?",
+                    'greeting': "👋 Kamusta! Maligayang pagdating sa TOMPuCO Assistant! Paano kita matutulungan ngayon?",
+                    'thank_you': "🙏 Walang anuman! May iba pa ba akong maitutulong sa iyo?",
+                    'goodbye': "👋 Salamat sa pag-chat! Bumalik ka anumang oras kung may tanong. Magandang araw!"
+                },
+                'bis': {
+                    'loan_req': "📋 **Mga Kinahanglanon sa Loan:**\n\n✅ Valid Government ID\n✅ Pamatuod sa Kita\n✅ Collateral Documents\n✅ Co-maker (saadaghanang loans)\n✅ Nakumpleto nga Application Form\n\n💡 Ang Salary Loan WALAY kinahanglan nga co-maker!",
+                    'interest': "💰 **Mga Interest Rates:**\n\n• NCL: 20% matag tuig\n• APCP: 15% matag tuig\n• Salary Loan: 8% matag tuig\n• Collateral: 20% matag tuig\n\n💡 Diminishing interest - interes lang sa nahabilin nga balanse ang bayaran!",
+                    'payment': "💳 **Paano Magbayad:**\n\n1️⃣ Adto sa STAFF - kuha ug Payment Instruction Slip\n2️⃣ Dad-a ang slip sa CASHIER\n3️⃣ Pagbayad pinaagi sa Cash, Pesada, o Quedan\n\nPwede magbayad bisan kanus-a, bisan sa wala pa ang due date!",
+                    'status': "📌 **Kahulugan sa Application Status:**\n\n• Pending Review - Gisusi sa staff ang documents\n• With Committee - Gisusi sa committee\n• Line Approved - Naaprubahan ang kantidad\n• Active - Na-release na ang loan\n• Rejected - Wala maaprubahan",
+                    'how_to_apply': "📝 **Paano Mag-apply:**\n\n1️⃣ Mag-login sa account\n2️⃣ I-klik ang 'Apply for Loan'\n3️⃣ Pun-an ang application form\n4️⃣ Mag-upload sa requirements\n5️⃣ Paghatag sa co-maker details\n6️⃣ Pagdrawing sa digital signature\n7️⃣ Pag-verify gamit ang OTP\n8️⃣ I-submit!\n\n⏱️ 24-48 hours ang processing.",
+                    'restructuring': "🔄 **Loan Restructuring:**\n\nKung naglisod ka sa pagbayad:\n• Walay penalty sa daan nga loan\n• Pareho ang interest rate\n• Bag-ong payment schedule base sa kakayahan\n• WALAY dugang nga cash nga igawas\n\nMakig-ugnayan sa among staff!",
+                    'salary_loan': "💼 **Salary Loan:**\n\n• Interest: 8% matag tuig (pinakaubos!)\n• DILI kinahanglan ug co-maker!\n• Para sa mga empleyado lamang\n• Max amount: ₱500,000\n\n✅ Aktibong empleyado nga adunay regular nga suweldo!",
+                    'employee_benefits': "👔 **Mga Benepisyo sa Employee Member:**\n\n✅ Salary Loan access (8% interest)\n✅ Mas taas nga loan limits\n✅ Mas paspas nga processing\n✅ Walay co-maker para sa Salary Loan\n✅ Opsyon sa salary deduction",
+                    'contact': "📞 **Pakig-ugnayan:**\n\n📱 Telepono: (035) 123-4567\n📧 Email: info@tompuco.ph\n📍 Villareal, Bayawan City, Negros Oriental\n\n🕐 Lunes-Biyernes: 8AM-5PM\n🕐 Sabado: 9AM-12PM",
+                    'default': "🤖 Ako si TOMPuCO Assistant!\n\nMakatabang ko kanimo sa:\n• Mga kinahanglanon sa loan 📋\n• Interest rates 💰\n• Unsaon pag-apply 📝\n• Paagi sa pagbayad 💵\n• Status sa loan 📊\n• Restructuring 🔄\n• Salary Loan 💼\n• Employee benefits 👔\n\nUnsa ang gusto nimong mahibaw-an?",
+                    'greeting': "👋 Kumusta! Maayong pag-abot sa TOMPuCO Assistant! Unsaon tika pagtabang?",
+                    'thank_you': "🙏 Walay sapayan! Naa pa bay lain akong matabang kanimo?",
+                    'goodbye': "👋 Salamat sa pag-chat! Balik kanunay kung naay pangutana. Maayong adlaw!"
+                }
+            }
 
-1️⃣ Click "Apply for Loan" on your dashboard
-2️⃣ Select loan type and amount
-3️⃣ Add co-maker (if required)
-4️⃣ Upload required documents
-5️⃣ Draw your signature and verify OTP
+            r = responses.get(language, responses['en'])
 
-Staff will review your application within 24-48 hours."""
-            elif 'balance' in question or 'remaining' in question:
-                response = """💰 **Check Your Balance:**
-
-Go to "My Loans" page on your dashboard.
-Click on your active loan to see:
-• Principal amount
-• Remaining balance
-• Next payment due date
-• Monthly payment amount"""
-            elif 'pay' in question or 'payment' in question:
-                response = """💳 **How to Pay Your Loan:**
-
-1️⃣ Visit our office
-2️⃣ Go to STAFF first - they will issue Payment Instruction Slip
-3️⃣ Take the slip to CASHIER to pay
-
-Accepted Methods: Cash, Pesada (Scale Ticket), Quedan (Sugar QS)"""
-            elif 'requirement' in question or 'need' in question or 'document' in question:
-                response = """📋 **Loan Requirements:**
-
-✅ Valid ID (Government-issued)
-✅ Proof of Income (Payslip/Business permit)
-✅ Collateral Documents (Land Title, etc.)
-✅ Co-maker (required for most loans)
-
-💡 Salary Loan does NOT require a co-maker."""
-            elif 'interest' in question or 'rate' in question:
-                response = """📊 **Interest Rates:**
-
-• NCL: 20% per annum
-• APCP: 15% per annum
-• Salary Loan: 8% per annum
-• Collateralized: 20% per annum
-• Providential: 16% per annum
-
-💡 Interest is diminishing - decreases each month as you pay."""
-            elif 'co-maker' in question or 'comaker' in question:
-                response = """👥 **About Co-maker:**
-
-✅ Must be an active ToMPuCo member
-✅ No overdue loans
-✅ Cannot be yourself
-✅ Maximum 3 active loans as co-maker
-
-💡 Salary Loan does NOT require a co-maker."""
-            elif 'status' in question:
-                response = """📌 **Application Status Meanings:**
-
-• Pending Staff Review - Staff is reviewing
-• With Committee - With committee for approval
-• Line Approved - Committee approved amount
-• Pending Manager Approval - Waiting for manager
-• Active - Loan disbursed
-• Rejected - Denied (reason provided)
-
-Go to "My Applications" page to see exact status."""
-            elif 'contact' in question or 'support' in question or 'call' in question:
-                response = """📞 **Contact Us:**
-
-📱 Phone: (035) 123-4567
-📧 Email: support@tompuco.com.ph
-📍 Address: Villareal, Bayawan City, Negros Oriental
-
-🕐 Office Hours:
-Monday - Friday: 7:00 AM - 4:00 PM
-Saturday: 8:00 AM - 12:00 PM
-Sunday: Closed"""
-            elif 'qr' in question or 'scan' in question or 'code' in question:
-                response = """📱 **QR Code Payment:**
-
-You can find your QR code in:
-• Your Profile page
-• Dashboard "My QR Code" section
-
-Show this QR code to the cashier for faster payment processing!"""
-            elif 'thank' in question or 'salamat' in question:
-                response = "🙏 You're welcome! Is there anything else I can help you with?"
+            if any(word in question for word in ['require', 'need', 'kinahanglan', 'requirements', 'document']):
+                response = r['loan_req']
+            elif any(word in question for word in ['interest', 'rate', 'interes']):
+                response = r['interest']
+            elif any(word in question for word in ['pay', 'payment', 'bayad']):
+                response = r['payment']
+            elif any(word in question for word in ['status', 'application']):
+                response = r['status']
+            elif any(word in question for word in ['apply', 'mag-apply']):
+                response = r['how_to_apply']
+            elif any(word in question for word in ['restructur']):
+                response = r['restructuring']
+            elif any(word in question for word in ['salary', 'employ', 'suweldo', 'empleyado']):
+                response = r['salary_loan']
+            elif any(word in question for word in ['benefit', 'employee', 'benepisyo']):
+                response = r['employee_benefits']
+            elif any(word in question for word in ['contact', 'phone', 'address', 'telepono']):
+                response = r['contact']
+            elif any(word in question for word in ['thank', 'salamat', 'thanks']):
+                response = r['thank_you']
+            elif any(word in question for word in ['bye', 'goodbye', 'paalam']):
+                response = r['goodbye']
+            elif any(word in question for word in ['hello', 'hi', 'hey', 'kamusta', 'kumusta']):
+                response = r['greeting']
             else:
-                response = """🤖 **I'm ToMPuCo Assistant!**
+                response = r['default']
 
-I can help you with:
-• How to apply for a loan
-• Check your balance
-• Payment methods
-• Loan requirements
-• Interest rates
-• Co-maker information
-• Application status
-• QR Code payment
-• Contact information
-
-Just type your question above or click one of the quick reply buttons!"""
-
-            return JsonResponse({'response': response})
+            return JsonResponse({'response': response, 'language': language})
 
         except Exception as e:
             print(f"Chatbot error: {e}")
@@ -1517,13 +1537,10 @@ def export_payment_history_csv(request):
         payments = Payment.objects.filter(member=member, status='completed').order_by('-payment_date')
 
         response = HttpResponse(content_type='text/csv')
-        response[
-            'Content-Disposition'] = f'attachment; filename="payment_history_{datetime.now().strftime("%Y%m%d")}.csv"'
+        response['Content-Disposition'] = f'attachment; filename="payment_history_{datetime.now().strftime("%Y%m%d")}.csv"'
 
         writer = csv.writer(response)
-        writer.writerow(
-            ['Payment Date', 'Receipt Number', 'Loan Number', 'Amount', 'Method', 'Principal', 'Interest', 'Penalty',
-             'Remaining Balance'])
+        writer.writerow(['Payment Date', 'Receipt Number', 'Loan Number', 'Amount', 'Method', 'Principal', 'Interest', 'Penalty', 'Remaining Balance'])
 
         for payment in payments:
             writer.writerow([
@@ -1561,8 +1578,7 @@ def loan_calculator(request):
             monthly_rate = (interest_rate / 100) / 12
 
             if monthly_rate > 0:
-                monthly_payment = (amount * monthly_rate * (1 + monthly_rate) ** term) / (
-                        (1 + monthly_rate) ** term - 1)
+                monthly_payment = (amount * monthly_rate * (1 + monthly_rate) ** term) / ((1 + monthly_rate) ** term - 1)
             else:
                 monthly_payment = amount / term
 
@@ -1633,27 +1649,19 @@ def loan_types(request):
 
 
 # ============================================================
-# API VIEWS FOR MEMBER DATA - FIXED
+# API VIEWS FOR MEMBER DATA
 # ============================================================
 
 @login_required
 def member_applications_api(request):
     """API endpoint for member's loan applications"""
     try:
-        # Check if user has member profile
         if not hasattr(request.user, 'member_profile'):
-            return JsonResponse({
-                'success': False,
-                'error': 'Member profile not found',
-                'applications': []
-            }, status=200)
+            return JsonResponse({'success': False, 'error': 'Member profile not found', 'applications': []}, status=200)
 
         member = request.user.member_profile
-
-        # Get applications ordered by most recent first (using applied_date, not created_at)
         applications = LoanApplication.objects.filter(member=member).order_by('-applied_date')
 
-        # Build response data
         applications_data = []
         for app in applications:
             applications_data.append({
@@ -1663,55 +1671,35 @@ def member_applications_api(request):
                 'amount': float(app.amount) if app.amount else 0,
                 'approved_line': float(app.approved_line) if app.approved_line else None,
                 'status': app.status,
-                'status_display': app.get_status_display() if hasattr(app,
-                                                                      'get_status_display') else app.status.replace('_',
-                                                                                                                    ' ').title(),
                 'applied_date': app.applied_date.strftime('%Y-%m-%d') if app.applied_date else '',
                 'purpose': app.purpose or '',
-                'collateral_offered': app.collateral_offered or '',
+                'collateral': app.collateral_offered or '',
                 'mode_of_payment': app.mode_of_payment or 'monthly',
                 'loan_term': app.loan_term or 12,
             })
 
-        return JsonResponse({
-            'success': True,
-            'applications': applications_data,
-            'count': len(applications_data)
-        })
+        return JsonResponse({'success': True, 'applications': applications_data, 'count': len(applications_data)})
 
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return JsonResponse({
-            'success': False,
-            'error': str(e),
-            'applications': []
-        }, status=200)
+        return JsonResponse({'success': False, 'error': str(e), 'applications': []}, status=200)
 
 
 @login_required
 def member_loans_api(request):
-    """API endpoint for member's active loans"""
+    """API endpoint for member's loans"""
     try:
-        # Check if user has member profile
         if not hasattr(request.user, 'member_profile'):
-            return JsonResponse({
-                'success': False,
-                'error': 'Member profile not found',
-                'loans': []
-            })
+            return JsonResponse({'success': False, 'error': 'Member profile not found', 'loans': []})
 
         member = request.user.member_profile
-
-        # Get loans for this member
         loans = Loan.objects.filter(member=member).order_by('-disbursement_date')
 
-        # Build response data
         loans_data = []
         today = date.today()
 
         for loan in loans:
-            # Calculate penalty if overdue
             penalty = 0
             days_overdue = 0
             if loan.due_date and loan.due_date < today and loan.status == 'active':
@@ -1720,7 +1708,6 @@ def member_loans_api(request):
                     penalty_months = ((days_overdue - 360) + 29) // 30
                     penalty = float(loan.remaining_balance or 0) * 0.02 * penalty_months
 
-            # Calculate progress percentage
             progress = 0
             if loan.amount and loan.amount > 0:
                 progress = (float(loan.paid_amount or 0) / float(loan.amount)) * 100
@@ -1741,46 +1728,29 @@ def member_loans_api(request):
                 'disbursement_date': loan.disbursement_date.strftime('%Y-%m-%d') if loan.disbursement_date else None,
             })
 
-        return JsonResponse({
-            'success': True,
-            'loans': loans_data,
-            'count': len(loans_data)
-        })
+        return JsonResponse({'success': True, 'loans': loans_data, 'count': len(loans_data)})
 
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return JsonResponse({
-            'success': False,
-            'error': str(e),
-            'loans': []
-        })
+        return JsonResponse({'success': False, 'error': str(e), 'loans': []})
 
 
 @login_required
 def member_payments_api(request):
     """API endpoint for member's payment history"""
     try:
-        # Check if user has member profile
         if not hasattr(request.user, 'member_profile'):
-            return JsonResponse({
-                'success': False,
-                'error': 'Member profile not found',
-                'payments': []
-            })
+            return JsonResponse({'success': False, 'error': 'Member profile not found', 'payments': []})
 
         member = request.user.member_profile
-
-        # Get payments for this member
         payments = Payment.objects.filter(member=member, is_posted=True).order_by('-payment_date')
 
-        # Build response data
         payments_data = []
         for payment in payments:
             payments_data.append({
                 'id': payment.id,
                 'payment_number': payment.payment_number,
-                'receipt_number': payment.payment_number,
                 'loan_number': payment.loan.loan_number if payment.loan else 'N/A',
                 'amount': float(payment.amount),
                 'payment_date': payment.payment_date.strftime('%Y-%m-%d'),
@@ -1788,30 +1758,20 @@ def member_payments_api(request):
                 'principal_amount': float(payment.principal_amount) if payment.principal_amount else 0,
                 'interest_amount': float(payment.interest_amount) if payment.interest_amount else 0,
                 'penalty_amount': float(payment.penalty_amount) if payment.penalty_amount else 0,
-                'receipt_url': f'/api/payment-receipt/{payment.id}/' if payment.id else None,
             })
 
-        return JsonResponse({
-            'success': True,
-            'payments': payments_data,
-            'count': len(payments_data)
-        })
+        return JsonResponse({'success': True, 'payments': payments_data, 'count': len(payments_data)})
 
     except Exception as e:
         import traceback
         traceback.print_exc()
-        return JsonResponse({
-            'success': False,
-            'error': str(e),
-            'payments': []
-        })
+        return JsonResponse({'success': False, 'error': str(e), 'payments': []})
 
 
 @login_required
 def notifications_api(request):
     notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')
-
-    data = {
+    return JsonResponse({
         'notifications': [{
             'id': n.id,
             'title': n.title,
@@ -1821,8 +1781,7 @@ def notifications_api(request):
             'is_read': n.is_read,
             'created_at': n.created_at.isoformat(),
         } for n in notifications]
-    }
-    return JsonResponse(data)
+    })
 
 
 @login_required
@@ -1857,7 +1816,6 @@ def notifications_page(request):
 def member_analytics_api(request):
     try:
         member = request.user.member_profile
-
         payment_labels = []
         payment_data = []
 
@@ -1881,24 +1839,17 @@ def member_analytics_api(request):
             ).aggregate(total=Sum('amount'))['total'] or 0
             payment_data.append(float(monthly_payments))
 
-        # FIXED: changed 'borrower' to 'member'
         loans = Loan.objects.filter(member=member)
-        distribution_labels = []
-        distribution_data = []
-
         loan_type_counts = {}
         for loan in loans:
             loan_type = loan.loan_product.name if loan.loan_product else 'APCP'
             loan_type_counts[loan_type] = loan_type_counts.get(loan_type, 0) + 1
 
-        distribution_labels = list(loan_type_counts.keys())
-        distribution_data = list(loan_type_counts.values())
-
         return JsonResponse({
             'payment_labels': payment_labels,
             'payment_data': payment_data,
-            'distribution_labels': distribution_labels,
-            'distribution_data': distribution_data,
+            'distribution_labels': list(loan_type_counts.keys()),
+            'distribution_data': list(loan_type_counts.values()),
         })
     except Exception as e:
         return JsonResponse({'error': str(e)})
@@ -1910,24 +1861,20 @@ def payment_receipt_api(request, payment_id):
     try:
         payment = get_object_or_404(Payment, id=payment_id, member=request.user.member_profile)
 
-        # Create PDF response
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="receipt_{payment.payment_number}.pdf"'
 
         from reportlab.lib.pagesizes import letter
         from reportlab.pdfgen import canvas
-        from reportlab.lib import colors
 
         p = canvas.Canvas(response, pagesize=letter)
         width, height = letter
 
-        # Header
         p.setFont("Helvetica-Bold", 24)
         p.drawString(180, height - 50, "TOMPuCO COOPERATIVE")
         p.setFont("Helvetica-Bold", 16)
         p.drawString(220, height - 80, "OFFICIAL RECEIPT")
 
-        # Details
         p.setFont("Helvetica", 11)
         y = height - 120
         p.drawString(50, y, f"Receipt Number: {payment.payment_number}")
@@ -1968,27 +1915,24 @@ def payment_receipt_api(request, payment_id):
 def member_stats_api(request):
     try:
         member = request.user.member_profile
-
-        # FIXED: changed 'borrower' to 'member' and 'principal_amount' to 'amount'
         loans = Loan.objects.filter(member=member)
+        active_loans = loans.filter(status='active')
         total_loaned = loans.aggregate(total=Sum('amount'))['total'] or 0
-        active_loans_count = loans.filter(status='active').count()
-        total_paid = Payment.objects.filter(member=member, status='completed').aggregate(total=Sum('amount'))[
-                         'total'] or 0
-        total_remaining_balance = loans.aggregate(total=Sum('remaining_balance'))['total'] or 0
-        pending_applications = LoanApplication.objects.filter(member=member, status='pending_staff_review').count()
+        total_paid = Payment.objects.filter(member=member, status='completed').aggregate(total=Sum('amount'))['total'] or 0
+        total_remaining = active_loans.aggregate(total=Sum('remaining_balance'))['total'] or 0
+        pending_apps = LoanApplication.objects.filter(member=member, status='pending_staff_review').count()
 
         next_due = None
-        active_loan = loans.filter(status='active').first()
+        active_loan = active_loans.first()
         if active_loan and active_loan.due_date:
             next_due = active_loan.due_date.isoformat()
 
         return JsonResponse({
             'total_loaned': float(total_loaned),
-            'active_loans_count': active_loans_count,
+            'active_loans_count': active_loans.count(),
             'total_paid': float(total_paid),
-            'total_remaining_balance': float(total_remaining_balance),
-            'pending_applications': pending_applications,
+            'total_remaining_balance': float(total_remaining),
+            'pending_applications': pending_apps,
             'next_due_date': next_due,
         })
     except Exception as e:
@@ -1999,7 +1943,6 @@ def member_stats_api(request):
 def loan_payment_schedule_api(request, loan_id):
     try:
         member = request.user.member_profile
-        # FIXED: changed 'borrower' to 'member'
         loan = get_object_or_404(Loan, id=loan_id, member=member)
 
         schedule = []
@@ -2051,11 +1994,7 @@ def setup_2fa(request):
     if request.method == 'POST':
         device = TOTPDevice.objects.filter(user=request.user).first()
         if not device:
-            device = TOTPDevice.objects.create(
-                user=request.user,
-                name='Member 2FA',
-                confirmed=False
-            )
+            device = TOTPDevice.objects.create(user=request.user, name='Member 2FA', confirmed=False)
 
         otp_code = request.POST.get('otp_code', '')
         if device.verify_token(otp_code):
@@ -2082,11 +2021,7 @@ def setup_2fa(request):
 
     device = TOTPDevice.objects.filter(user=request.user).first()
     if not device:
-        device = TOTPDevice.objects.create(
-            user=request.user,
-            name='Member 2FA',
-            confirmed=False
-        )
+        device = TOTPDevice.objects.create(user=request.user, name='Member 2FA', confirmed=False)
 
     provisioning_uri = device.config_url
 
@@ -2173,6 +2108,7 @@ def verify_2fa_login(request):
         messages.error(request, 'Invalid 2FA code. Please try again.')
 
     return render(request, 'main/verify_2fa.html')
+
 
 def verification_rejected(request):
     """Verification rejected page"""

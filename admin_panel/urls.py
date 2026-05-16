@@ -16,6 +16,8 @@ urlpatterns = [
     path('profile/update/', views.update_profile, name='update_profile'),
     path('profile/avatar/', views.upload_avatar, name='upload_avatar'),
     path('profile/change-password/', views.change_password, name='change_password'),
+    path('api/dashboard-stats/', views.dashboard_stats_api, name='dashboard_stats_api'),
+    path('loan-applications/<int:app_id>/process/', views.loan_application_process, name='loan_application_process'),
 
     # Users Management
     path('users/', views.users_list, name='users_list'),

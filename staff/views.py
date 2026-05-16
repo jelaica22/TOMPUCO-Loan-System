@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt  # ← ADD THIS IMPORT
 from datetime import datetime, timedelta, date
 import json
+from datetime import date, timedelta
 from decimal import Decimal
 import random
 import secrets
@@ -628,18 +629,32 @@ def loan_list(request):
     if date_to:
         loans = loans.filter(disbursement_date__lte=date_to)
 
+    # ============================================================
+    # PENALTY CALCULATION - Starts at DAY 361
+    # ============================================================
     today = date.today()
+
     for loan in loans:
         if loan.due_date and loan.due_date < today:
             loan.days_overdue = (today - loan.due_date).days
+
+            # Penalty only starts AFTER 360 days (on day 361)
             if loan.days_overdue > 360:
-                penalty_months = ((loan.days_overdue - 360) + 29) // 30
+                penalty_days = loan.days_overdue - 360
+                penalty_months = (penalty_days + 29) // 30  # Ceiling division
                 loan.penalty_amount = float(loan.remaining_balance or 0) * 0.02 * penalty_months
+                loan.penalty_months = penalty_months
             else:
                 loan.penalty_amount = 0
+                loan.penalty_months = 0
         else:
             loan.days_overdue = 0
             loan.penalty_amount = 0
+            loan.penalty_months = 0
+
+    # Calculate totals
+    total_principal = loans.aggregate(total=Sum('amount'))['total'] or 0
+    total_penalty = sum(float(getattr(loan, 'penalty_amount', 0)) for loan in loans)
 
     context = {
         'staff_profile': staff_profile,
@@ -649,7 +664,8 @@ def loan_list(request):
         'restructured_loans_count': loans.filter(status='restructured').count(),
         'paid_loans_count': loans.filter(status='paid').count(),
         'total_loans': loans.count(),
-        'total_principal': loans.aggregate(total=Sum('amount'))['total'] or 0,
+        'total_principal': total_principal,
+        'total_penalty': total_penalty,
     }
 
     return render(request, 'staff/loans/list.html', context)
@@ -1292,30 +1308,124 @@ def report_restructuring_api(request):
 @login_required
 @staff_required
 def report_penalty_api(request):
-    """API endpoint for penalty report"""
+    """API endpoint for penalty report - Penalty starts at DAY 361"""
     today = date.today()
-    overdue_loans = Loan.objects.filter(status='overdue')
+
+    # Get all active loans (or all loans with status 'active' or 'overdue')
+    overdue_loans = Loan.objects.filter(status__in=['active', 'overdue'])
+
     penalties = []
     total_penalty = 0
+    total_loans_with_penalty = 0
+    total_balance_with_penalty = 0
 
     for loan in overdue_loans:
-        days_overdue = 0
         if loan.due_date and loan.due_date < today:
             days_overdue = (today - loan.due_date).days
 
-        if days_overdue > 360:
-            penalty_months = ((days_overdue - 360) + 29) // 30
-            penalty = float(loan.remaining_balance or 0) * 0.02 * penalty_months
-            total_penalty += penalty
-            penalties.append({
-                'loan_number': loan.loan_number,
-                'member': f"{loan.member.last_name}, {loan.member.first_name}",
-                'balance': float(loan.remaining_balance or 0),
-                'days_overdue': days_overdue,
-                'total_penalty': penalty
-            })
+            # Penalty only starts after 360 days (on day 361)
+            if days_overdue > 360:
+                penalty_days = days_overdue - 360
+                penalty_months = (penalty_days + 29) // 30
+                penalty = float(loan.remaining_balance or 0) * 0.02 * penalty_months
+                total_penalty += penalty
+                total_loans_with_penalty += 1
+                total_balance_with_penalty += float(loan.remaining_balance or 0)
 
-    return JsonResponse({'penalties': penalties, 'total_penalty': total_penalty})
+                # Determine penalty category
+                if penalty_months == 1:
+                    category = "1 Month (361-390 days)"
+                elif penalty_months == 2:
+                    category = "2 Months (391-420 days)"
+                elif penalty_months == 3:
+                    category = "3 Months (421-450 days)"
+                elif penalty_months >= 4:
+                    category = f"{penalty_months}+ Months (451+ days)"
+                else:
+                    category = "Other"
+
+                penalties.append({
+                    'loan_number': loan.loan_number,
+                    'member_name': f"{loan.member.last_name}, {loan.member.first_name}",
+                    'membership_number': loan.member.membership_number,
+                    'remaining_balance': round(float(loan.remaining_balance or 0), 2),
+                    'days_overdue': days_overdue,
+                    'penalty_months': penalty_months,
+                    'penalty_amount': round(penalty, 2),
+                    'category': category
+                })
+
+    # Sort penalties by days overdue (highest first)
+    penalties.sort(key=lambda x: x['days_overdue'], reverse=True)
+
+    return JsonResponse({
+        'penalties': penalties,
+        'total_penalty': round(total_penalty, 2),
+        'total_loans_with_penalty': total_loans_with_penalty,
+        'total_balance_with_penalty': round(total_balance_with_penalty, 2),
+        'penalty_rate': '2% per month',
+        'grace_period': '360 days',
+        'calculation_note': 'Penalty starts at DAY 361 (after 360 days grace period)'
+    })
+
+
+@login_required
+@staff_required
+def loan_detail(request, pk):
+    """Loan details with payment schedule and penalty calculation"""
+    staff_profile = request.user.staff_profile
+    loan = get_object_or_404(Loan, pk=pk)
+
+    # Calculate penalty information
+    penalty_info = get_penalty_info(loan)
+
+    # Get payment schedule
+    payment_schedules = PaymentSchedule.objects.filter(loan=loan).order_by('due_date')
+
+    # Calculate payment progress
+    total_paid = Payment.objects.filter(loan=loan, status='completed').aggregate(total=Sum('amount'))['total'] or 0
+    progress_percentage = (float(total_paid) / float(loan.amount) * 100) if loan.amount > 0 else 0
+
+    # Get recent payments
+    recent_payments = Payment.objects.filter(loan=loan).order_by('-payment_date')[:5]
+
+    context = {
+        'staff_profile': staff_profile,
+        'loan': loan,
+        'penalty_info': penalty_info,
+        'payment_schedules': payment_schedules,
+        'total_paid': total_paid,
+        'progress_percentage': round(progress_percentage, 2),
+        'recent_payments': recent_payments,
+    }
+
+    return render(request, 'staff/loans/detail.html', context)
+
+
+@login_required
+@staff_required
+def calculate_penalty_api(request, loan_id):
+    """API endpoint to calculate penalty for a specific loan"""
+    try:
+        loan = get_object_or_404(Loan, pk=loan_id)
+        penalty_info = get_penalty_info(loan)
+
+        return JsonResponse({
+            'success': True,
+            'loan_id': loan.id,
+            'loan_number': loan.loan_number,
+            'member_name': f"{loan.member.last_name}, {loan.member.first_name}",
+            'remaining_balance': float(loan.remaining_balance),
+            'due_date': loan.due_date.strftime('%Y-%m-%d') if loan.due_date else None,
+            'days_overdue': penalty_info['days_overdue'],
+            'penalty_months': penalty_info['penalty_months'],
+            'penalty_amount': float(penalty_info['penalty_amount']),
+            'penalty_active': penalty_info['penalty_active'],
+            'grace_period_remaining': penalty_info['grace_period_remaining'],
+            'penalty_rate': '2% per month after 360 days'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 
 # ==================== NOTIFICATION VIEWS ====================
@@ -1778,3 +1888,80 @@ def staff_logout(request):
     from django.contrib.auth import logout
     logout(request)
     return redirect('main:landing')
+
+
+def calculate_penalty(loan):
+    """
+    Calculate penalty for overdue loan
+    Penalty starts at DAY 361 (after 360 days grace period)
+    Penalty rate: 2% per month on remaining balance
+
+    Args:
+        loan: Loan object with due_date and remaining_balance
+
+    Returns:
+        Decimal: Penalty amount
+    """
+    today = date.today()
+
+    # If no due date or not overdue, no penalty
+    if not loan.due_date or loan.due_date >= today:
+        return Decimal('0.00')
+
+    # Calculate days overdue
+    days_overdue = (today - loan.due_date).days
+
+    # Penalty only starts after 360 days (on day 361)
+    if days_overdue <= 360:
+        return Decimal('0.00')
+
+    # Calculate penalty months (round up to nearest month)
+    penalty_days = days_overdue - 360
+    penalty_months = (penalty_days + 29) // 30  # Ceiling division
+
+    # Calculate penalty: remaining_balance * 2% * penalty_months
+    penalty = loan.remaining_balance * Decimal('0.02') * penalty_months
+
+    return penalty.quantize(Decimal('0.01'))
+
+
+def get_penalty_info(loan):
+    """
+    Get detailed penalty information for a loan
+
+    Returns:
+        dict: Contains days_overdue, penalty_months, penalty_amount
+    """
+    today = date.today()
+
+    if not loan.due_date or loan.due_date >= today:
+        return {
+            'days_overdue': 0,
+            'penalty_months': 0,
+            'penalty_amount': Decimal('0.00'),
+            'grace_period_remaining': 360,
+            'penalty_active': False
+        }
+
+    days_overdue = (today - loan.due_date).days
+
+    if days_overdue <= 360:
+        return {
+            'days_overdue': days_overdue,
+            'penalty_months': 0,
+            'penalty_amount': Decimal('0.00'),
+            'grace_period_remaining': 360 - days_overdue,
+            'penalty_active': False
+        }
+
+    penalty_days = days_overdue - 360
+    penalty_months = (penalty_days + 29) // 30
+    penalty_amount = loan.remaining_balance * Decimal('0.02') * penalty_months
+
+    return {
+        'days_overdue': days_overdue,
+        'penalty_months': penalty_months,
+        'penalty_amount': penalty_amount.quantize(Decimal('0.01')),
+        'grace_period_remaining': 0,
+        'penalty_active': True
+    }

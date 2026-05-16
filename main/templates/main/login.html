@@ -7,14 +7,11 @@
 <style>
     /* ===============================================
        Enhanced Login Page – Teal/Navy Theme
-       Colors matching TOMPUCO ALMS
     =============================================== */
-    /* Full‑height wrapper */
     .login-wrapper {
         width: 100%;
     }
 
-    /* Left brand side */
     .brand-side {
         background: linear-gradient(135deg, var(--teal-deep) 0%, var(--teal-primary) 70%, var(--teal-medium) 100%);
         height: 100%;
@@ -111,7 +108,6 @@
         font-size: 1.2rem;
     }
 
-    /* Right form side */
     .form-side {
         background: white;
         padding: 3rem;
@@ -136,7 +132,6 @@
         text-align: center;
     }
 
-    /* Input groups */
     .input-group-custom {
         position: relative;
         margin-bottom: 1.25rem;
@@ -175,7 +170,6 @@
         color: var(--teal-primary);
     }
 
-    /* Password toggle */
     .toggle-password {
         position: absolute;
         right: 1rem;
@@ -188,13 +182,18 @@
         cursor: pointer;
         transition: all 0.3s;
         z-index: 10;
+        padding: 5px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .toggle-password:hover {
         color: var(--teal-primary);
+        background: rgba(26, 138, 138, 0.1);
     }
 
-    /* Login button */
     .btn-login {
         background: linear-gradient(135deg, var(--teal-deep) 0%, var(--teal-primary) 50%, var(--teal-medium) 100%);
         border: none;
@@ -214,7 +213,6 @@
         box-shadow: 0 10px 20px rgba(10, 90, 90, 0.3);
     }
 
-    /* Checkbox */
     .form-check {
         display: flex;
         align-items: center;
@@ -236,7 +234,6 @@
         cursor: pointer;
     }
 
-    /* Links */
     .forgot-link {
         color: var(--teal-primary);
         text-decoration: none;
@@ -261,7 +258,6 @@
         text-decoration: underline;
     }
 
-    /* Alert */
     .alert-custom {
         background: #fee2e2;
         color: #991b1b;
@@ -278,7 +274,6 @@
         font-size: 1.2rem;
     }
 
-    /* Loading state */
     .btn-loading {
         position: relative;
         color: transparent !important;
@@ -304,7 +299,6 @@
         to { transform: rotate(360deg); }
     }
 
-    /* Validation */
     .invalid-feedback {
         display: block;
         margin-top: 0.5rem;
@@ -320,7 +314,6 @@
         border-color: #10b981 !important;
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
         .brand-side {
             display: none;
@@ -333,7 +326,6 @@
         }
     }
 
-    /* ADD THIS - reCAPTCHA container styling */
     .recaptcha-container {
         margin: 1.5rem 0;
         display: flex;
@@ -346,13 +338,22 @@
         font-size: 0.75rem;
         color: #dc2626;
     }
+
+    .password-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .password-wrapper input {
+        width: 100%;
+        padding-right: 45px;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="login-wrapper">
     <div class="row g-0">
-        <!-- Left Brand Side -->
         <div class="col-lg-6 d-none d-lg-block">
             <div class="brand-side">
                 <div class="brand-logo">
@@ -368,7 +369,6 @@
             </div>
         </div>
 
-        <!-- Right Form Side -->
         <div class="col-lg-6">
             <div class="form-side">
                 {% if user.is_authenticated %}
@@ -404,22 +404,28 @@
 
                         <div class="input-group-custom">
                             <i class="bi bi-person input-icon"></i>
-                            <input type="text" name="username" id="username" placeholder="Username" required autofocus>
+                            <input type="text" name="username" id="username" class="form-control" placeholder="Username" required>
                             <div id="usernameFeedback" class="invalid-feedback"></div>
                         </div>
 
                         <div class="input-group-custom">
                             <i class="bi bi-lock input-icon"></i>
-                            <input type="password" name="password" id="password" placeholder="Password" required>
-                            <button type="button" class="toggle-password" id="togglePassword">
-                                <i class="bi bi-eye"></i>
-                            </button>
+                            <div class="password-wrapper">
+                                <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
+                                <button type="button" class="toggle-password" id="togglePasswordBtn">
+                                    <i class="bi bi-eye-slash"></i>
+                                </button>
+                            </div>
                             <div id="passwordFeedback" class="invalid-feedback"></div>
                         </div>
 
-                        <!-- ✅ ADD reCAPTCHA HERE -->
+                        <!-- reCAPTCHA Widget -->
                         <div class="recaptcha-container">
-                            <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}" data-callback="onRecaptchaSuccess"></div>
+                            <div class="g-recaptcha"
+                                 data-sitekey="{{ RECAPTCHA_SITE_KEY }}"
+                                 data-callback="onRecaptchaSuccess"
+                                 data-expired-callback="onRecaptchaExpired">
+                            </div>
                         </div>
                         <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
                         <div id="recaptchaError" class="recaptcha-error" style="display: none;">Please complete the reCAPTCHA verification</div>
@@ -450,103 +456,65 @@
     </div>
 </div>
 
-<!-- ✅ Add reCAPTCHA API script -->
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-
 <script>
-    // ✅ reCAPTCHA success callback
+    let recaptchaCompleted = false;
+
     function onRecaptchaSuccess(token) {
-        document.getElementById('g-recaptcha-response').value = token;
-        document.getElementById('recaptchaError').style.display = 'none';
+        const recaptchaResponse = document.getElementById('g-recaptcha-response');
+        if (recaptchaResponse) {
+            recaptchaResponse.value = token;
+        }
+        recaptchaCompleted = true;
+        const errorDiv = document.getElementById('recaptchaError');
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+        }
     }
 
-    // ✅ Function to check if reCAPTCHA is completed
-    function isRecaptchaCompleted() {
-        const token = document.getElementById('g-recaptcha-response').value;
-        if (!token) {
-            document.getElementById('recaptchaError').style.display = 'block';
-            return false;
+    function onRecaptchaExpired() {
+        recaptchaCompleted = false;
+        const recaptchaResponse = document.getElementById('g-recaptcha-response');
+        if (recaptchaResponse) {
+            recaptchaResponse.value = '';
         }
-        return true;
+        const errorDiv = document.getElementById('recaptchaError');
+        if (errorDiv) {
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = 'reCAPTCHA expired. Please verify again.';
+        }
+    }
+
+    function isRecaptchaCompleted() {
+        const token = document.getElementById('g-recaptcha-response');
+        return token && token.value !== '';
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         // Password visibility toggle
-        const togglePassword = document.getElementById('togglePassword');
-        const password = document.getElementById('password');
-
-        if (togglePassword && password) {
-            togglePassword.addEventListener('click', function() {
-                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-                password.setAttribute('type', type);
-                const icon = this.querySelector('i');
-                icon.classList.toggle('bi-eye');
-                icon.classList.toggle('bi-eye-slash');
-            });
-        }
-
-        // Form validation with reCAPTCHA check
-        const loginForm = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-
-        if (loginForm && loginBtn) {
-            loginForm.addEventListener('submit', function(e) {
-                const username = document.getElementById('username');
-                const password = document.getElementById('password');
-                let isValid = true;
-
-                if (!username.value.trim()) {
-                    showValidationError(username, 'Username is required');
-                    isValid = false;
-                } else {
-                    clearValidationError(username);
-                }
-
-                if (!password.value) {
-                    showValidationError(password, 'Password is required');
-                    isValid = false;
-                } else {
-                    clearValidationError(password);
-                }
-
-                // ✅ Check reCAPTCHA
-                if (!isRecaptchaCompleted()) {
-                    isValid = false;
-                }
-
-                if (!isValid) {
-                    e.preventDefault();
-                    return;
-                }
-
-                loginBtn.disabled = true;
-                loginBtn.classList.add('btn-loading');
-            });
-        }
-
-        // Real-time validation
-        const usernameInput = document.getElementById('username');
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
         const passwordInput = document.getElementById('password');
 
-        if (usernameInput) {
-            usernameInput.addEventListener('blur', function() {
-                if (!this.value.trim()) {
-                    showValidationError(this, 'Username is required');
+        if (togglePasswordBtn && passwordInput) {
+            togglePasswordBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                const icon = this.querySelector('i');
+                if (type === 'text') {
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
                 } else {
-                    clearValidationError(this);
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
                 }
             });
         }
 
-        if (passwordInput) {
-            passwordInput.addEventListener('blur', function() {
-                if (!this.value) {
-                    showValidationError(this, 'Password is required');
-                } else {
-                    clearValidationError(this);
-                }
-            });
-        }
+        // Form validation
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const usernameInput = document.getElementById('username');
 
         function showValidationError(input, message) {
             input.classList.add('is-invalid');
@@ -567,29 +535,64 @@
                 feedback.textContent = '';
             }
         }
-    });
-                    // Force add favicon to dashboard
-        (function() {
-            // Remove any existing favicons
-            var oldLinks = document.querySelectorAll("link[rel*='icon']");
-            oldLinks.forEach(function(link) {
-                link.parentNode.removeChild(link);
+
+        if (loginForm && loginBtn) {
+            loginForm.addEventListener('submit', function(e) {
+                let isValid = true;
+
+                if (!usernameInput.value.trim()) {
+                    showValidationError(usernameInput, 'Username is required');
+                    isValid = false;
+                } else {
+                    clearValidationError(usernameInput);
+                }
+
+                if (!passwordInput.value) {
+                    showValidationError(passwordInput, 'Password is required');
+                    isValid = false;
+                } else {
+                    clearValidationError(passwordInput);
+                }
+
+                if (!isRecaptchaCompleted()) {
+                    e.preventDefault();
+                    const errorDiv = document.getElementById('recaptchaError');
+                    if (errorDiv) {
+                        errorDiv.style.display = 'block';
+                        errorDiv.innerHTML = 'Please complete the reCAPTCHA verification';
+                    }
+                    return false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    return;
+                }
+
+                loginBtn.disabled = true;
+                loginBtn.classList.add('btn-loading');
             });
+        }
 
-            // Create new favicon with your actual logo
-            var link = document.createElement('link');
-            link.rel = 'icon';
-            link.type = 'image/png';
-            link.href = "{% static 'images/logo.png' %}?v=" + Date.now();
-            document.head.appendChild(link);
+        if (usernameInput) {
+            usernameInput.addEventListener('blur', function() {
+                if (!this.value.trim()) {
+                    showValidationError(this, 'Username is required');
+                } else {
+                    clearValidationError(this);
+                }
+            });
+        }
 
-            var link2 = document.createElement('link');
-            link2.rel = 'shortcut icon';
-            link2.type = 'image/png';
-            link2.href = "{% static 'images/logo.png' %}?v=" + Date.now();
-            document.head.appendChild(link2);
-
-            console.log('Favicon added to dashboard');
-        })();
+        if (passwordInput) {
+            passwordInput.addEventListener('blur', function() {
+                if (!this.value) {
+                    showValidationError(this, 'Password is required');
+                } else {
+                    clearValidationError(this);
+                }
+            });
+        }
+    });
 </script>
 {% endblock %}

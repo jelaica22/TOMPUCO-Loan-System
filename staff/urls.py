@@ -94,6 +94,7 @@ urlpatterns = [
     # Add these to your staff/urls.py
     path('api/application/<int:pk>/', views.application_api, name='application_api'),
     path('api/loan-status/<int:loan_id>/', views.loan_status_api, name='loan_status_api'),
+    path('api/calculate-penalty/<int:loan_id>/', views.calculate_penalty_api, name='calculate_penalty_api'),
 
     # Logout
     path('logout/', views.staff_logout, name='logout'),

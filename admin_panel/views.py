@@ -1004,48 +1004,47 @@ def loan_product_delete(request, product_id):
 
 @super_admin_required
 def loan_applications_list(request):
-    applications = LoanApplication.objects.all().order_by('-applied_date')
+    """List all loan applications"""
+    from main.models import LoanApplication
 
-    search = request.GET.get('search', '').strip()
-    status = request.GET.get('status', 'all')
+    applications = LoanApplication.objects.select_related('member', 'loan_product').all().order_by('-applied_date')
 
-    if search:
-        applications = applications.filter(
-            Q(application_id__icontains=search) |
-            Q(member__first_name__icontains=search) |
-            Q(member__last_name__icontains=search)
-        )
-
-    if status and status != 'all':
-        applications = applications.filter(status=status)
-
-    total_applications = LoanApplication.objects.count()
-    pending_count = LoanApplication.objects.filter(status='pending_staff_review').count()
-    approved_count = LoanApplication.objects.filter(status__in=['line_approved', 'manager_approved']).count()
-    rejected_count = LoanApplication.objects.filter(status='rejected').count()
-
-    return render(request, 'admin_panel/loan_applications_list.html', {
+    context = {
         'applications': applications,
-        'total_applications': total_applications,
-        'pending_count': pending_count,
-        'approved_count': approved_count,
-        'rejected_count': rejected_count,
-    })
+        'total_count': applications.count(),
+        'pending_count': applications.filter(status='pending_staff_review').count(),
+        'approved_count': applications.filter(status='manager_approved').count(),
+        'rejected_count': applications.filter(status='rejected').count(),
+    }
+
+    return render(request, 'admin_panel/loan_applications_list.html', context)
 
 
 @super_admin_required
 def loan_application_detail(request, app_id):
+    """Display loan application details"""
+    from main.models import LoanApplication
+
     app = get_object_or_404(LoanApplication, id=app_id)
-    return JsonResponse({
-        "id": app.id,
-        "application_id": app.application_id,
-        "member_name": f"{app.member.first_name} {app.member.last_name}",
-        "requested_amount": str(app.requested_amount),
-        "status": app.status,
-        "loan_product": app.loan_product.name if app.loan_product else "-",
-        "purpose": app.purpose or "-",
-        "date_applied": app.created_at.strftime("%Y-%m-%d %H:%M"),
-    })
+
+    context = {
+        'application': app,
+        'application_id': app.application_id,
+        'member': app.member,
+        'loan_product': app.loan_product,
+        'amount': app.amount,  # Use 'amount', not 'requested_amount'
+        'approved_line': app.approved_line,
+        'status': app.status,
+        'applied_date': app.applied_date,
+        'purpose': app.purpose,
+        'committee_approved_date': app.committee_approved_date,
+        'committee_reduction_reason': app.committee_reduction_reason,
+        'remarks': app.remarks,
+        'reviewed_by': app.reviewed_by,
+        'reviewed_date': app.reviewed_date,
+    }
+
+    return render(request, 'admin_panel/loan_application_detail.html', context)
 
 
 @super_admin_required
@@ -1967,3 +1966,58 @@ def verify_member_ajax(request, member_id):
         except Member.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Member not found'})
     return JsonResponse({'success': False, 'error': 'Invalid method'})
+
+
+from django.http import JsonResponse
+
+
+@login_required
+@super_admin_required
+def dashboard_stats_api(request):
+    """API endpoint for dashboard statistics"""
+    from django.db.models import Sum, Count
+    from main.models import Member, Loan, LoanApplication, Payment
+
+    stats = {
+        'total_members': Member.objects.count(),
+        'active_members': Member.objects.filter(is_active=True).count(),
+        'total_loans': Loan.objects.count(),
+        'active_loans': Loan.objects.filter(status='active').count(),
+        'total_applications': LoanApplication.objects.count(),
+        'pending_applications': LoanApplication.objects.filter(status='pending_staff_review').count(),
+        'total_payments': float(Payment.objects.aggregate(total=Sum('amount'))['total'] or 0),
+        'total_principal': float(Loan.objects.aggregate(total=Sum('amount'))['total'] or 0),
+    }
+    return JsonResponse(stats)
+
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from main.models import LoanApplication
+
+
+@login_required
+@super_admin_required
+def loan_application_process(request, app_id):
+    """Process a loan application (approve/reject)"""
+    from main.models import LoanApplication
+    from django.shortcuts import get_object_or_404, redirect
+    from django.contrib import messages
+
+    application = get_object_or_404(LoanApplication, id=app_id)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'approve':
+            application.status = 'manager_approved'  # Or whatever status you use
+            application.save()
+            messages.success(request, f'Application {application.application_id} has been approved.')
+        elif action == 'reject':
+            application.status = 'rejected'
+            application.save()
+            messages.error(request, f'Application {application.application_id} has been rejected.')
+
+        return redirect('superadmin:loan_application_detail', app_id=app_id)
+
+    return redirect('superadmin:loan_application_detail', app_id=app_id)

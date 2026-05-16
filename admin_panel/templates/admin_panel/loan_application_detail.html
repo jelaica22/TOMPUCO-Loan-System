@@ -1,26 +1,329 @@
 ﻿{% extends 'admin_panel/base.html' %}
 
 {% block title %}Loan Application Details{% endblock %}
-{% block page_title %}Application: {{ app.application_id }}{% endblock %}
+{% block page_title %}Application: {{ application.application_id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Enhanced styling for application details */
+    .details-section {
+        background: var(--bg-card);
+        border-radius: 16px;
+        margin-bottom: 24px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        color: white;
+        padding: 12px 20px;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .section-header i {
+        margin-right: 8px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        padding: 20px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-committee { background: #dbeafe; color: #1e40af; }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+    .status-active { background: #d1fae5; color: #065f46; }
+    .status-line-approved { background: #ede9fe; color: #5b21b6; }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-process {
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-approve {
+        background: #10b981;
+        color: white;
+    }
+
+    .btn-approve:hover {
+        background: #059669;
+        transform: translateY(-2px);
+    }
+
+    .btn-reject {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-reject:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+    }
+
+    .btn-verify {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-verify:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+    }
+
+    .btn-back {
+        background: #6b7280;
+        color: white;
+    }
+
+    .btn-back:hover {
+        background: #4b5563;
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <p><strong>Application ID:</strong> {{ app.application_id }}</p>
-                <p><strong>Member:</strong> {{ app.member.first_name }} {{ app.member.last_name }}</p>
-                <p><strong>Requested Amount:</strong> ₱{{ app.requested_amount|floatformat:2 }}</p>
-                <p><strong>Status:</strong> <span class="badge bg-info">{{ app.status }}</span></p>
+<div class="container-fluid">
+    <!-- Main Details Section -->
+    <div class="details-section">
+        <div class="section-header">
+            <i class="bi bi-file-text-fill"></i> Application Information
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-hash"></i> Application ID</div>
+                <div class="info-value">{{ application.application_id }}</div>
             </div>
-            <div class="col-md-6">
-                <p><strong>Loan Product:</strong> {{ app.loan_product.name }}</p>
-                <p><strong>Purpose:</strong> {{ app.purpose|default:"-" }}</p>
-                <p><strong>Date Applied:</strong> {{ app.created_at|date:"Y-m-d H:i" }}</p>
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-person"></i> Member Name</div>
+                <div class="info-value">
+                    {% if application.member %}
+                        {{ application.member.first_name }} {{ application.member.last_name }}
+                    {% else %}
+                        <span class="text-muted">N/A</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-cash-stack"></i> Requested Amount</div>
+                <div class="info-value text-primary fw-bold">
+                    ₱{{ application.amount|floatformat:2|default:"0.00" }}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-tag"></i> Loan Product</div>
+                <div class="info-value">
+                    {% if application.loan_product %}
+                        {{ application.loan_product.display_name|default:application.loan_product.name }}
+                    {% else %}
+                        <span class="text-muted">N/A</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-info-circle"></i> Purpose</div>
+                <div class="info-value">{{ application.purpose|default:"—" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-calendar"></i> Date Applied</div>
+                <div class="info-value">{{ application.applied_date|date:"F d, Y"|default:"—" }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-check-circle"></i> Status</div>
+                <div class="info-value">
+                    {% if application.status == 'pending_staff_review' %}
+                        <span class="status-badge status-pending"><i class="bi bi-clock-history"></i> Pending Staff Review</span>
+                    {% elif application.status == 'with_committee' %}
+                        <span class="status-badge status-committee"><i class="bi bi-people"></i> With Committee</span>
+                    {% elif application.status == 'line_approved' %}
+                        <span class="status-badge status-line-approved"><i class="bi bi-check-circle"></i> Line Approved</span>
+                    {% elif application.status == 'pending_manager_approval' %}
+                        <span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> Pending Manager</span>
+                    {% elif application.status == 'manager_approved' %}
+                        <span class="status-badge status-approved"><i class="bi bi-check-circle-fill"></i> Manager Approved</span>
+                    {% elif application.status == 'active' %}
+                        <span class="status-badge status-active"><i class="bi bi-cash-stack"></i> Active</span>
+                    {% elif application.status == 'rejected' %}
+                        <span class="status-badge status-rejected"><i class="bi bi-x-circle"></i> Rejected</span>
+                    {% else %}
+                        <span class="status-badge status-pending">{{ application.status|title }}</span>
+                    {% endif %}
+                </div>
             </div>
         </div>
-        <hr>
-        <a href="{% url 'admin_panel:loan_applications_list' %}" class="btn btn-secondary">Back to List</a>
+    </div>
+
+    <!-- Committee Decision Section (if available) -->
+    {% if application.approved_line %}
+    <div class="details-section">
+        <div class="section-header">
+            <i class="bi bi-people-fill"></i> Committee Decision
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-check-lg"></i> Approved Line</div>
+                <div class="info-value text-success fw-bold">₱{{ application.approved_line|floatformat:2 }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-calendar-check"></i> Date Approved</div>
+                <div class="info-value">{{ application.committee_approved_date|date:"F d, Y"|default:"—" }}</div>
+            </div>
+            {% if application.committee_reduction_reason %}
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-chat-dots"></i> Reduction Reason</div>
+                <div class="info-value">{{ application.committee_reduction_reason }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Review Information Section (if available) -->
+    {% if application.reviewed_by or application.remarks %}
+    <div class="details-section">
+        <div class="section-header">
+            <i class="bi bi-clipboard-check"></i> Review Information
+        </div>
+        <div class="info-grid">
+            {% if application.reviewed_by %}
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-person-check"></i> Reviewed By</div>
+                <div class="info-value">{{ application.reviewed_by.get_full_name|default:application.reviewed_by.username }}</div>
+            </div>
+            {% endif %}
+            {% if application.reviewed_date %}
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-calendar"></i> Reviewed Date</div>
+                <div class="info-value">{{ application.reviewed_date|date:"F d, Y H:i" }}</div>
+            </div>
+            {% endif %}
+            {% if application.remarks %}
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-chat-text"></i> Remarks</div>
+                <div class="info-value">{{ application.remarks }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        {% if application.status == 'pending_staff_review' %}
+        <form method="post" action="{% url 'admin_panel:loan_application_process' application.id %}" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="verify">
+            <button type="submit" class="btn-process btn-verify">
+                <i class="bi bi-check-lg"></i> Verify Application
+            </button>
+        </form>
+        {% endif %}
+
+        {% if application.status == 'with_committee' %}
+        <form method="post" action="{% url 'admin_panel:loan_application_process' application.id %}" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="approve">
+            <button type="submit" class="btn-process btn-approve">
+                <i class="bi bi-check-circle"></i> Approve Line
+            </button>
+        </form>
+        {% endif %}
+
+        {% if application.status == 'line_approved' %}
+        <button class="btn-process btn-approve" onclick="alert('Add charges functionality coming soon')">
+            <i class="bi bi-calculator"></i> Add Charges
+        </button>
+        {% endif %}
+
+        {% if application.status == 'pending_manager_approval' %}
+        <form method="post" action="{% url 'admin_panel:loan_application_process' application.id %}" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="approve">
+            <button type="submit" class="btn-process btn-approve">
+                <i class="bi bi-check-circle-fill"></i> Final Approve
+            </button>
+        </form>
+        {% endif %}
+
+        {% if application.status not in 'approved,active,rejected' %}
+        <form method="post" action="{% url 'admin_panel:loan_application_process' application.id %}" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reject">
+            <button type="submit" class="btn-process btn-reject" onclick="return confirm('Are you sure you want to reject this application?')">
+                <i class="bi bi-x-circle"></i> Reject Application
+            </button>
+        </form>
+        {% endif %}
+
+        <a href="{% url 'admin_panel:loan_applications_list' %}" class="btn-process btn-back">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
     </div>
 </div>
+
+<script>
+    // Add confirmation for approve actions
+    document.querySelectorAll('.btn-approve').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            if (!confirm('Are you sure you want to approve this application?')) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
 {% endblock %}

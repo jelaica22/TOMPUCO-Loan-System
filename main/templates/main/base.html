@@ -5,14 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
 
-    <!-- Browser Tab Title -->
     <title>{% block title %}Dashboard{% endblock %} | TOMPUCO Member Portal</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/logo.png' %}">
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/logo.png' %}">
-    <link rel="shortcut icon" href="{% static 'images/logo.png' %}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/logo.png' %}">
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -20,7 +17,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        /* ===== CSS Variables for Light/Dark Mode ===== */
         :root {
             --header-height: 64px;
             --sidebar-width: 280px;
@@ -43,7 +39,6 @@
             --header-bg: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
             --footer-bg: #ffffff;
             --input-bg: #ffffff;
-            --table-hover: #f8fafc;
             --success-bg: #d1fae5;
             --success-text: #065f46;
             --warning-bg: #fef3c7;
@@ -52,7 +47,6 @@
             --danger-text: #991b1b;
             --info-bg: #dbeafe;
             --info-text: #1e40af;
-            --click-ripple: rgba(13, 110, 110, 0.2);
         }
 
         [data-theme="dark"] {
@@ -68,7 +62,6 @@
             --header-bg: linear-gradient(135deg, #0a3d3d 0%, #073d3d 100%);
             --footer-bg: #1a2332;
             --input-bg: #1e2a3a;
-            --table-hover: #1e2a3a;
             --success-bg: #064e3b;
             --success-text: #a7f3d0;
             --warning-bg: #451a03;
@@ -77,14 +70,9 @@
             --danger-text: #fecaca;
             --info-bg: #1e3a8a;
             --info-text: #bfdbfe;
-            --click-ripple: rgba(255, 255, 255, 0.1);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', system-ui, sans-serif;
@@ -95,7 +83,7 @@
             transition: background 0.3s ease;
         }
 
-        /* ===== Fixed Navbar ===== */
+        /* Navbar */
         .top-navbar {
             position: fixed;
             top: 0;
@@ -159,9 +147,7 @@
             gap: 12px;
         }
 
-        .navbar-brand:hover {
-            text-decoration: none;
-        }
+        .navbar-brand:hover { text-decoration: none; }
 
         .brand-logo {
             height: 40px;
@@ -172,27 +158,11 @@
             object-fit: contain;
         }
 
-        .brand-text {
-            display: flex;
-            flex-direction: column;
-        }
+        .brand-text { display: flex; flex-direction: column; }
+        .brand-title { font-size: 1.2rem; font-weight: 700; color: white; }
+        .brand-subtitle { font-size: 0.65rem; color: rgba(255, 255, 255, 0.7); }
 
-        .brand-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: white;
-        }
-
-        .brand-subtitle {
-            font-size: 0.65rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .navbar-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        .navbar-right { display: flex; align-items: center; gap: 15px; }
 
         .notification-bell {
             position: relative;
@@ -210,9 +180,7 @@
             transform: scale(1.05);
         }
 
-        .notification-bell i {
-            font-size: 1.3rem;
-        }
+        .notification-bell i { font-size: 1.3rem; }
 
         .notification-badge {
             position: absolute;
@@ -241,9 +209,7 @@
             transition: all 0.3s;
         }
 
-        .user-dropdown-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
+        .user-dropdown-btn:hover { background: rgba(255, 255, 255, 0.15); }
 
         .user-avatar {
             width: 36px;
@@ -258,24 +224,12 @@
             overflow: hidden;
         }
 
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-name { font-weight: 500; font-size: 0.9rem; }
 
-        .user-name {
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
+        @media (max-width: 768px) { .user-name { display: none; } }
 
-        @media (max-width: 768px) {
-            .user-name {
-                display: none;
-            }
-        }
-
-        /* ===== Sidebar ===== */
+        /* Sidebar */
         .sidebar {
             position: fixed;
             top: var(--header-height);
@@ -319,13 +273,8 @@
             transform: scale(1.05);
         }
 
-        .sidebar-nav {
-            padding: 20px 0;
-        }
-
-        .nav-section {
-            margin-bottom: 20px;
-        }
+        .sidebar-nav { padding: 20px 0; }
+        .nav-section { margin-bottom: 20px; }
 
         .nav-section-title {
             padding: 8px 20px;
@@ -363,10 +312,7 @@
             font-weight: 600;
         }
 
-        .nav-link i {
-            font-size: 1.2rem;
-            min-width: 24px;
-        }
+        .nav-link i { font-size: 1.2rem; min-width: 24px; }
 
         .nav-badge {
             margin-left: auto;
@@ -384,34 +330,15 @@
         }
 
         /* Collapsed Sidebar */
-        body.sidebar-collapsed .sidebar {
-            width: var(--sidebar-collapsed-width);
-        }
-
+        body.sidebar-collapsed .sidebar { width: var(--sidebar-collapsed-width); }
         body.sidebar-collapsed .nav-link span,
         body.sidebar-collapsed .nav-section-title,
         body.sidebar-collapsed .nav-divider,
-        body.sidebar-collapsed .nav-badge {
-            display: none;
-        }
-
-        body.sidebar-collapsed .nav-link {
-            justify-content: center;
-            padding: 12px;
-        }
-
-        body.sidebar-collapsed .nav-link i {
-            margin: 0;
-            font-size: 1.3rem;
-        }
-
-        body.sidebar-collapsed .sidebar-collapse-btn i {
-            transform: rotate(180deg);
-        }
-
-        body.sidebar-collapsed .main-content {
-            margin-left: var(--sidebar-collapsed-width);
-        }
+        body.sidebar-collapsed .nav-badge { display: none; }
+        body.sidebar-collapsed .nav-link { justify-content: center; padding: 12px; }
+        body.sidebar-collapsed .nav-link i { margin: 0; font-size: 1.3rem; }
+        body.sidebar-collapsed .sidebar-collapse-btn i { transform: rotate(180deg); }
+        body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed-width); }
 
         /* Main Content */
         .main-content {
@@ -446,9 +373,7 @@
             z-index: 1015;
         }
 
-        .sidebar-overlay.active {
-            display: block;
-        }
+        .sidebar-overlay.active { display: block; }
 
         .btn-clicked {
             animation: btn-pulse 0.2s ease-out;
@@ -473,11 +398,14 @@
             box-shadow: var(--shadow-hover);
         }
 
-        /* Logout Modal */
-        .logout-modal .modal-content {
-            border-radius: 16px;
-            overflow: hidden;
+        /* Alert styles */
+        .alert {
+            border-radius: 12px;
+            border: none;
         }
+
+        /* Logout Modal */
+        .logout-modal .modal-content { border-radius: 16px; overflow: hidden; }
         .logout-modal .modal-header {
             background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
@@ -493,42 +421,229 @@
             justify-content: center;
             margin: 0 auto 15px;
         }
-        .logout-icon i {
-            font-size: 2.5rem;
-            color: #dc2626;
+        .logout-icon i { font-size: 2.5rem; color: #dc2626; }
+
+        /* ============================================ */
+        /* CHATBOT STYLES */
+        /* ============================================ */
+        .chatbot-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1050;
         }
 
-        ::-webkit-scrollbar {
-            width: 6px;
+        .chatbot-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--brand-gradient);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
         }
-        ::-webkit-scrollbar-track {
+
+        .chatbot-toggle:hover { transform: scale(1.05); }
+        .chatbot-toggle i { font-size: 1.8rem; }
+
+        .chatbot-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .chatbot-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 400px;
+            height: 550px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .chatbot-window.open { display: flex; }
+        .chatbot-window.minimized { height: 60px; }
+        .chatbot-window.minimized .chatbot-messages,
+        .chatbot-window.minimized .chatbot-input { display: none; }
+
+        .chatbot-header {
+            background: var(--brand-gradient);
+            color: white;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-header h6 { margin: 0; font-weight: 600; }
+
+        .chatbot-header-actions { display: flex; gap: 8px; }
+
+        .chatbot-header button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .chatbot-header button:hover { background: rgba(255, 255, 255, 0.4); }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
             background: var(--bg-body);
         }
-        ::-webkit-scrollbar-thumb {
-            background: var(--brand-primary);
-            border-radius: 3px;
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
         }
 
+        .message.bot { justify-content: flex-start; }
+        .message.user { justify-content: flex-end; }
+
+        .message-content {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .bot .message-content {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .user .message-content {
+            background: var(--brand-gradient);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .quick-reply-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--brand-primary);
+            color: var(--brand-primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-reply-btn:hover {
+            background: var(--brand-primary);
+            color: white;
+        }
+
+        .chatbot-input {
+            display: flex;
+            padding: 12px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            gap: 8px;
+        }
+
+        .language-select {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            padding: 8px;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            width: 75px;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            outline: none;
+            font-size: 0.85rem;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        .chatbot-input input:focus { border-color: var(--brand-primary); }
+
+        .chatbot-input button {
+            background: var(--brand-primary);
+            border: none;
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .chatbot-input button:hover {
+            background: var(--brand-primary-dark);
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 576px) {
+            .chatbot-window {
+                width: calc(100vw - 40px);
+                height: 500px;
+                right: 0;
+                bottom: 80px;
+            }
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-body); }
+        ::-webkit-scrollbar-thumb { background: var(--brand-primary); border-radius: 3px; }
+
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform var(--transition-speed) ease;
-            }
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            .main-content {
-                margin-left: 0 !important;
-            }
-            .mobile-menu-btn {
-                display: block;
-            }
-            .brand-title {
-                font-size: 1rem;
-            }
-            .brand-subtitle {
-                display: none;
-            }
+            .sidebar { transform: translateX(-100%); transition: transform var(--transition-speed) ease; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+            .mobile-menu-btn { display: block; }
+            .brand-title { font-size: 1rem; }
+            .brand-subtitle { display: none; }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -690,6 +805,39 @@
         </div>
     </footer>
 
+    <!-- ============================================ -->
+    <!-- PERSISTENT CHATBOT - Works Across All Pages -->
+    <!-- ============================================ -->
+    <div class="chatbot-container">
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">
+                <h6><i class="bi bi-robot me-2"></i>TOMPuCO Assistant</h6>
+                <div class="chatbot-header-actions">
+                    <button id="clearChatBtn" title="Clear History"><i class="bi bi-trash3"></i></button>
+                    <button id="minimizeChatBtn" title="Minimize"><i class="bi bi-dash-lg"></i></button>
+                    <button id="maximizeChatBtn" title="Maximize" style="display:none;"><i class="bi bi-square"></i></button>
+                    <button id="closeChatBtn"><i class="bi bi-x-lg"></i></button>
+                </div>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <!-- Messages load dynamically from localStorage -->
+            </div>
+            <div class="chatbot-input">
+                <select id="chatbotLanguage" class="language-select">
+                    <option value="en">🇬🇧 English</option>
+                    <option value="tl">🇵🇭 Tagalog</option>
+                    <option value="bis">🇵🇭 Bisaya</option>
+                </select>
+                <input type="text" id="chatbotInput" placeholder="Type your question here..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+                <button onclick="sendChatMessage()"><i class="bi bi-send"></i></button>
+            </div>
+        </div>
+        <button class="chatbot-toggle" id="chatbotToggleBtn">
+            <i class="bi bi-chat-dots-fill"></i>
+            <span class="chatbot-badge" id="chatbotBadge">1</span>
+        </button>
+    </div>
+
     <div class="modal fade logout-modal" id="logoutModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -722,12 +870,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // ============================================
+        // SIDEBAR FUNCTIONS
+        // ============================================
         function addClickEffect(element) {
             if (!element) return;
             element.classList.add('btn-clicked');
-            setTimeout(() => {
-                element.classList.remove('btn-clicked');
-            }, 200);
+            setTimeout(() => element.classList.remove('btn-clicked'), 200);
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -736,22 +885,19 @@
                 '.user-dropdown-btn, .notification-bell, .btn, .dropdown-item, .navbar-brand'
             );
             clickableElements.forEach(element => {
-                element.addEventListener('click', function() {
-                    addClickEffect(this);
-                });
+                element.addEventListener('click', function() { addClickEffect(this); });
             });
         });
 
+        // Theme Toggle
         const theme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', theme);
-
         const themeToggle = document.getElementById('themeToggle');
         const updateThemeIcon = () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             themeToggle.innerHTML = currentTheme === 'dark' ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-stars-fill"></i>';
         };
         updateThemeIcon();
-
         themeToggle?.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -760,34 +906,31 @@
             updateThemeIcon();
         });
 
+        // Sidebar Collapse
         const sidebar = document.getElementById('sidebar');
         const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
         const body = document.body;
-
         if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 768) {
             body.classList.add('sidebar-collapsed');
         }
-
         sidebarCollapseBtn?.addEventListener('click', () => {
             body.classList.toggle('sidebar-collapsed');
             localStorage.setItem('sidebarCollapsed', body.classList.contains('sidebar-collapsed'));
         });
 
+        // Mobile Menu
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
-
         mobileMenuBtn?.addEventListener('click', () => {
             sidebar.classList.toggle('open');
             sidebarOverlay.classList.toggle('active');
             document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
         });
-
         sidebarOverlay?.addEventListener('click', () => {
             sidebar.classList.remove('open');
             sidebarOverlay.classList.remove('active');
             document.body.style.overflow = '';
         });
-
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) {
                 sidebar.classList.remove('open');
@@ -796,6 +939,7 @@
             }
         });
 
+        // Active Nav Link
         function updateActiveNavLink() {
             const currentPath = window.location.pathname;
             const navPaths = {
@@ -808,34 +952,25 @@
                 'notifications': ['/notifications/', '/notifications', '/member/notifications/'],
                 'profile': ['/profile/', '/profile', '/member/profile/']
             };
-
             document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-
             if (currentPath === '/' || currentPath === '' || currentPath === '/dashboard/' || currentPath === '/member/dashboard/') {
                 const dashboardLink = document.querySelector('.nav-link[data-nav="dashboard"]');
                 if (dashboardLink) dashboardLink.classList.add('active');
                 return;
             }
-
-            let found = false;
             for (const [navId, paths] of Object.entries(navPaths)) {
                 for (const path of paths) {
                     if (currentPath === path || (path !== '/' && currentPath.startsWith(path))) {
                         const link = document.querySelector(`.nav-link[data-nav="${navId}"]`);
-                        if (link) {
-                            link.classList.add('active');
-                            found = true;
-                            break;
-                        }
+                        if (link) { link.classList.add('active'); return; }
                     }
                 }
-                if (found) break;
             }
         }
-
         document.addEventListener('DOMContentLoaded', updateActiveNavLink);
         window.addEventListener('popstate', () => setTimeout(updateActiveNavLink, 10));
 
+        // Logout Modal
         const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
         document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
             e.preventDefault();
@@ -846,6 +981,7 @@
             logoutModal.show();
         });
 
+        // Notification Badges
         function updateBadges() {
             fetch('/api/notifications/')
                 .then(r => r.json())
@@ -853,7 +989,6 @@
                     const unread = data.unread_count || 0;
                     const topBadge = document.getElementById('topNotificationBadge');
                     const sidebarBadge = document.getElementById('sidebarNotificationBadge');
-
                     if (topBadge) {
                         topBadge.textContent = unread > 99 ? '99+' : unread;
                         topBadge.style.display = unread > 0 ? 'inline-block' : 'none';
@@ -862,14 +997,310 @@
                         sidebarBadge.textContent = unread > 99 ? '99+' : unread;
                         sidebarBadge.style.display = unread > 0 ? 'inline-block' : 'none';
                     }
-                })
-                .catch(() => {});
+                }).catch(() => {});
         }
-
         document.addEventListener('DOMContentLoaded', () => {
             updateBadges();
             setInterval(updateBadges, 30000);
         });
+
+        // ============================================
+        // PERSISTENT CHATBOT - CROSS-PAGE HISTORY
+        // ============================================
+
+        // Storage keys
+        const CHAT_STORAGE_KEY = 'tompuco_chat_messages_v2';
+        const CHAT_LANG_KEY = 'tompuco_chat_language_v2';
+
+        // DOM Elements
+        const chatbotWindow = document.getElementById('chatbotWindow');
+        const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
+        const chatbotMessages = document.getElementById('chatbotMessages');
+        const chatbotInput = document.getElementById('chatbotInput');
+        const chatbotLanguage = document.getElementById('chatbotLanguage');
+        const chatbotBadge = document.getElementById('chatbotBadge');
+
+        // Multi-language responses
+        const responses = {
+            en: {
+                greeting: "👋 Hello! Welcome to TOMPuCO Assistant! How can I help you today?",
+                loan_req: "📋 **Loan Requirements:**\n\n✅ Valid Government ID\n✅ Proof of Income\n✅ Collateral Documents\n✅ Co-maker (for most loans)\n✅ Completed Application Form\n\n💡 Salary Loan does NOT require a co-maker!",
+                interest: "💰 **Interest Rates:**\n\n• NCL: 20% per annum\n• APCP: 15% per annum\n• Salary Loan: 8% per annum (for employees)\n• Collateral: 20% per annum\n\n💡 Interest is diminishing - you pay interest only on remaining balance!",
+                payment: "💳 **How to Pay:**\n\n1️⃣ Go to STAFF - get Payment Instruction Slip\n2️⃣ Take slip to CASHIER\n3️⃣ Pay via Cash, Pesada, or Quedan\n\nYou can pay anytime, even before due date!",
+                status: "📌 **Application Status Meanings:**\n\n• Pending Review - Staff checking documents\n• With Committee - Committee reviewing\n• Line Approved - Amount approved\n• Active - Loan disbursed\n• Rejected - Application denied",
+                how_to_apply: "📝 **How to Apply:**\n\n1️⃣ Login to your account\n2️⃣ Click 'Apply for Loan'\n3️⃣ Fill out application form\n4️⃣ Upload required documents\n5️⃣ Provide co-maker details\n6️⃣ Draw digital signature\n7️⃣ Submit!\n\n⏱️ Processing takes 24-48 hours.",
+                restructuring: "🔄 **Loan Restructuring:**\n\nIf you're having difficulty paying:\n• No penalty on old loan\n• Same interest rate\n• New payment schedule based on your capacity\n• NO additional cash released\n\nContact our staff to discuss options!",
+                salary_loan: "💼 **Salary Loan:**\n\n• Interest: 8% per annum (lowest!)\n• No co-maker required!\n• For employees only\n• Max amount: ₱500,000\n• Term: 360 days",
+                employee_benefits: "👔 **Employee Member Benefits:**\n\n✅ Salary Loan access (8% interest)\n✅ Higher loan limits\n✅ Faster processing\n✅ No co-maker for Salary Loan\n✅ Salary deduction option available",
+                contact: "📞 **Contact Us:**\n\n📱 Phone: (035) 123-4567\n📧 Email: info@tompuco.ph\n📍 Villareal, Bayawan City, Negros Oriental\n\n🕐 Mon-Fri: 8AM-5PM\n🕐 Sat: 9AM-12PM",
+                default: "🤖 I'm TOMPuCO Assistant!\n\nI can help you with:\n• Loan requirements 📋\n• Interest rates 💰\n• How to apply 📝\n• Payment methods 💵\n• Loan status 📊\n• Restructuring 🔄\n• Salary Loan 💼\n• Employee benefits 👔\n\nWhat would you like to know?",
+                thank_you: "🙏 You're welcome! Is there anything else I can help you with?",
+                goodbye: "👋 Thank you for chatting! Come back anytime if you have questions. Have a great day!"
+            },
+            tl: {
+                greeting: "👋 Kamusta! Maligayang pagdating sa TOMPuCO Assistant! Paano kita matutulungan ngayon?",
+                loan_req: "📋 **Mga Kinakailangan sa Loan:**\n\n✅ Valid Government ID\n✅ Patunay ng Kita\n✅ Collateral Documents\n✅ Co-maker (sa karamihan ng loans)\n✅ Nakumpletong Application Form\n\n💡 Ang Salary Loan ay HINDI nangangailangan ng co-maker!",
+                interest: "💰 **Mga Interest Rates:**\n\n• NCL: 20% bawat taon\n• APCP: 15% bawat taon\n• Salary Loan: 8% bawat taon\n• Collateral: 20% bawat taon\n\n💡 Diminishing interest - interes lang sa natitirang balanse ang babayaran!",
+                payment: "💳 **Paano Magbayad:**\n\n1️⃣ Pumunta sa STAFF - kumuha ng Payment Instruction Slip\n2️⃣ Dalhin ang slip sa CASHIER\n3️⃣ Magbayad sa pamamagitan ng Cash, Pesada, o Quedan\n\nPwedeng magbayad kahit kailan, kahit bago ang due date!",
+                status: "📌 **Kahulugan ng Application Status:**\n\n• Pending Review - Sinusuri ng staff ang documents\n• With Committee - Sinusuri ng committee\n• Line Approved - Naaprubahan ang halaga\n• Active - Na-release na ang loan\n• Rejected - Hindi naaprubahan",
+                how_to_apply: "📝 **Paano Mag-apply:**\n\n1️⃣ Mag-login sa account\n2️⃣ I-click ang 'Apply for Loan'\n3️⃣ Punan ang application form\n4️⃣ Mag-upload ng requirements\n5️⃣ Magbigay ng co-maker details\n6️⃣ Gumuhit ng digital signature\n7️⃣ Mag-verify gamit ang OTP\n8️⃣ I-submit!\n\n⏱️ 24-48 hours ang processing.",
+                restructuring: "🔄 **Loan Restructuring:**\n\nKung nahihirapan kang magbayad:\n• Walang penalty sa lumang loan\n• Pareho ang interest rate\n• Bagong payment schedule ayon sa kakayahan\n• WALANG karagdagang cash na ilalabas\n\nMakipag-ugnayan sa aming staff!",
+                salary_loan: "💼 **Salary Loan:**\n\n• Interest: 8% bawat taon (pinakamababa!)\n• Hindi kailangan ng co-maker!\n• Para sa mga empleyado lamang\n• Max amount: ₱500,000",
+                employee_benefits: "👔 **Mga Benepisyo ng Employee Member:**\n\n✅ Salary Loan access (8% interest)\n✅ Mas mataas na loan limits\n✅ Mas mabilis na processing\n✅ Walang co-maker para sa Salary Loan\n✅ Opsyon ng salary deduction",
+                contact: "📞 **Makipag-ugnayan:**\n\n📱 Telepono: (035) 123-4567\n📧 Email: info@tompuco.ph\n📍 Villareal, Bayawan City, Negros Oriental\n\n🕐 Lunes-Biyernes: 8AM-5PM\n🕐 Sabado: 9AM-12PM",
+                default: "🤖 Ako si TOMPuCO Assistant!\n\nMaaari kitang tulungan sa:\n• Mga kinakailangan sa loan 📋\n• Interest rates 💰\n• Paano mag-apply 📝\n• Paraan ng pagbabayad 💵\n• Status ng loan 📊\n• Restructuring 🔄\n• Salary Loan 💼\n• Employee benefits 👔\n\nAno ang gusto mong malaman?",
+                thank_you: "🙏 Walang anuman! May iba pa ba akong maitutulong sa iyo?",
+                goodbye: "👋 Salamat sa pag-chat! Bumalik ka anumang oras kung may tanong. Magandang araw!"
+            },
+            bis: {
+                greeting: "👋 Kumusta! Maayong pag-abot sa TOMPuCO Assistant! Unsaon tika pagtabang?",
+                loan_req: "📋 **Mga Kinahanglanon sa Loan:**\n\n✅ Valid Government ID\n✅ Pamatuod sa Kita\n✅ Collateral Documents\n✅ Co-maker (saadaghanang loans)\n✅ Nakumpleto nga Application Form\n\n💡 Ang Salary Loan WALAY kinahanglan nga co-maker!",
+                interest: "💰 **Mga Interest Rates:**\n\n• NCL: 20% matag tuig\n• APCP: 15% matag tuig\n• Salary Loan: 8% matag tuig\n• Collateral: 20% matag tuig\n\n💡 Diminishing interest - interes lang sa nahabilin nga balanse ang bayaran!",
+                payment: "💳 **Paano Magbayad:**\n\n1️⃣ Adto sa STAFF - kuha ug Payment Instruction Slip\n2️⃣ Dad-a ang slip sa CASHIER\n3️⃣ Pagbayad pinaagi sa Cash, Pesada, o Quedan\n\nPwede magbayad bisan kanus-a, bisan sa wala pa ang due date!",
+                status: "📌 **Kahulugan sa Application Status:**\n\n• Pending Review - Gisusi sa staff ang documents\n• With Committee - Gisusi sa committee\n• Line Approved - Naaprubahan ang kantidad\n• Active - Na-release na ang loan\n• Rejected - Wala maaprubahan",
+                how_to_apply: "📝 **Paano Mag-apply:**\n\n1️⃣ Mag-login sa account\n2️⃣ I-klik ang 'Apply for Loan'\n3️⃣ Pun-an ang application form\n4️⃣ Mag-upload sa requirements\n5️⃣ Paghatag sa co-maker details\n6️⃣ Pagdrawing sa digital signature\n7️⃣ Pag-verify gamit ang OTP\n8️⃣ I-submit!\n\n⏱️ 24-48 hours ang processing.",
+                restructuring: "🔄 **Loan Restructuring:**\n\nKung naglisod ka sa pagbayad:\n• Walay penalty sa daan nga loan\n• Pareho ang interest rate\n• Bag-ong payment schedule base sa kakayahan\n• WALAY dugang nga cash nga igawas\n\nMakig-ugnayan sa among staff!",
+                salary_loan: "💼 **Salary Loan:**\n\n• Interest: 8% matag tuig (pinakaubos!)\n• DILI kinahanglan ug co-maker!\n• Para sa mga empleyado lamang\n• Max amount: ₱500,000",
+                employee_benefits: "👔 **Mga Benepisyo sa Employee Member:**\n\n✅ Salary Loan access (8% interest)\n✅ Mas taas nga loan limits\n✅ Mas paspas nga processing\n✅ Walay co-maker para sa Salary Loan\n✅ Opsyon sa salary deduction",
+                contact: "📞 **Pakig-ugnayan:**\n\n📱 Telepono: (035) 123-4567\n📧 Email: info@tompuco.ph\n📍 Villareal, Bayawan City, Negros Oriental\n\n🕐 Lunes-Biyernes: 8AM-5PM\n🕐 Sabado: 9AM-12PM",
+                default: "🤖 Ako si TOMPuCO Assistant!\n\nMakatabang ko kanimo sa:\n• Mga kinahanglanon sa loan 📋\n• Interest rates 💰\n• Unsaon pag-apply 📝\n• Paagi sa pagbayad 💵\n• Status sa loan 📊\n• Restructuring 🔄\n• Salary Loan 💼\n• Employee benefits 👔\n\nUnsa ang gusto nimong mahibaw-an?",
+                thank_you: "🙏 Walay sapayan! Naa pa bay lain akong matabang kanimo?",
+                goodbye: "👋 Salamat sa pag-chat! Balik kanunay kung naay pangutana. Maayong adlaw!"
+            }
+        };
+
+        let currentLang = 'en';
+        let isMinimized = false;
+
+        // Load saved language
+        const savedLang = localStorage.getItem(CHAT_LANG_KEY);
+        if (savedLang && responses[savedLang]) {
+            currentLang = savedLang;
+            chatbotLanguage.value = savedLang;
+        }
+
+        // ============================================
+        // CHAT MESSAGE FUNCTIONS
+        // ============================================
+
+        function addMessage(content, isUser = false, save = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            messageDiv.innerHTML = `<div class="message-content">${content.replace(/\n/g, '<br>')}</div>`;
+            chatbotMessages.appendChild(messageDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+            if (save) saveMessages();
+        }
+
+        function showTypingIndicator() {
+            removeTypingIndicator();
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = '<div class="message-content"><i class="bi bi-three-dots"></i> Typing...</div>';
+            chatbotMessages.appendChild(typingDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        function getBotResponse(question) {
+            const q = question.toLowerCase();
+            const r = responses[currentLang];
+
+            if (q.includes('require') || q.includes('need') || q.includes('kinahanglan')) return r.loan_req;
+            if (q.includes('interest') || q.includes('rate') || q.includes('interes')) return r.interest;
+            if (q.includes('pay') || q.includes('payment') || q.includes('bayad')) return r.payment;
+            if (q.includes('status')) return r.status;
+            if (q.includes('apply')) return r.how_to_apply;
+            if (q.includes('restructur')) return r.restructuring;
+            if (q.includes('salary')) return r.salary_loan;
+            if (q.includes('benefit') || q.includes('employee')) return r.employee_benefits;
+            if (q.includes('contact') || q.includes('phone')) return r.contact;
+            if (q.includes('thank') || q.includes('salamat')) return r.thank_you;
+            if (q.includes('bye') || q.includes('goodbye')) return r.goodbye;
+            if (q.includes('hello') || q.includes('hi') || q.includes('hey') || q.includes('kamusta')) return r.greeting;
+
+            return r.default;
+        }
+
+        async function sendChatMessage() {
+            const message = chatbotInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            chatbotInput.value = '';
+
+            showTypingIndicator();
+
+            setTimeout(() => {
+                removeTypingIndicator();
+                const response = getBotResponse(message);
+                addMessage(response, false);
+            }, 500);
+        }
+
+        function sendQuickReply(message) {
+            addMessage(message, true);
+            showTypingIndicator();
+            setTimeout(() => {
+                removeTypingIndicator();
+                const response = getBotResponse(message);
+                addMessage(response, false);
+            }, 300);
+        }
+
+        // ============================================
+        // PERSISTENT STORAGE FUNCTIONS
+        // ============================================
+
+        function saveMessages() {
+            const messages = [];
+            const messageElements = document.querySelectorAll('#chatbotMessages .message');
+            messageElements.forEach(msg => {
+                const isUser = msg.classList.contains('user');
+                const contentElem = msg.querySelector('.message-content');
+                if (contentElem && !contentElem.innerHTML.includes('typingIndicator')) {
+                    messages.push({ isUser, text: contentElem.innerText });
+                }
+            });
+            localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+        }
+
+        function loadMessages() {
+            const saved = localStorage.getItem(CHAT_STORAGE_KEY);
+            if (saved) {
+                try {
+                    const messages = JSON.parse(saved);
+                    if (messages.length > 0) {
+                        chatbotMessages.innerHTML = '';
+                        messages.forEach(msg => {
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = `message ${msg.isUser ? 'user' : 'bot'}`;
+                            messageDiv.innerHTML = `<div class="message-content">${msg.text.replace(/\n/g, '<br>')}</div>`;
+                            chatbotMessages.appendChild(messageDiv);
+                        });
+                        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+                        return true;
+                    }
+                } catch(e) { console.log('Error loading messages:', e); }
+            }
+            return false;
+        }
+
+        function loadWelcomeMessage() {
+            const r = responses[currentLang];
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.className = 'message bot';
+            welcomeDiv.innerHTML = `<div class="message-content">
+                <div>${r.greeting}</div>
+                <div class="quick-replies">
+                    <button class="quick-reply-btn" onclick="sendQuickReply('loan requirements')">📋 Requirements</button>
+                    <button class="quick-reply-btn" onclick="sendQuickReply('interest rates')">💰 Interest</button>
+                    <button class="quick-reply-btn" onclick="sendQuickReply('payment')">💵 Payment</button>
+                    <button class="quick-reply-btn" onclick="sendQuickReply('status')">📊 Status</button>
+                    <button class="quick-reply-btn" onclick="sendQuickReply('how to apply')">📝 Apply</button>
+                    <button class="quick-reply-btn" onclick="sendQuickReply('salary loan')">💼 Salary</button>
+                </div>
+            </div>`;
+            chatbotMessages.appendChild(welcomeDiv);
+            saveMessages();
+        }
+
+        function clearChatHistory() {
+            if (confirm('Clear all chat history? This cannot be undone.')) {
+                chatbotMessages.innerHTML = '';
+                loadWelcomeMessage();
+                saveMessages();
+            }
+        }
+
+        // Language change handler
+        chatbotLanguage.addEventListener('change', () => {
+            currentLang = chatbotLanguage.value;
+            localStorage.setItem(CHAT_LANG_KEY, currentLang);
+
+            // Reload messages to retranslate bot messages
+            const messages = [];
+            const messageElements = document.querySelectorAll('#chatbotMessages .message');
+            messageElements.forEach(msg => {
+                const isUser = msg.classList.contains('user');
+                if (!isUser) {
+                    const text = msg.querySelector('.message-content').innerText;
+                    messages.push(text);
+                }
+            });
+
+            chatbotMessages.innerHTML = '';
+            messages.forEach(msgText => {
+                const response = getBotResponse(msgText);
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot';
+                messageDiv.innerHTML = `<div class="message-content">${response.replace(/\n/g, '<br>')}</div>`;
+                chatbotMessages.appendChild(messageDiv);
+            });
+
+            if (chatbotMessages.children.length === 0) loadWelcomeMessage();
+            saveMessages();
+        });
+
+        // ============================================
+        // CHATBOT CONTROLS
+        // ============================================
+
+        const closeChatBtn = document.getElementById('closeChatBtn');
+        const clearChatBtn = document.getElementById('clearChatBtn');
+        const minimizeChatBtn = document.getElementById('minimizeChatBtn');
+        const maximizeChatBtn = document.getElementById('maximizeChatBtn');
+
+        chatbotToggleBtn.addEventListener('click', () => {
+            const wasOpen = chatbotWindow.classList.contains('open');
+            chatbotWindow.classList.toggle('open');
+            if (!wasOpen) {
+                const hasHistory = loadMessages();
+                if (!hasHistory || chatbotMessages.children.length === 0) loadWelcomeMessage();
+                chatbotBadge.style.display = 'none';
+            }
+        });
+
+        closeChatBtn.addEventListener('click', () => {
+            chatbotWindow.classList.remove('open');
+            saveMessages();
+        });
+
+        minimizeChatBtn.addEventListener('click', () => {
+            chatbotWindow.classList.add('minimized');
+            minimizeChatBtn.style.display = 'none';
+            maximizeChatBtn.style.display = 'inline-flex';
+        });
+
+        maximizeChatBtn.addEventListener('click', () => {
+            chatbotWindow.classList.remove('minimized');
+            minimizeChatBtn.style.display = 'inline-flex';
+            maximizeChatBtn.style.display = 'none';
+        });
+
+        clearChatBtn.addEventListener('click', clearChatHistory);
+
+        chatbotInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChatMessage();
+        });
+
+        // Save before page unload
+        window.addEventListener('beforeunload', () => saveMessages());
+
+        // Make functions global for quick replies
+        window.sendQuickReply = sendQuickReply;
+        window.sendChatMessage = sendChatMessage;
+
+        // Load chat history on page load if chat is open
+        if (chatbotWindow.classList.contains('open')) {
+            const hasHistory = loadMessages();
+            if (!hasHistory) loadWelcomeMessage();
+        }
     </script>
     {% block extra_js %}{% endblock %}
 </body>
