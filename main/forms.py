@@ -71,9 +71,14 @@ class MemberRegistrationForm(UserCreationForm):
     adjacent_farm = forms.CharField(max_length=200, required=False, widget=forms.TextInput(
         attrs={'class': 'form-control', 'placeholder': 'N/A if none'}))
 
-    # Income Information
-    monthly_income = forms.DecimalField(max_digits=12, decimal_places=2, required=True, min_value=0,
-                                        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '1000'}))
+    # Income Information - Allow any amount including 0
+    monthly_income = forms.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        required=True,
+        min_value=0,  # Allow 0 or any amount
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '1', 'placeholder': '0'})
+    )
     other_income_sources = forms.CharField(max_length=200, required=False, widget=forms.TextInput(
         attrs={'class': 'form-control', 'placeholder': 'N/A if none'}))
     other_loans = forms.CharField(
@@ -129,7 +134,6 @@ class MemberRegistrationForm(UserCreationForm):
 
     def clean_contact_number(self):
         contact = self.cleaned_data.get('contact_number')
-        # Remove any non-digit characters
         digits = ''.join(filter(str.isdigit, contact))
         if len(digits) != 11:
             raise forms.ValidationError('Contact number must be exactly 11 digits.')
@@ -137,8 +141,9 @@ class MemberRegistrationForm(UserCreationForm):
 
     def clean_monthly_income(self):
         income = self.cleaned_data.get('monthly_income')
-        if income and income <= 0:
-            raise forms.ValidationError('Monthly income must be greater than 0.')
+        # Allow any amount including 0 - no validation needed
+        if income is None:
+            return Decimal('0')
         return income
 
     def clean_password1(self):
@@ -172,7 +177,6 @@ class MemberRegistrationForm(UserCreationForm):
         if commit:
             user.save()
 
-            # Handle "N/A" values for optional fields
             def clean_optional(value):
                 if value in ['N/A', 'n/a', 'N/a', '']:
                     return None
@@ -213,7 +217,6 @@ class MemberRegistrationForm(UserCreationForm):
                 is_active=False,
             )
 
-            # Update membership number with actual member ID
             member.membership_number = f"M-{member.id:05d}"
             member.save()
 

@@ -364,27 +364,31 @@ def register(request):
                     return default
             return default
 
-        # reCAPTCHA validation
+        # ============================================================
+        # RECAPTCHA VALIDATION (Skip in development)
+        # ============================================================
         recaptcha_response = request.POST.get('g-recaptcha-response')
-        if not recaptcha_response and not settings.DEBUG:
-            messages.error(request, "Please complete the reCAPTCHA verification.")
-            return render(request, 'registration/register.html')
 
-        secret_key = getattr(settings, 'RECAPTCHA_SECRET_KEY', None)
-
-        if secret_key and not settings.DEBUG:
-            verify_url = 'https://www.google.com/recaptcha/api/siteverify'
-            try:
-                result = requests.post(verify_url, data={
-                    'secret': secret_key,
-                    'response': recaptcha_response
-                }).json()
-                if not result.get('success'):
-                    messages.error(request, "reCAPTCHA verification failed. Please try again.")
-                    return render(request, 'registration/register.html')
-            except Exception:
-                messages.error(request, "reCAPTCHA verification error. Please try again.")
+        # Skip reCAPTCHA in development
+        if not settings.DEBUG:
+            if not recaptcha_response:
+                messages.error(request, "Please complete the reCAPTCHA verification.")
                 return render(request, 'registration/register.html')
+
+            secret_key = getattr(settings, 'RECAPTCHA_SECRET_KEY', None)
+            if secret_key:
+                verify_url = 'https://www.google.com/recaptcha/api/siteverify'
+                try:
+                    result = requests.post(verify_url, data={
+                        'secret': secret_key,
+                        'response': recaptcha_response
+                    }).json()
+                    if not result.get('success'):
+                        messages.error(request, "reCAPTCHA verification failed. Please try again.")
+                        return render(request, 'registration/register.html')
+                except Exception:
+                    messages.error(request, "reCAPTCHA verification error. Please try again.")
+                    return render(request, 'registration/register.html')
 
         # Get basic account data
         username = request.POST.get('username')
@@ -416,13 +420,15 @@ def register(request):
         spouse_name = request.POST.get('spouse_name', '')
         num_dependents = safe_int(request.POST.get('num_dependents', 0))
 
-        # Contact number validation
+        # ============================================================
+        # CONTACT NUMBER VALIDATION (Exactly 11 digits)
+        # ============================================================
         contact_digits = ''.join(filter(str.isdigit, contact_number))
         if len(contact_digits) != 11:
             messages.error(request, "Contact number must be exactly 11 digits.")
             return render(request, 'registration/register.html')
 
-        # Farm data
+        # Farm data (optional)
         farm_location = request.POST.get('farm_location', '')
         if farm_location in ['N/A', 'n/a', '']:
             farm_location = ''
@@ -435,7 +441,7 @@ def register(request):
         if adjacent_farm in ['N/A', 'n/a', '']:
             adjacent_farm = ''
 
-        # Income data
+        # Income data - Allow any amount including 0
         monthly_income = safe_decimal(request.POST.get('monthly_income', 0))
         other_income_sources = request.POST.get('other_income_sources', '')
         if other_income_sources in ['N/A', 'n/a', '']:
@@ -461,19 +467,20 @@ def register(request):
         else:
             date_hired = None
 
-        # Validation
+        # ============================================================
+        # VALIDATION
+        # ============================================================
+
         if user_type not in ['member', 'employee']:
             messages.error(request, "Invalid account type selected.")
             return render(request, 'registration/register.html')
 
-        required_fields = [username, password, email, last_name, first_name, contact_number, residence_address, monthly_income]
+        required_fields = [username, password, email, last_name, first_name, contact_number, residence_address]
         if not all(required_fields):
             messages.error(request, "Please fill in all required fields.")
             return render(request, 'registration/register.html')
 
-        if monthly_income <= 0:
-            messages.error(request, "Monthly income must be greater than 0.")
-            return render(request, 'registration/register.html')
+        # REMOVED: monthly_income validation - allow any amount including 0
 
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username already exists.")
@@ -548,7 +555,7 @@ def register(request):
                 new_plant=new_plant,
                 ratoon_crops=ratoon_crops,
                 adjacent_farm=adjacent_farm if adjacent_farm else None,
-                monthly_income=monthly_income,
+                monthly_income=monthly_income,  # Now accepts any amount including 0
                 other_income_sources=other_income_sources if other_income_sources else None,
                 other_loans=other_loans if other_loans else None,
                 employment_status=user_type,
