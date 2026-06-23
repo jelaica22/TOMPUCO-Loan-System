@@ -6,7 +6,8 @@
       pip install --upgrade pip
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
-      python manage.py migrate --noinput || echo "Migrations will run on startup"
+      python manage.py migrate --noinput
+      python -c "import os; import django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tompuco.settings'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@tompuco.com', 'admin123') if not User.objects.filter(username='admin').exists() else print('Superuser exists')"
     startCommand: gunicorn tompuco.wsgi:application --bind 0.0.0.0:10000
     envVars:
       - key: PYTHON_VERSION
@@ -18,4 +19,4 @@
       - key: DEBUG
         value: "False"
       - key: DATABASE_URL
-        value: postgresql://postgres:Jelaica_db123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require
+        value: postgresql://neondb_owner:npg_CRofXpwybU38@ep-young-rain-aof7gkbe.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
