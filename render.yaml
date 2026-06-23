@@ -6,7 +6,7 @@
       pip install --upgrade pip
       pip install -r requirements-render.txt
       python manage.py collectstatic --noinput
-    startCommand: daphne -b 0.0.0.0 -p $PORT tompuco.asgi:application
+    startCommand: bash startup.sh
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.0
