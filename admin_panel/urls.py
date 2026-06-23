@@ -21,7 +21,7 @@ urlpatterns = [
 
     # Users Management
     path('users/', views.users_list, name='users_list'),
-    path('users/list/', views.users_list, name='user_list'),  # Alias
+    path('users/list/', views.users_list, name='user_list'),
     path('users/<int:user_id>/', views.user_detail, name='user_detail'),
     path('users/<int:user_id>/edit/', views.user_edit, name='user_edit'),
     path('users/<int:user_id>/delete/', views.user_delete, name='user_delete'),
@@ -59,8 +59,7 @@ urlpatterns = [
     path('payment-schedules/generate/', views.payment_schedule_generate, name='payment_schedule_generate'),
     path('payment-schedules/<int:schedule_id>/', views.payment_schedule_detail, name='payment_schedule_detail'),
     path('payment-schedules/<int:schedule_id>/edit/', views.payment_schedule_edit, name='payment_schedule_edit'),
-    path('payment-schedules/<int:schedule_id>/mark-paid/', views.payment_schedule_mark_paid,
-         name='payment_schedule_mark_paid'),
+    path('payment-schedules/<int:schedule_id>/mark-paid/', views.payment_schedule_mark_paid, name='payment_schedule_mark_paid'),
     path('payment-schedules/<int:schedule_id>/delete/', views.payment_schedule_delete, name='payment_schedule_delete'),
 
     # Payments
@@ -90,13 +89,18 @@ urlpatterns = [
     # Committee Decisions
     path('committee-decisions/', views.committee_decisions_list, name='committee_decisions_list'),
 
-    # Notifications
+    # ============================================================
+    # NOTIFICATIONS URLs
+    # ============================================================
     path('notifications/', views.notifications_list, name='notifications_list'),
-    path('notifications/<int:notif_id>/mark-read/', views.notification_mark_read, name='notification_mark_read'),
+    path('notifications/<int:notif_id>/read/', views.notification_mark_read, name='notification_mark_read'),
     path('notifications/<int:notif_id>/delete/', views.notification_delete, name='notification_delete'),
+
+    # API endpoints
     path('api/notifications/', views.notifications_api, name='notifications_api'),
-    path('api/notifications/mark-read/<int:notif_id>/', views.mark_notification_read_api, name='mark_notification_read_api'),
-    path('api/notifications/mark-all-read/', views.mark_all_notifications_read_api, name='mark_all_notifications_read_api'),
+    path('api/notifications/<int:notif_id>/read/', views.mark_notification_read_api, name='mark_notification_read_api'),
+    path('api/notifications/mark-all-read/', views.mark_all_notifications_read_api,
+         name='mark_all_notifications_read_api'),
 
     # Audit Logs
     path('audit-logs/', views.audit_logs_list, name='audit_logs_list'),

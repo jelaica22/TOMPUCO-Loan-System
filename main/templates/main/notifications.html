@@ -7,9 +7,6 @@
 
 {% block extra_css %}
 <style>
-    /* ===== Notifications Page - Professional Design ===== */
-
-    /* Stats Grid */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -17,16 +14,9 @@
         margin-bottom: 28px;
         margin-top: 15px;
     }
-
-    @media (max-width: 1200px) {
-        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
-    }
-    @media (max-width: 768px) {
-        .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 480px) {
-        .stats-grid { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; } }
+    @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
 
     .stat-card {
         background: var(--bg-card);
@@ -38,12 +28,10 @@
         overflow: hidden;
         cursor: pointer;
     }
-
     .stat-card:hover {
         transform: translateY(-3px);
         box-shadow: var(--shadow-hover);
     }
-
     .stat-card::before {
         content: '';
         position: absolute;
@@ -52,7 +40,6 @@
         right: 0;
         height: 4px;
     }
-
     .stat-card.total::before { background: linear-gradient(90deg, #0d6e6e, #0a5a5a); }
     .stat-card.unread::before { background: #ef4444; }
     .stat-card.read::before { background: #10b981; }
@@ -67,7 +54,6 @@
         justify-content: center;
         font-size: 1.3rem;
     }
-
     .stat-icon.total { background: rgba(13, 110, 110, 0.1); color: #0d6e6e; }
     .stat-icon.unread { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
     .stat-icon.read { background: rgba(16, 185, 129, 0.1); color: #10b981; }
@@ -78,29 +64,10 @@
     [data-theme="dark"] .stat-icon.read { background: rgba(16, 185, 129, 0.15); color: #34d399; }
     [data-theme="dark"] .stat-icon.system { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
 
-    .stat-value {
-        font-size: 32px;
-        font-weight: 800;
-        color: var(--text-primary);
-        margin-top: 5px;
-    }
+    .stat-value { font-size: 32px; font-weight: 800; color: var(--text-primary); margin-top: 5px; }
+    .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 600; margin-top: 8px; }
 
-    .stat-label {
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-muted);
-        font-weight: 600;
-        margin-top: 8px;
-    }
-
-    /* Mark All Read Button */
-    .mark-all-container {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 20px;
-    }
-
+    .mark-all-container { display: flex; justify-content: flex-end; margin-bottom: 20px; }
     .btn-mark-read {
         padding: 10px 24px;
         font-weight: 600;
@@ -114,20 +81,17 @@
         align-items: center;
         gap: 8px;
     }
-
     .btn-mark-read:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
     }
 
-    /* Main Card */
     .main-card {
         background: var(--bg-card);
         border-radius: 20px;
         overflow: hidden;
         border: 1px solid var(--border-color);
     }
-
     .card-header-custom {
         background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
         padding: 20px 24px;
@@ -137,7 +101,6 @@
         flex-wrap: wrap;
         gap: 12px;
     }
-
     .card-title {
         margin: 0;
         font-size: 1.3rem;
@@ -147,14 +110,12 @@
         gap: 10px;
         color: white;
     }
-
     .card-stats {
         display: flex;
         gap: 15px;
         font-size: 0.85rem;
         flex-wrap: wrap;
     }
-
     .card-stats span {
         background: rgba(255, 255, 255, 0.2);
         padding: 4px 10px;
@@ -162,13 +123,10 @@
         color: white;
     }
 
-    /* Notifications Container */
     .notifications-container {
         max-height: 650px;
         overflow-y: auto;
     }
-
-    /* Notification Item */
     .notification-item {
         display: flex;
         align-items: flex-start;
@@ -178,24 +136,17 @@
         transition: all 0.2s;
         cursor: pointer;
         position: relative;
+        text-decoration: none;
+        color: inherit;
     }
-
     .notification-item:hover {
         background: var(--gray-50);
+        text-decoration: none;
+        color: inherit;
     }
-
-    [data-theme="dark"] .notification-item:hover {
-        background: #1e2a3a;
-    }
-
-    .notification-item.unread {
-        background: #eff6ff;
-    }
-
-    [data-theme="dark"] .notification-item.unread {
-        background: #1e3a5f;
-    }
-
+    [data-theme="dark"] .notification-item:hover { background: #1e2a3a; }
+    .notification-item.unread { background: #eff6ff; }
+    [data-theme="dark"] .notification-item.unread { background: #1e3a5f; }
     .notification-item.unread::before {
         content: '';
         position: absolute;
@@ -205,12 +156,8 @@
         width: 4px;
         background: #0d6e6e;
     }
+    [data-theme="dark"] .notification-item.unread::before { background: #4ade80; }
 
-    [data-theme="dark"] .notification-item.unread::before {
-        background: #4ade80;
-    }
-
-    /* Notification Icon */
     .notification-icon {
         width: 48px;
         height: 48px;
@@ -221,7 +168,6 @@
         font-size: 1.3rem;
         flex-shrink: 0;
     }
-
     .notification-icon.application { background: rgba(13, 110, 110, 0.1); color: #0d6e6e; }
     .notification-icon.payment { background: rgba(16, 185, 129, 0.1); color: #10b981; }
     .notification-icon.loan { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
@@ -236,69 +182,23 @@
     [data-theme="dark"] .notification-icon.approval { background: rgba(16, 185, 129, 0.15); color: #34d399; }
     [data-theme="dark"] .notification-icon.alert { background: rgba(239, 68, 68, 0.15); color: #f87171; }
 
-    /* Notification Content */
-    .notification-content {
-        flex: 1;
-    }
+    .notification-content { flex: 1; }
+    .notification-title { font-weight: 700; font-size: 1rem; color: var(--text-primary); margin-bottom: 6px; }
+    .notification-message { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.5; }
+    .notification-time { font-size: 0.7rem; color: var(--text-muted); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
-    .notification-title {
-        font-weight: 700;
-        font-size: 1rem;
-        color: var(--text-primary);
-        margin-bottom: 6px;
-    }
-
-    .notification-message {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        margin-bottom: 8px;
-        line-height: 1.5;
-    }
-
-    .notification-time {
-        font-size: 0.7rem;
-        color: var(--text-muted);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    /* Read Status Badge */
     .read-status {
         font-size: 0.65rem;
         padding: 3px 10px;
         border-radius: 20px;
         font-weight: 600;
     }
+    .read-status.read { background: #d1fae5; color: #065f46; }
+    .read-status.unread-badge { background: #fee2e2; color: #dc2626; }
+    [data-theme="dark"] .read-status.read { background: #064e3b; color: #a7f3d0; }
+    [data-theme="dark"] .read-status.unread-badge { background: #7f1d1d; color: #fecaca; }
 
-    .read-status.read {
-        background: #d1fae5;
-        color: #065f46;
-    }
-
-    .read-status.unread-badge {
-        background: #fee2e2;
-        color: #dc2626;
-    }
-
-    [data-theme="dark"] .read-status.read {
-        background: #064e3b;
-        color: #a7f3d0;
-    }
-
-    [data-theme="dark"] .read-status.unread-badge {
-        background: #7f1d1d;
-        color: #fecaca;
-    }
-
-    /* Action Buttons */
-    .notification-actions {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-    }
-
+    .notification-actions { display: flex; gap: 8px; align-items: center; }
     .btn-icon {
         background: none;
         border: none;
@@ -308,41 +208,23 @@
         transition: all 0.2s;
         color: var(--text-muted);
     }
+    .btn-icon:hover { background: var(--gray-100); color: #0d6e6e; }
+    [data-theme="dark"] .btn-icon:hover { background: #2a3548; color: #4ade80; }
 
-    .btn-icon:hover {
-        background: var(--gray-100);
-        color: #0d6e6e;
-    }
-
-    [data-theme="dark"] .btn-icon:hover {
-        background: #2a3548;
-        color: #4ade80;
-    }
-
-    /* Modal Styles */
     .modal-content {
         background: var(--bg-card);
         border-radius: 20px;
         border: none;
         overflow: hidden;
     }
-
     .modal-header {
         background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
         color: white;
         border: none;
         padding: 20px 24px;
     }
-
-    .modal-body {
-        padding: 24px;
-    }
-
-    .modal-footer {
-        padding: 16px 24px;
-        border-top: 1px solid var(--border-color);
-    }
-
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border-color); }
     .modal .btn-secondary {
         background: var(--gray-100);
         border: 1px solid var(--border-color);
@@ -350,7 +232,6 @@
         padding: 8px 20px;
         border-radius: 8px;
     }
-
     .modal .btn-primary {
         background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
         border: none;
@@ -359,62 +240,11 @@
         color: white;
     }
 
-    .modal .btn-primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(13, 110, 110, 0.3);
-    }
-
-    /* Detail Content in Modal */
-    .detail-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 15px;
-        font-size: 1.8rem;
-    }
-
-    .detail-icon.application { background: rgba(13, 110, 110, 0.1); color: #0d6e6e; }
-    .detail-icon.payment { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .detail-icon.loan { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-    .detail-icon.system { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-
-    [data-theme="dark"] .detail-icon.application { background: rgba(13, 110, 110, 0.2); color: #4ade80; }
-    [data-theme="dark"] .detail-icon.payment { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-    [data-theme="dark"] .detail-icon.loan { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-    [data-theme="dark"] .detail-icon.system { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-    }
-
-    .empty-state i {
-        font-size: 4rem;
-        color: var(--text-muted);
-        margin-bottom: 15px;
-    }
-
-    .empty-state h6 {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 8px;
-    }
-
-    .empty-state p {
-        color: var(--text-muted);
-        margin-bottom: 15px;
-    }
-
-    /* Loading State */
-    .loading-state {
-        text-align: center;
-        padding: 60px 20px;
-    }
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-state i { font-size: 4rem; color: var(--text-muted); margin-bottom: 15px; }
+    .empty-state h6 { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+    .empty-state p { color: var(--text-muted); margin-bottom: 15px; }
+    .loading-state { text-align: center; padding: 60px 20px; }
 </style>
 {% endblock %}
 
@@ -464,30 +294,9 @@
             </div>
         </div>
         <div class="notifications-container" id="notificationsContainer">
-            <div class="loading-state">
+            <div class="loading-state" id="loadingState">
                 <div class="spinner-border text-primary" role="status"></div>
                 <p class="mt-2 text-muted">Loading notifications...</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Notification Detail Modal -->
-<div class="modal fade" id="notificationModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-bell me-2"></i>Notification Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="notificationDetailContent">
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <a href="#" id="notificationLinkBtn" class="btn btn-primary">Go to Page</a>
             </div>
         </div>
     </div>
@@ -496,17 +305,6 @@
 <script>
     let allNotifications = [];
     let currentFilter = 'all';
-
-    // Notification type icons mapping
-    const notificationTypeConfig = {
-        'application': { icon: 'bi-file-text', color: 'application', label: 'Application' },
-        'payment': { icon: 'bi-cash-stack', color: 'payment', label: 'Payment' },
-        'loan': { icon: 'bi-bank', color: 'loan', label: 'Loan' },
-        'system': { icon: 'bi-gear', color: 'system', label: 'System' },
-        'alert': { icon: 'bi-exclamation-triangle', color: 'alert', label: 'Alert' },
-        'approval': { icon: 'bi-check-circle', color: 'approval', label: 'Approval' },
-        'committee': { icon: 'bi-people', color: 'application', label: 'Committee' }
-    };
 
     function formatDate(dateString) {
         if (!dateString) return '—';
@@ -525,26 +323,62 @@
     }
 
     function getNotificationIcon(type) {
-        const config = notificationTypeConfig[type] || { icon: 'bi-bell', color: 'system', label: 'Notification' };
-        return `<div class="notification-icon ${config.color}"><i class="bi ${config.icon}"></i></div>`;
-    }
-
-    function getDetailIcon(type) {
-        const config = notificationTypeConfig[type] || { icon: 'bi-bell', color: 'system', label: 'Notification' };
-        return `<div class="detail-icon ${config.color}"><i class="bi ${config.icon}"></i></div>`;
+        const iconMap = {
+            'application': 'bi-file-text',
+            'payment': 'bi-cash-stack',
+            'loan': 'bi-bank',
+            'system': 'bi-gear',
+            'alert': 'bi-exclamation-triangle',
+            'approval': 'bi-check-circle'
+        };
+        const colorMap = {
+            'application': 'application',
+            'payment': 'payment',
+            'loan': 'loan',
+            'system': 'system',
+            'alert': 'alert',
+            'approval': 'approval'
+        };
+        const icon = iconMap[type] || 'bi-bell';
+        const color = colorMap[type] || 'system';
+        return `<div class="notification-icon ${color}"><i class="bi ${icon}"></i></div>`;
     }
 
     function loadNotifications() {
+        const loadingState = document.getElementById('loadingState');
+
         fetch('/api/notifications/')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('API Response:', data);
+
+                if (data.success !== undefined && !data.success) {
+                    throw new Error(data.error || 'Unknown error');
+                }
+
+                // Handle both formats (with or without success flag)
                 allNotifications = data.notifications || [];
                 updateStats();
                 renderNotifications();
             })
             .catch(error => {
-                console.error('Error:', error);
-                showError();
+                console.error('Error loading notifications:', error);
+                const container = document.getElementById('notificationsContainer');
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                        <h6>Error Loading Notifications</h6>
+                        <p>${error.message}</p>
+                        <button class="btn btn-primary btn-sm" onclick="loadNotifications()">
+                            <i class="bi bi-arrow-repeat"></i> Retry
+                        </button>
+                    </div>
+                `;
             });
     }
 
@@ -552,12 +386,12 @@
         const total = allNotifications.length;
         const unread = allNotifications.filter(n => !n.is_read).length;
         const read = total - unread;
-        const system = allNotifications.filter(n => n.type === 'system').length;
+        const system = allNotifications.filter(n => n.type === 'system' || n.notification_type === 'system').length;
 
-        document.getElementById('totalCount').innerHTML = total;
-        document.getElementById('unreadCount').innerHTML = unread;
-        document.getElementById('readCount').innerHTML = read;
-        document.getElementById('systemCount').innerHTML = system;
+        document.getElementById('totalCount').textContent = total;
+        document.getElementById('unreadCount').textContent = unread;
+        document.getElementById('readCount').textContent = read;
+        document.getElementById('systemCount').textContent = system;
     }
 
     function renderNotifications() {
@@ -568,12 +402,17 @@
         } else if (currentFilter === 'read') {
             filtered = filtered.filter(n => n.is_read);
         } else if (currentFilter === 'system') {
-            filtered = filtered.filter(n => n.type === 'system');
+            filtered = filtered.filter(n => n.type === 'system' || n.notification_type === 'system');
         }
 
         filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
         const container = document.getElementById('notificationsContainer');
+        const loadingState = document.getElementById('loadingState');
+
+        if (loadingState) {
+            loadingState.style.display = 'none';
+        }
 
         if (filtered.length === 0) {
             container.innerHTML = `
@@ -584,103 +423,50 @@
                     ${currentFilter !== 'all' ? '<button class="btn btn-outline-primary btn-sm" onclick="currentFilter=\'all\'; renderNotifications();">Clear Filter</button>' : ''}
                 </div>
             `;
-            document.getElementById('showingCount').innerHTML = `Showing 0 notifications`;
-            document.getElementById('totalNotifsSpan').innerHTML = `Total: ${allNotifications.length}`;
+            document.getElementById('showingCount').textContent = 'Showing 0 notifications';
+            document.getElementById('totalNotifsSpan').textContent = `Total: ${allNotifications.length}`;
             return;
         }
 
-        container.innerHTML = filtered.map(notif => `
-            <div class="notification-item ${!notif.is_read ? 'unread' : ''}"
-                 data-id="${notif.id}"
-                 data-link="${notif.link || '#'}"
-                 data-title="${escapeHtml(notif.title)}"
-                 data-message="${escapeHtml(notif.message)}"
-                 data-time="${formatDate(notif.created_at)}"
-                 data-type="${notif.type}">
-                ${getNotificationIcon(notif.type)}
-                <div class="notification-content">
-                    <div class="notification-title">${escapeHtml(notif.title)}</div>
-                    <div class="notification-message">${escapeHtml(notif.message)}</div>
-                    <div class="notification-time">
-                        <i class="bi bi-clock"></i> ${formatDate(notif.created_at)}
-                        ${!notif.is_read ? '<span class="read-status unread-badge">Unread</span>' : '<span class="read-status read">Read</span>'}
+        let html = '';
+        filtered.forEach(notif => {
+            const type = notif.type || notif.notification_type || 'system';
+            const isUnread = notif.is_read === false || notif.is_read === 0;
+            const timeAgo = formatDate(notif.created_at);
+            const link = notif.link || '/member/notifications/';
+
+            html += `
+                <a href="${link}" class="notification-item ${isUnread ? 'unread' : ''}" data-id="${notif.id}">
+                    ${getNotificationIcon(type)}
+                    <div class="notification-content">
+                        <div class="notification-title">${escapeHtml(notif.title)}</div>
+                        <div class="notification-message">${escapeHtml(notif.message)}</div>
+                        <div class="notification-time">
+                            <i class="bi bi-clock"></i> ${timeAgo}
+                            ${isUnread ? '<span class="read-status unread-badge">Unread</span>' : '<span class="read-status read">Read</span>'}
+                        </div>
                     </div>
-                </div>
-                <div class="notification-actions">
-                    ${!notif.is_read ? `
-                        <button class="btn-icon" onclick="markAsRead(${notif.id}, event)" title="Mark as read">
-                            <i class="bi bi-check-lg"></i>
+                    <div class="notification-actions">
+                        ${isUnread ? `
+                            <button class="btn-icon" onclick="event.preventDefault(); event.stopPropagation(); markAsRead(${notif.id})" title="Mark as read">
+                                <i class="bi bi-check-lg"></i>
+                            </button>
+                        ` : ''}
+                        <button class="btn-icon" onclick="event.preventDefault(); event.stopPropagation(); deleteNotification(${notif.id})" title="Delete">
+                            <i class="bi bi-trash"></i>
                         </button>
-                    ` : ''}
-                    <button class="btn-icon" onclick="deleteNotification(${notif.id}, event)" title="Delete">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-
-        document.getElementById('showingCount').innerHTML = `Showing ${filtered.length} notifications`;
-        document.getElementById('totalNotifsSpan').innerHTML = `Total: ${allNotifications.length}`;
-
-        // Add click handlers for notification items
-        document.querySelectorAll('.notification-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                // Don't trigger if clicking on action buttons
-                if (e.target.closest('.btn-icon')) return;
-
-                const id = parseInt(this.dataset.id);
-                const link = this.dataset.link;
-                const title = this.dataset.title;
-                const message = this.dataset.message;
-                const time = this.dataset.time;
-                const type = this.dataset.type;
-
-                showNotificationDetails(id, title, message, time, type, link);
-
-                // Mark as read if unread
-                if (this.classList.contains('unread')) {
-                    markAsRead(id, null, true);
-                }
-            });
+                    </div>
+                </a>
+            `;
         });
+
+        container.innerHTML = html;
+
+        document.getElementById('showingCount').textContent = `Showing ${filtered.length} notifications`;
+        document.getElementById('totalNotifsSpan').textContent = `Total: ${allNotifications.length}`;
     }
 
-    function showNotificationDetails(id, title, message, time, type, link) {
-        const modalContent = document.getElementById('notificationDetailContent');
-        const config = notificationTypeConfig[type] || { icon: 'bi-bell', color: 'system', label: 'Notification' };
-
-        modalContent.innerHTML = `
-            <div class="text-center mb-4">
-                ${getDetailIcon(type)}
-                <h5 class="mt-3">${escapeHtml(title)}</h5>
-                <p class="text-muted small">${time}</p>
-            </div>
-            <hr>
-            <div class="mt-3">
-                <p class="mb-0">${escapeHtml(message).replace(/\n/g, '<br>')}</p>
-            </div>
-        `;
-
-        const linkBtn = document.getElementById('notificationLinkBtn');
-        if (link && link !== '#' && link !== '') {
-            linkBtn.href = link;
-            linkBtn.style.opacity = '1';
-            linkBtn.style.pointerEvents = 'auto';
-            linkBtn.classList.remove('disabled');
-        } else {
-            linkBtn.href = '#';
-            linkBtn.style.opacity = '0.5';
-            linkBtn.style.pointerEvents = 'none';
-            linkBtn.classList.add('disabled');
-        }
-
-        new bootstrap.Modal(document.getElementById('notificationModal')).show();
-    }
-
-    function markAsRead(notificationId, event, fromModal = false) {
-        if (event) event.stopPropagation();
-        if (event) event.preventDefault();
-
+    function markAsRead(notificationId) {
         fetch(`/api/notifications/${notificationId}/read/`, {
             method: 'POST',
             headers: {
@@ -694,23 +480,12 @@
                 const notif = allNotifications.find(n => n.id === notificationId);
                 if (notif) {
                     notif.is_read = true;
-
-                    // Also update in the DOM if the notification is currently visible
-                    const notificationElement = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
-                    if (notificationElement) {
-                        notificationElement.classList.remove('unread');
-                        notificationElement.classList.add('read');
-                        const unreadBadge = notificationElement.querySelector('.read-status.unread-badge');
-                        if (unreadBadge) {
-                            unreadBadge.className = 'read-status read';
-                            unreadBadge.innerHTML = 'Read';
-                        }
-                    }
                 }
+                updateStats();
                 renderNotifications();
             }
         })
-        .catch(error => console.error('Error marking as read:', error));
+        .catch(error => console.error('Error:', error));
     }
 
     function markAllAsRead() {
@@ -722,7 +497,7 @@
 
         if (!confirm(`Mark ${unreadNotifications.length} notification(s) as read?`)) return;
 
-        fetch('/api/notifications/read-all/', {
+        fetch('/api/notifications/mark-all-read/', {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCSRFToken(),
@@ -733,14 +508,14 @@
         .then(data => {
             if (data.success) {
                 allNotifications.forEach(n => n.is_read = true);
+                updateStats();
                 renderNotifications();
             }
         })
         .catch(error => console.error('Error:', error));
     }
 
-    function deleteNotification(notificationId, event) {
-        event.stopPropagation();
+    function deleteNotification(notificationId) {
         if (confirm('Delete this notification?')) {
             fetch(`/api/notifications/${notificationId}/delete/`, {
                 method: 'DELETE',
@@ -753,25 +528,12 @@
             .then(data => {
                 if (data.success) {
                     allNotifications = allNotifications.filter(n => n.id !== notificationId);
+                    updateStats();
                     renderNotifications();
                 }
             })
             .catch(error => console.error('Error:', error));
         }
-    }
-
-    function showError() {
-        const container = document.getElementById('notificationsContainer');
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
-                <h6>Error Loading Notifications</h6>
-                <p>There was a problem loading your notifications. Please try again.</p>
-                <button class="btn btn-primary btn-sm" onclick="loadNotifications()">
-                    <i class="bi bi-arrow-repeat"></i> Retry
-                </button>
-            </div>
-        `;
     }
 
     function escapeHtml(text) {

@@ -123,7 +123,6 @@
         gap: 8px;
     }
 
-    /* NEW APPLICATION BUTTON - VISIBLE IN LIGHT MODE */
     .btn-add-application {
         background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
         color: white;
@@ -174,7 +173,6 @@
         box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
     }
 
-    /* BUTTONS - VISIBLE IN LIGHT MODE */
     .btn-apply {
         background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
         color: white;
@@ -321,7 +319,7 @@
     [data-theme="dark"] .status-rejected { background: #7f1d1d; color: #fecaca; }
     [data-theme="dark"] .status-needs-revision { background: #78350f; color: #fde68a; }
 
-    /* ACTION BUTTONS - VISIBLE IN LIGHT MODE */
+    /* ACTION BUTTONS */
     .action-buttons {
         display: flex;
         gap: 8px;
@@ -354,8 +352,8 @@
 
     .btn-review {
         background: #ffffff;
-        border: 2px solid #10b981;
-        color: #10b981;
+        border: 2px solid #f59e0b;
+        color: #f59e0b;
         padding: 6px 12px;
         border-radius: 8px;
         font-size: 0.7rem;
@@ -369,7 +367,7 @@
     }
 
     .btn-review:hover {
-        background: #10b981;
+        background: #f59e0b;
         color: white;
         transform: translateY(-1px);
         text-decoration: none;
@@ -433,14 +431,23 @@
         color: white;
     }
 
-    [data-theme="dark"] .btn-review,
+    [data-theme="dark"] .btn-review {
+        background: transparent;
+        border-color: #fbbf24;
+        color: #fbbf24;
+    }
+
+    [data-theme="dark"] .btn-review:hover {
+        background: #f59e0b;
+        color: white;
+    }
+
     [data-theme="dark"] .btn-add-charges {
         background: transparent;
         border-color: #34d399;
         color: #34d399;
     }
 
-    [data-theme="dark"] .btn-review:hover,
     [data-theme="dark"] .btn-add-charges:hover {
         background: #10b981;
         color: white;
@@ -448,8 +455,8 @@
 
     [data-theme="dark"] .btn-create-loan {
         background: transparent;
-        border-color: #0d6e6e;
-        color: #0d6e6e;
+        border-color: #2a9d8f;
+        color: #2a9d8f;
     }
 
     [data-theme="dark"] .btn-create-loan:hover {
@@ -486,7 +493,6 @@
         font-family: monospace;
     }
 
-    /* Member info styling */
     .member-name {
         font-weight: 600;
         margin-bottom: 2px;
@@ -498,7 +504,6 @@
         color: var(--text-secondary);
     }
 
-    /* Amount styling */
     .amount {
         font-weight: 700;
         font-family: monospace;
@@ -577,6 +582,8 @@
                         <option value="with_committee" {% if request.GET.status == 'with_committee' %}selected{% endif %}>With Committee</option>
                         <option value="line_approved" {% if request.GET.status == 'line_approved' %}selected{% endif %}>Line Approved</option>
                         <option value="manager_approved" {% if request.GET.status == 'manager_approved' %}selected{% endif %}>Manager Approved</option>
+                        <option value="ready_for_disbursement" {% if request.GET.status == 'ready_for_disbursement' %}selected{% endif %}>Ready for Disbursement</option>
+                        <option value="disbursed" {% if request.GET.status == 'disbursed' %}selected{% endif %}>Disbursed</option>
                         <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
                         <option value="needs_revision" {% if request.GET.status == 'needs_revision' %}selected{% endif %}>Needs Revision</option>
                     </select>
@@ -626,7 +633,7 @@
                         <th width="120">Amount</th>
                         <th width="140">Status</th>
                         <th width="110">Date</th>
-                        <th width="320">Actions</th>
+                        <th width="350">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -639,7 +646,8 @@
                             <div class="member-number">{{ app.member.membership_number|default:"" }}</div>
                         </td>
                         <td>{{ app.loan_product.name|default:"APCP" }}</td>
-                        <td class="amount">₱{{ app.requested_amount|floatformat:2 }}</td>
+                        <!-- FIXED: Changed from requested_amount to amount -->
+                        <td class="amount">₱{{ app.amount|floatformat:2 }}</td>
                         <td>
                             {% if app.status == 'pending_staff_review' %}
                                 <span class="status-badge status-pending"><i class="bi bi-clock"></i> Pending Review</span>
@@ -661,7 +669,7 @@
                                 <span class="status-badge">{{ app.status|title }}</span>
                             {% endif %}
                         </td>
-                        <td>{{ app.date_applied|date:"Y-m-d" }}</td>
+                        <td>{{ app.applied_date|date:"Y-m-d" }}</td>
                         <td>
                             <div class="action-buttons">
                                 <!-- View - Always visible -->
@@ -689,6 +697,15 @@
                                     <i class="bi bi-bank"></i> Create Loan
                                 </a>
                                 {% endif %}
+
+                                <!-- Disbursed - Show Loan Link -->
+                                {% if app.status == 'disbursed' %}
+                                    {% if app.loan_set.first %}
+                                    <a href="{% url 'staff:loan_detail' app.loan_set.first.id %}" class="btn-view" title="View Loan">
+                                        <i class="bi bi-bank"></i> View Loan
+                                    </a>
+                                    {% endif %}
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -700,7 +717,7 @@
                                 <h6>No applications found</h6>
                                 <p>Try adjusting your filters or create a new application.</p>
                                 <div class="d-flex gap-2 justify-content-center">
-                                    <button class="btn-reset" onclick="resetFilters()">
+                                    <button type="button" class="btn-reset" onclick="resetFilters()">
                                         <i class="bi bi-arrow-repeat"></i> Reset Filters
                                     </button>
                                     <a href="{% url 'staff:create_application' %}" class="btn-apply">
@@ -746,7 +763,12 @@
                     document.getElementById('filterForm').submit();
                 }
             } else if (status === 'all') {
-                window.location.href = window.location.pathname;
+                // Reset status filter
+                const statusSelect = document.getElementById('statusSelect');
+                if (statusSelect) {
+                    statusSelect.value = 'all';
+                    document.getElementById('filterForm').submit();
+                }
             }
         });
     });
@@ -760,9 +782,17 @@
             }
             const appId = this.dataset.appId;
             if (appId) {
-                window.location.href = `/staff/applications/${appId}/review/`;
+                window.location.href = `/staff/applications/${appId}/`;
             }
         });
+    });
+
+    // Enter key on search input
+    document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('filterForm').submit();
+        }
     });
 </script>
 {% endblock %}

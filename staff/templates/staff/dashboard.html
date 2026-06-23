@@ -1,4 +1,4 @@
-{% extends 'staff/base_staff.html' %}
+﻿{% extends 'staff/base_staff.html' %}
 {% load static %}
 
 {% block title %}Staff Dashboard - TOMPuCO Analytics{% endblock %}
@@ -441,6 +441,11 @@
         color: var(--success-text);
     }
 
+    .status-overdue {
+        background: var(--danger-bg);
+        color: var(--danger-text);
+    }
+
     /* Action Buttons */
     .action-buttons {
         display: flex;
@@ -795,10 +800,10 @@
                         <tbody>
                             {% for app in recent_applications %}
                             <tr>
-                                <td><code>{{ app.application_id }}</code></div>
-                                <td>{{ app.member.first_name }} {{ app.member.last_name }}</div>
-                                <td>{{ app.loan_product.name|default:"NCL" }}</div>
-                                <td>₱{{ app.amount|floatformat:2 }}</div>
+                                <td><code>{{ app.application_id }}</code></td>
+                                <td>{{ app.member.first_name }} {{ app.member.last_name }}</td>
+                                <td>{{ app.loan_product.name|default:"NCL" }}</td>
+                                <td>₱{{ app.amount|floatformat:2 }}</td>
                                 <td>
                                     {% if app.status == 'pending_staff_review' %}
                                         <span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> Pending</span>
@@ -813,7 +818,7 @@
                                     {% else %}
                                         <span class="status-badge status-pending">{{ app.status|title }}</span>
                                     {% endif %}
-                                </div>
+                                </td>
                                 <td>
                                     <div class="action-buttons">
                                         <button class="btn-view" onclick="viewApplicationDetails({{ app.id }})">
@@ -825,10 +830,10 @@
                                             </button>
                                         {% endif %}
                                     </div>
-                                </div>
+                                </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="6"><div class="empty-state"><i class="bi bi-inbox"></i><p>No recent applications</p></div></div></tr>
+                            <tr><td colspan="6"><div class="empty-state"><i class="bi bi-inbox"></i><p>No recent applications</p></div></td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -856,10 +861,10 @@
                         <tbody>
                             {% for loan in recent_loans %}
                             <tr>
-                                <td><code>{{ loan.loan_number }}</code></div>
-                                <td>{{ loan.member.first_name }} {{ loan.member.last_name }}</div>
-                                <td>₱{{ loan.amount|floatformat:2 }}</div>
-                                <td>₱{{ loan.remaining_balance|floatformat:2 }}</div>
+                                <td><code>{{ loan.loan_number }}</code></td>
+                                <td>{{ loan.member.first_name }} {{ loan.member.last_name }}</td>
+                                <td>₱{{ loan.amount|floatformat:2 }}</td>
+                                <td>₱{{ loan.remaining_balance|floatformat:2 }}</td>
                                 <td>
                                     {% if loan.status == 'active' %}
                                         <span class="status-badge status-active"><i class="bi bi-check-circle"></i> Active</span>
@@ -870,15 +875,15 @@
                                     {% else %}
                                         <span class="status-badge status-pending">{{ loan.status|title }}</span>
                                     {% endif %}
-                                </div>
+                                </td>
                                 <td>
                                     <button class="btn-view" onclick="viewLoanDetails({{ loan.id }})">
                                         <i class="bi bi-eye"></i> View
                                     </button>
-                                </div>
+                                </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="6"><div class="empty-state"><i class="bi bi-inbox"></i><p>No recent loans</p></div></div></td>
+                            <tr><td colspan="6"><div class="empty-state"><i class="bi bi-inbox"></i><p>No recent loans</p></div></td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -913,6 +918,43 @@
                         <span class="text-muted">Today's Collection</span>
                         <span class="fw-bold text-primary">₱{{ today_collection|default:0|floatformat:2 }}</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Overdue Loans Widget -->
+            <div class="dashboard-card">
+                <div class="card-header-custom" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                    <h6 style="color: white; margin: 0;">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Overdue Loans
+                    </h6>
+                    <span class="badge" style="background: white; color: #dc2626; font-weight: 700;">{{ overdue_loans|default:0 }}</span>
+                </div>
+                <div class="p-3" id="overdueLoansList">
+                    {% if overdue_loans_list %}
+                        {% for loan in overdue_loans_list %}
+                        <div class="loan-item overdue" style="border-left: 4px solid #ef4444; margin-bottom: 10px; padding: 12px; background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border-color);">
+                            <div class="loan-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span class="loan-title" style="font-weight: 700; color: #dc2626; font-size: 0.9rem;">{{ loan.loan_number }}</span>
+                                <span class="badge bg-danger">{{ loan.due_date|timesince }} overdue</span>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-2">
+                                <span class="text-muted">Member: {{ loan.member.first_name }} {{ loan.member.last_name }}</span>
+                                <span class="text-danger fw-bold">Balance: ₱{{ loan.remaining_balance|floatformat:2 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small">Due: {{ loan.due_date|date:"M d, Y" }}</span>
+                                <a href="{% url 'staff:loan_detail' loan.id %}" class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-check-circle" style="color: #10b981; font-size: 2rem;"></i>
+                            <p class="text-muted mb-0">No overdue loans. Great job! 🎉</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -1005,7 +1047,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="bi bi-x-circle me-1"></i> Close
                 </button>
-                <button type="button" class="btn-view" id="modalScheduleBtn" style="display: none;" onclick="viewPaymentSchedule()">
+                <button type="button" class="btn-view" id="modalScheduleBtn" style="display: none;">
                     <i class="bi bi-calendar me-1"></i> Payment Schedule
                 </button>
             </div>
@@ -1115,42 +1157,91 @@
 
     // Load Recent Activity
     function loadRecentActivity() {
+        const activityList = document.getElementById('activityList');
+
+        if (activityList) {
+            activityList.innerHTML = `
+                <div class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <p class="mt-2 text-muted small">Loading activity...</p>
+                </div>
+            `;
+        }
+
         fetch('/staff/notifications/api/')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Network error');
+                return response.json();
+            })
             .then(data => {
-                const activityList = document.getElementById('activityList');
+                const notifications = data.notifications || [];
                 const unreadCount = data.unread_count || 0;
 
-                if (unreadCount === 0) {
+                if (activityList) {
+                    if (notifications.length > 0) {
+                        let html = '';
+                        const recent = notifications.slice(0, 5);
+
+                        recent.forEach(function(n) {
+                            const icon = n.type === 'payment' ? 'bi-cash-stack' :
+                                       n.type === 'application' ? 'bi-file-text' :
+                                       n.type === 'overdue_alert' ? 'bi-exclamation-triangle' : 'bi-bell';
+                            const iconColor = n.type === 'overdue_alert' ? 'color: #ef4444;' : '';
+                            const timeAgo = formatTimeAgo(n.created_at);
+
+                            html += `
+                                <div class="activity-item" onclick="window.location.href='${n.link || '#'}'">
+                                    <div class="activity-icon" style="${iconColor}">
+                                        <i class="bi ${icon}"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold small">${escapeHtml(n.title)}</div>
+                                        <div class="text-muted small">${escapeHtml(n.message.substring(0, 60))}${n.message.length > 60 ? '...' : ''}</div>
+                                        <div class="text-muted" style="font-size: 0.65rem;">${timeAgo}</div>
+                                    </div>
+                                    ${!n.is_read ? '<span class="badge bg-danger rounded-pill" style="width: 8px; height: 8px; padding: 0; flex-shrink: 0;"></span>' : ''}
+                                </div>
+                            `;
+                        });
+
+                        activityList.innerHTML = html;
+                    } else {
+                        activityList.innerHTML = `
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p class="text-muted small">No recent activity</p>
+                            </div>
+                        `;
+                    }
+                }
+            })
+            .catch(function(error) {
+                console.error('Error loading activity:', error);
+                if (activityList) {
                     activityList.innerHTML = `
                         <div class="empty-state">
-                            <i class="bi bi-inbox"></i>
-                            <p>No recent activity</p>
-                        </div>
-                    `;
-                } else {
-                    activityList.innerHTML = `
-                        <div class="activity-item" onclick="location.href='{% url 'staff:notifications_page' %}'">
-                            <div class="activity-icon">
-                                <i class="bi bi-bell"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="fw-semibold small">You have ${unreadCount} unread notification(s)</div>
-                                <div class="text-muted small">Click to view all notifications</div>
-                            </div>
+                            <i class="bi bi-exclamation-triangle text-danger"></i>
+                            <p class="text-muted small">Error loading activity</p>
                         </div>
                     `;
                 }
-            })
-            .catch(() => {
-                const activityList = document.getElementById('activityList');
-                activityList.innerHTML = `
-                    <div class="empty-state">
-                        <i class="bi bi-inbox"></i>
-                        <p>No recent activity</p>
-                    </div>
-                `;
             });
+    }
+
+    function formatTimeAgo(dateString) {
+        if (!dateString) return 'Just now';
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return diffMins + 'm ago';
+        if (diffHours < 24) return diffHours + 'h ago';
+        if (diffDays < 7) return diffDays + 'd ago';
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
     // View Application Details
@@ -1176,7 +1267,9 @@
 
                 if (data.status === 'pending_staff_review') {
                     processBtn.style.display = 'inline-flex';
-                    processBtn.onclick = () => processApplication(appId);
+                    processBtn.onclick = function() {
+                        window.location.href = `/staff/applications/${appId}/`;
+                    };
                 } else {
                     processBtn.style.display = 'none';
                 }
@@ -1219,7 +1312,7 @@
                     <div class="detail-label"><i class="bi bi-file-text me-1"></i> Loan Information</div>
                     <div class="detail-value"><strong>Requested Amount:</strong> ₱ ${parseFloat(data.amount).toLocaleString()}</div>
                     <div class="detail-value"><strong>Approved Line:</strong> ${data.approved_line ? '₱ ' + parseFloat(data.approved_line).toLocaleString() : 'Pending'}</div>
-                    <div class="detail-value><strong>Status:</strong> <span class="status-badge ${statusClass}"><i class="bi bi-${statusIcon}"></i> ${data.status.replace(/_/g, ' ').toUpperCase()}</span></div>
+                    <div class="detail-value"><strong>Status:</strong> <span class="status-badge ${statusClass}"><i class="bi bi-${statusIcon}"></i> ${data.status.replace(/_/g, ' ').toUpperCase()}</span></div>
                 </div>
             </div>
         `;
@@ -1246,6 +1339,9 @@
                 const data = await response.json();
                 renderLoanDetails(data);
                 scheduleBtn.style.display = 'inline-flex';
+                scheduleBtn.onclick = function() {
+                    window.location.href = `/staff/loans/${currentLoanId}/`;
+                };
             } else {
                 throw new Error('Failed to load');
             }
@@ -1280,14 +1376,16 @@
         `;
     }
 
-    function viewPaymentSchedule() {
-        if (currentLoanId) {
-            window.location.href = `/staff/loans/${currentLoanId}/schedule/`;
-        }
+    // Process Application
+    function processApplication(appId) {
+        window.location.href = `/staff/applications/${appId}/`;
     }
 
-    function processApplication(appId) {
-        window.location.href = `/staff/applications/${appId}/review/`;
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     // Refresh Dashboard
@@ -1299,13 +1397,6 @@
         }
         loadCharts();
         loadRecentActivity();
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
 
     // Initialize on load

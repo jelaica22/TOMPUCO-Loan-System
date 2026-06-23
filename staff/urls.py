@@ -31,14 +31,14 @@ urlpatterns = [
     path('payments/<int:pk>/', views.payment_detail, name='payment_detail'),
     path('payments/<int:pk>/receipt/', views.payment_receipt_json, name='payment_receipt_json'),
 
-    # Restructuring
+    # Restructuring URLs
     path('restructuring/', views.restructuring_list, name='restructuring_list'),
     path('restructuring/<int:pk>/', views.restructuring_detail, name='restructuring_detail'),
     path('restructuring/request/', views.restructuring_request_form, name='restructuring_request'),
     path('restructuring/request/<int:member_id>/', views.restructuring_request_form, name='restructuring_request_form'),
-    path('api/restructuring/request/', views.restructuring_api_request, name='restructuring_api_request'),
     path('api/restructuring/list/', views.restructuring_api_list, name='restructuring_api_list'),
     path('api/restructuring/<int:pk>/', views.restructuring_api_detail, name='restructuring_api_detail'),
+    path('api/restructuring/request/', views.restructuring_api_request, name='restructuring_api_request'),
 
     # Reports
     path('reports/', views.reports_index, name='staff_reports'),
@@ -61,11 +61,14 @@ urlpatterns = [
     path('reports/restructuring/api/', views.report_restructuring_api, name='report_restructuring_api'),
     path('reports/penalty/api/', views.report_penalty_api, name='report_penalty_api'),
 
-    # Notifications
-    path('notifications/', views.notifications_page, name='notifications_page'),
+    # ============================================================
+    # NOTIFICATIONS URLs
+    # ============================================================
+    path('notifications/', views.notifications_list, name='notifications'),
     path('notifications/api/', views.notifications_api, name='notifications_api'),
-    path('notifications/mark-read/<int:pk>/', views.mark_notification_read, name='mark_notification_read'),
-    path('notifications/mark-all-read/', views.mark_all_notifications_read, name='mark_all_read'),
+    path('notifications/<int:notif_id>/read/', views.notification_mark_read, name='notification_mark_read'),
+    path('notifications/mark-all-read/', views.notification_mark_all_read, name='notification_mark_all_read'),
+    path('notifications/<int:notif_id>/delete/', views.notification_delete, name='notification_delete'),
 
     # Profile
     path('profile/', views.staff_profile_view, name='staff_profile'),

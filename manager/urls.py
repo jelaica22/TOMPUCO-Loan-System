@@ -33,11 +33,14 @@ urlpatterns = [
     # 2FA Verification
     path('verify-2fa/', views.verify_2fa, name='verify_2fa'),
 
-    # Notifications
-    path('notifications/', views.notifications_list, name='notifications_list'),
+    # Notification API URLs
     path('api/notifications/', views.notifications_api, name='notifications_api'),
-    path('api/notifications/<int:notif_id>/mark-read/', views.mark_notification_read, name='mark_notification_read'),
-    path('api/notifications/mark-all-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('api/notifications/read-all/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('api/notifications/<int:notif_id>/read/', views.mark_notification_read, name='mark_notification_read'),
+    path('api/notifications/<int:notif_id>/delete/', views.delete_notification_api, name='delete_notification_api'),
+
+    # Notification page
+    path('notifications/', views.notifications_list, name='notifications_list'),
 
     # Application Details
     path('applications/<int:app_id>/detail/', views.application_detail, name='application_detail'),

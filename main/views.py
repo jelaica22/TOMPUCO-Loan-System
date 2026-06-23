@@ -72,21 +72,43 @@ def role_based_redirect(request):
     """Redirect users to their appropriate dashboard based on role"""
     user = request.user
 
-    # Check for different user types and redirect accordingly
+    # ============================================================
+    # CRITICAL FIX: Check Manager FIRST (before Staff)
+    # ============================================================
+    # Manager redirect (HIGHEST PRIORITY)
+    if hasattr(user, 'manager_profile'):
+        return redirect('manager:dashboard')
+    if user.groups.filter(name='Manager').exists():
+        return redirect('manager:dashboard')
+
+    # Committee redirect
+    if hasattr(user, 'committee_profile'):
+        return redirect('committee:dashboard')
+    if user.groups.filter(name='Committee').exists():
+        return redirect('committee:dashboard')
+
+    # Cashier redirect
     if hasattr(user, 'cashier_profile'):
         return redirect('cashier:dashboard')
-    elif hasattr(user, 'staff_profile'):
+    if user.groups.filter(name='Cashier').exists():
+        return redirect('cashier:dashboard')
+
+    # Staff/Loan Officer redirect (LOWER PRIORITY)
+    if hasattr(user, 'staff_profile'):
         return redirect('staff:dashboard')
-    elif hasattr(user, 'committee_profile'):
-        return redirect('committee:dashboard')
-    elif hasattr(user, 'manager_profile'):
-        return redirect('manager:dashboard')
-    elif user.is_superuser:
-        return redirect('/superadmin/dashboard/')  # Direct URL path
-    elif hasattr(user, 'member_profile'):
+    if user.is_staff:
+        return redirect('staff:dashboard')
+
+    # Superuser redirect
+    if user.is_superuser:
+        return redirect('/superadmin/dashboard/')
+
+    # Regular member
+    if hasattr(user, 'member_profile'):
         return redirect('main:dashboard')
-    else:
-        return redirect('main:dashboard')
+
+    # Default fallback
+    return redirect('main:dashboard')
 
 # ============================================================
 # QR CODE GENERATION FUNCTIONS
@@ -162,33 +184,32 @@ class CustomLoginView(LoginView):
 
             # Superuser redirect - USE DIRECT URL PATH
             if user.is_superuser:
-                return redirect('/superadmin/dashboard/')  # Direct path, not namespace
+                return redirect('/superadmin/dashboard/')
 
-            # Staff/Loan Officer redirect
-            if hasattr(user, 'staff_profile'):
-                return redirect('staff:dashboard')
-
-            # Cashier redirect
-            if hasattr(user, 'cashier_profile'):
-                return redirect('cashier:dashboard')
+            # ============================================================
+            # CRITICAL FIX: Check Manager FIRST (before Staff)
+            # ============================================================
+            # Manager redirect (HIGHEST PRIORITY)
+            if hasattr(user, 'manager_profile'):
+                return redirect('manager:dashboard')
+            if user.groups.filter(name='Manager').exists():
+                return redirect('manager:dashboard')
 
             # Committee redirect
             if hasattr(user, 'committee_profile'):
                 return redirect('committee:dashboard')
-
-            # Manager redirect
-            if hasattr(user, 'manager_profile'):
-                return redirect('manager:dashboard')
-
-            # Group redirects
-            if user.groups.filter(name='Manager').exists():
-                return redirect('manager:dashboard')
             if user.groups.filter(name='Committee').exists():
                 return redirect('committee:dashboard')
+
+            # Cashier redirect
+            if hasattr(user, 'cashier_profile'):
+                return redirect('cashier:dashboard')
             if user.groups.filter(name='Cashier').exists():
                 return redirect('cashier:dashboard')
 
-            # Staff flag
+            # Staff/Loan Officer redirect (LOWER PRIORITY - after Manager)
+            if hasattr(user, 'staff_profile'):
+                return redirect('staff:dashboard')
             if user.is_staff:
                 return redirect('staff:dashboard')
 
@@ -203,7 +224,6 @@ class CustomLoginView(LoginView):
 
     def form_valid(self, form):
         """Handle Remember Me functionality and reCAPTCHA validation"""
-
         recaptcha_response = self.request.POST.get('g-recaptcha-response')
 
         if getattr(settings, 'RECAPTCHA_SITE_KEY', None) and not getattr(settings, 'DEBUG', False):
@@ -243,35 +263,153 @@ class CustomLoginView(LoginView):
     def get_success_url(self):
         user = self.request.user
 
-        # Superuser redirect - USE DIRECT URL PATH
+        # ============================================================
+        # CRITICAL FIX: Check Manager FIRST
+        # ============================================================
+        # Superuser redirect
         if user.is_superuser:
             return '/superadmin/dashboard/'
 
-        # Staff/Loan Officer redirect
-        if hasattr(user, 'staff_profile'):
-            return '/staff/dashboard/'
-
-        # Cashier redirect
-        if hasattr(user, 'cashier_profile'):
-            return '/cashier/dashboard/'
+        # Manager redirect (HIGHEST PRIORITY)
+        if hasattr(user, 'manager_profile'):
+            return '/manager/dashboard/'
+        if user.groups.filter(name='Manager').exists():
+            return '/manager/dashboard/'
 
         # Committee redirect
         if hasattr(user, 'committee_profile'):
             return '/committee/dashboard/'
-
-        # Manager redirect
-        if hasattr(user, 'manager_profile'):
-            return '/manager/dashboard/'
-
-        # Group redirects
-        if user.groups.filter(name='Manager').exists():
-            return '/manager/dashboard/'
         if user.groups.filter(name='Committee').exists():
             return '/committee/dashboard/'
+
+        # Cashier redirect
+        if hasattr(user, 'cashier_profile'):
+            return '/cashier/dashboard/'
         if user.groups.filter(name='Cashier').exists():
             return '/cashier/dashboard/'
 
-        # Staff flag
+        # Staff/Loan Officer redirect (LOWER PRIORITY)
+        if hasattr(user, 'staff_profile'):
+            return '/staff/dashboard/'
+        if user.is_staff:
+            return '/staff/dashboard/'
+
+        # Regular member
+        return '/dashboard/'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            user = request.user
+
+            # Superuser redirect - USE DIRECT URL PATH
+            if user.is_superuser:
+                return redirect('/superadmin/dashboard/')
+
+            # ============================================================
+            # CRITICAL FIX: Check Manager FIRST (before Staff)
+            # ============================================================
+            # Manager redirect (HIGHEST PRIORITY)
+            if hasattr(user, 'manager_profile'):
+                return redirect('manager:dashboard')
+            if user.groups.filter(name='Manager').exists():
+                return redirect('manager:dashboard')
+
+            # Committee redirect
+            if hasattr(user, 'committee_profile'):
+                return redirect('committee:dashboard')
+            if user.groups.filter(name='Committee').exists():
+                return redirect('committee:dashboard')
+
+            # Cashier redirect
+            if hasattr(user, 'cashier_profile'):
+                return redirect('cashier:dashboard')
+            if user.groups.filter(name='Cashier').exists():
+                return redirect('cashier:dashboard')
+
+            # Staff/Loan Officer redirect (LOWER PRIORITY - after Manager)
+            if hasattr(user, 'staff_profile'):
+                return redirect('staff:dashboard')
+            if user.is_staff:
+                return redirect('staff:dashboard')
+
+            # Regular member
+            if hasattr(user, 'member_profile'):
+                return redirect('main:dashboard')
+
+            # Default fallback
+            return redirect('main:dashboard')
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        """Handle Remember Me functionality and reCAPTCHA validation"""
+        recaptcha_response = self.request.POST.get('g-recaptcha-response')
+
+        if getattr(settings, 'RECAPTCHA_SITE_KEY', None) and not getattr(settings, 'DEBUG', False):
+            if not recaptcha_response:
+                messages.error(self.request, 'Please complete the reCAPTCHA verification.')
+                return self.form_invalid(form)
+
+            secret_key = getattr(settings, 'RECAPTCHA_SECRET_KEY', '')
+            verify_url = 'https://www.google.com/recaptcha/api/siteverify'
+
+            try:
+                result = requests.post(verify_url, data={
+                    'secret': secret_key,
+                    'response': recaptcha_response
+                }).json()
+
+                if not result.get('success'):
+                    messages.error(self.request, 'reCAPTCHA verification failed. Please try again.')
+                    return self.form_invalid(form)
+            except Exception:
+                messages.error(self.request, 'reCAPTCHA verification error. Please try again.')
+                return self.form_invalid(form)
+
+        response = super().form_valid(form)
+
+        if self.request.POST.get('rememberMe'):
+            self.request.session.set_expiry(2592000)
+        else:
+            self.request.session.set_expiry(0)
+
+        return response
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Invalid username or password. Please try again.')
+        return super().form_invalid(form)
+
+    def get_success_url(self):
+        user = self.request.user
+
+        # ============================================================
+        # CRITICAL FIX: Check Manager FIRST
+        # ============================================================
+        # Superuser redirect
+        if user.is_superuser:
+            return '/superadmin/dashboard/'
+
+        # Manager redirect (HIGHEST PRIORITY)
+        if hasattr(user, 'manager_profile'):
+            return '/manager/dashboard/'
+        if user.groups.filter(name='Manager').exists():
+            return '/manager/dashboard/'
+
+        # Committee redirect
+        if hasattr(user, 'committee_profile'):
+            return '/committee/dashboard/'
+        if user.groups.filter(name='Committee').exists():
+            return '/committee/dashboard/'
+
+        # Cashier redirect
+        if hasattr(user, 'cashier_profile'):
+            return '/cashier/dashboard/'
+        if user.groups.filter(name='Cashier').exists():
+            return '/cashier/dashboard/'
+
+        # Staff/Loan Officer redirect (LOWER PRIORITY)
+        if hasattr(user, 'staff_profile'):
+            return '/staff/dashboard/'
         if user.is_staff:
             return '/staff/dashboard/'
 
@@ -743,6 +881,9 @@ def member_profile(request):
     except Member.DoesNotExist:
         messages.warning(request, 'Please complete your profile first.')
         return redirect('main:edit_profile')
+    except Exception as e:
+        messages.error(request, f'Error loading profile: {str(e)}')
+        return redirect('main:edit_profile')
 
 
 @login_required
@@ -764,7 +905,16 @@ def member_qr_code(request):
 
 @login_required
 def edit_profile(request):
-    member = request.user.member_profile
+    """Edit user profile - FIXED to handle users without member_profile"""
+    user = request.user
+    member = None
+
+    # Safely check if user has a member profile
+    try:
+        if hasattr(user, 'member_profile'):
+            member = user.member_profile
+    except:
+        member = None
 
     if request.method == 'POST':
         try:
@@ -817,7 +967,7 @@ def edit_profile(request):
             # Birthdate
             birthdate_input = request.POST.get('birthdate')
             if birthdate_input and birthdate_input != 'None' and birthdate_input != '':
-                if isinstance(birthdate_input, str):
+                if isinstance(birthdate_input, str) and member:
                     try:
                         member.birthdate = datetime.strptime(birthdate_input, '%Y-%m-%d').date()
                     except ValueError:
@@ -828,15 +978,16 @@ def edit_profile(request):
 
             # Profile picture
             if request.FILES.get('profile_picture'):
-                if member.profile_picture:
-                    try:
-                        member.profile_picture.delete(save=False)
-                    except:
-                        pass
-                member.profile_picture = request.FILES['profile_picture']
+                if member:
+                    if member.profile_picture:
+                        try:
+                            member.profile_picture.delete(save=False)
+                        except:
+                            pass
+                    member.profile_picture = request.FILES['profile_picture']
 
             if request.POST.get('remove_profile_picture') == 'on':
-                if member.profile_picture:
+                if member and member.profile_picture:
                     try:
                         member.profile_picture.delete(save=False)
                     except:
@@ -844,25 +995,25 @@ def edit_profile(request):
                     member.profile_picture = None
 
             # Save user
-            user = request.user
             user.first_name = first_name
             user.last_name = last_name
             user.save()
 
-            # Save member
-            member.first_name = first_name
-            member.last_name = last_name
-            member.middle_initial = middle_initial
-            member.nickname = nickname
-            member.nationality = nationality
-            member.gender = gender
-            member.age = age
-            member.contact_number = contact_number
-            member.residence_address = residence_address
-            member.spouse_name = spouse_name
-            member.num_dependents = num_dependents
-            member.farm_location = farm_location
-            member.save()
+            # Save member if it exists
+            if member:
+                member.first_name = first_name
+                member.last_name = last_name
+                member.middle_initial = middle_initial
+                member.nickname = nickname
+                member.nationality = nationality
+                member.gender = gender
+                member.age = age
+                member.contact_number = contact_number
+                member.residence_address = residence_address
+                member.spouse_name = spouse_name
+                member.num_dependents = num_dependents
+                member.farm_location = farm_location
+                member.save()
 
             messages.success(request, 'Profile updated successfully!')
             return redirect('main:member_profile')
@@ -871,8 +1022,12 @@ def edit_profile(request):
             messages.error(request, f'Error updating profile: {str(e)}')
             return redirect('main:edit_profile')
 
-    return render(request, 'main/edit_profile.html', {'member': member})
-
+    context = {
+        'member': member,
+        'user': user,
+        'has_member_profile': member is not None,
+    }
+    return render(request, 'main/edit_profile.html', context)
 
 @login_required
 def upload_valid_id(request):
@@ -1323,40 +1478,300 @@ def upload_collateral(request, application_id):
 
 
 # ============================================================
-# NOTIFICATION VIEWS
+# NOTIFICATION VIEWS - COMPLETE FIX
 # ============================================================
 
 @login_required
-def get_notifications_api(request):
-    notifications = get_user_notifications(request.user, 30)
-    unread_count = get_unread_count(request.user)
-    data = {
-        'unread_count': unread_count,
-        'notifications': [{
-            'id': n.id,
-            'title': n.title,
-            'message': n.message,
-            'link': n.link,
-            'type': n.notification_type,
-            'created_at': n.created_at.strftime('%Y-%m-%d %I:%M %p'),
-            'is_read': n.is_read
-        } for n in notifications]
-    }
-    return JsonResponse(data)
+def notifications_page(request):
+    """Member notifications page - ONLY for members"""
+    # ============================================================
+    # CRITICAL FIX: Redirect admin users away from member portal
+    # ============================================================
+    if request.user.is_superuser:
+        return redirect('/superadmin/notifications/')
+
+    if not hasattr(request.user, 'member_profile'):
+        messages.warning(request, 'Access denied. Member portal only.')
+        return redirect('main:dashboard')
+
+    try:
+        user = request.user
+
+        # Get notifications ONLY for the current user
+        notifications = Notification.objects.filter(
+            recipient=user
+        ).order_by('-created_at')
+
+        # Get counts
+        total_count = notifications.count()
+        read_count = notifications.filter(is_read=True).count()
+        unread_count = notifications.filter(is_read=False).count()
+
+        context = {
+            'notifications': notifications,
+            'total_notifications': total_count,
+            'read_count': read_count,
+            'unread_count': unread_count,
+        }
+        return render(request, 'main/notifications.html', context)
+    except Exception as e:
+        messages.error(request, f'Error loading notifications: {str(e)}')
+        return render(request, 'main/notifications.html', {
+            'notifications': [],
+            'total_notifications': 0,
+            'read_count': 0,
+            'unread_count': 0,
+        })
 
 
 @login_required
+def get_notifications_api(request):
+    """API endpoint for member notifications - ONLY for members"""
+    # ============================================================
+    # CRITICAL FIX: Only allow members to access this API
+    # ============================================================
+    if request.user.is_superuser:
+        return JsonResponse({'unread_count': 0, 'notifications': [], 'error': 'Admin users should use admin API'})
+
+    if not hasattr(request.user, 'member_profile'):
+        return JsonResponse({'unread_count': 0, 'notifications': [], 'error': 'Member profile not found'})
+
+    try:
+        user = request.user
+
+        # Get notifications ONLY for the current user
+        notifications = Notification.objects.filter(
+            recipient=user
+        ).order_by('-created_at')[:30]
+
+        unread_count = Notification.objects.filter(
+            recipient=user,
+            is_read=False
+        ).count()
+
+        data = {
+            'unread_count': unread_count,
+            'notifications': [{
+                'id': n.id,
+                'title': n.title,
+                'message': n.message,
+                'link': n.link,
+                'type': n.notification_type,
+                'created_at': n.created_at.strftime('%Y-%m-%d %I:%M %p'),
+                'is_read': n.is_read
+            } for n in notifications]
+        }
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'unread_count': 0,
+            'notifications': [],
+            'error': str(e)
+        })
+
+
+@login_required
+def notifications_api(request):
+    """API endpoint for member notifications"""
+    try:
+        user = request.user
+
+        # Debug - will show in console
+        print(f"🔔 API called for user: {user.username} (ID: {user.id})")
+
+        # Get notifications for the current user
+        notifications = Notification.objects.filter(
+            recipient=user
+        ).order_by('-created_at')[:30]
+
+        unread_count = Notification.objects.filter(
+            recipient=user,
+            is_read=False
+        ).count()
+
+        print(f"📊 Found {notifications.count()} notifications for {user.username}")
+        print(f"📬 Unread count: {unread_count}")
+
+        notification_data = []
+        for n in notifications:
+            # Build correct links
+            title = n.title or ''
+            link = n.link or ''
+            lowerTitle = title.lower()
+
+            # If link exists and is valid, use it
+            if link and link != '#' and link != '/payment-schedule/' and not link.startswith('/member/'):
+                final_link = link
+            else:
+                # Build link based on title
+                if 'loan approved' in lowerTitle or 'application' in lowerTitle or 'app-' in lowerTitle or 'app_' in lowerTitle:
+                    final_link = '/my-applications/'
+                elif 'payment' in lowerTitle or 'reminder' in lowerTitle or 'due' in lowerTitle:
+                    final_link = '/payment-history/'
+                elif 'overdue' in lowerTitle or 'loan ln-' in lowerTitle:
+                    final_link = '/my-loans/'
+                elif 'profile' in lowerTitle:
+                    final_link = '/profile/'
+                elif 'welcome' in lowerTitle or 'employee' in lowerTitle:
+                    final_link = '/dashboard/'
+                elif 'notification system' in lowerTitle:
+                    final_link = '/notifications/'
+                elif 'committee' in lowerTitle or 'decision' in lowerTitle:
+                    final_link = '/my-applications/'
+                else:
+                    final_link = '/dashboard/'
+
+            notification_data.append({
+                'id': n.id,
+                'title': n.title,
+                'message': n.message,
+                'link': final_link,
+                'notification_type': n.notification_type,
+                'created_at': n.created_at.isoformat(),
+                'is_read': n.is_read,
+            })
+
+        print(f"✅ Returning {len(notification_data)} notifications")
+
+        return JsonResponse({
+            'success': True,
+            'unread_count': unread_count,
+            'notifications': notification_data
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"❌ Error in notifications_api: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'unread_count': 0,
+            'notifications': []
+        })
+
+@login_required
 def mark_notification_read(request, notif_id):
-    notification = get_object_or_404(Notification, id=notif_id, recipient=request.user)
-    notification.is_read = True
-    notification.save()
-    return JsonResponse({'success': True})
+    """Mark a notification as read - ONLY if it belongs to current user"""
+    try:
+        notification = get_object_or_404(
+            Notification,
+            id=notif_id,
+            recipient=request.user
+        )
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 
 @login_required
 def mark_all_notifications_read(request):
-    Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
-    return JsonResponse({'success': True})
+    """Mark all notifications as read - ONLY for current user"""
+    try:
+        count = Notification.objects.filter(
+            recipient=request.user,
+            is_read=False
+        ).update(is_read=True)
+        return JsonResponse({'success': True, 'count': count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def notifications_api(request):
+    """API endpoint for member notifications - ONLY for current user"""
+    try:
+        user = request.user
+
+        # ============================================================
+        # CRITICAL FIX: ONLY get notifications for the current user
+        # ============================================================
+        notifications = Notification.objects.filter(
+            recipient=user
+        ).order_by('-created_at')[:30]
+
+        unread_count = Notification.objects.filter(
+            recipient=user,
+            is_read=False
+        ).count()
+
+        notification_data = []
+        for n in notifications:
+            link = n.link or '/member/notifications/'
+            notification_data.append({
+                'id': n.id,
+                'title': n.title,
+                'message': n.message,
+                'link': link,
+                'notification_type': n.notification_type,
+                'created_at': n.created_at.isoformat(),
+                'is_read': n.is_read,
+            })
+
+        return JsonResponse({
+            'success': True,
+            'unread_count': unread_count,
+            'notifications': notification_data
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'unread_count': 0,
+            'notifications': []
+        })
+
+
+@login_required
+def mark_notification_read_api(request, notif_id):
+    """Mark notification as read - ONLY if it belongs to current user"""
+    try:
+        notification = get_object_or_404(
+            Notification,
+            id=notif_id,
+            recipient=request.user
+        )
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def mark_all_notifications_read_api(request):
+    """Mark all notifications as read - ONLY for current user"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'})
+
+    try:
+        count = Notification.objects.filter(
+            recipient=request.user,
+            is_read=False
+        ).update(is_read=True)
+        return JsonResponse({'success': True, 'count': count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def delete_notification_api(request, notif_id):
+    """Delete a notification - ONLY if it belongs to current user"""
+    if request.method != 'DELETE':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    try:
+        notification = get_object_or_404(
+            Notification,
+            id=notif_id,
+            recipient=request.user
+        )
+        notification.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 
 # ============================================================
@@ -1671,18 +2086,35 @@ def member_applications_api(request):
 
         applications_data = []
         for app in applications:
+            # Get loan type safely
+            loan_type = 'APCP'
+            if hasattr(app, 'loan_product') and app.loan_product:
+                if hasattr(app.loan_product, 'display_name'):
+                    loan_type = app.loan_product.display_name
+                else:
+                    loan_type = app.loan_product.name
+
+            # Check co-maker status
+            co_maker_status = None
+            if hasattr(app, 'co_maker_confirmations'):
+                latest_confirmation = app.co_maker_confirmations.first()
+                if latest_confirmation:
+                    co_maker_status = latest_confirmation.status
+
             applications_data.append({
                 'id': app.id,
                 'application_id': app.application_id,
-                'loan_type': app.loan_product.display_name if app.loan_product else 'APCP',
+                'loan_type': loan_type,
                 'amount': float(app.amount) if app.amount else 0,
-                'approved_line': float(app.approved_line) if app.approved_line else None,
+                'approved_line': float(app.approved_line) if hasattr(app, 'approved_line') and app.approved_line else None,
                 'status': app.status,
+                'revision_notes': getattr(app, 'revision_notes', ''),
+                'co_maker_status': co_maker_status,
                 'applied_date': app.applied_date.strftime('%Y-%m-%d') if app.applied_date else '',
-                'purpose': app.purpose or '',
-                'collateral': app.collateral_offered or '',
-                'mode_of_payment': app.mode_of_payment or 'monthly',
-                'loan_term': app.loan_term or 12,
+                'purpose': getattr(app, 'purpose', ''),
+                'collateral': getattr(app, 'collateral_offered', ''),
+                'mode_of_payment': getattr(app, 'mode_of_payment', 'monthly'),
+                'loan_term': getattr(app, 'loan_term', 12),
             })
 
         return JsonResponse({'success': True, 'applications': applications_data, 'count': len(applications_data)})
@@ -1691,6 +2123,377 @@ def member_applications_api(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e), 'applications': []}, status=200)
+
+
+@login_required
+def delete_application_api(request, app_id):
+    """Delete a loan application (only if in draft or pending status)"""
+    if request.method != 'DELETE':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+    try:
+        # Get the application - ensure it belongs to the logged-in user
+        application = get_object_or_404(LoanApplication, id=app_id, member__user=request.user)
+
+        # Check if application can be deleted
+        allowed_statuses = ['pending', 'draft', 'pending_staff_review', 'with_committee', 'needs_revision']
+        if application.status not in allowed_statuses:
+            return JsonResponse({
+                'success': False,
+                'error': f'Cannot delete application with status: {application.status}'
+            })
+
+        # Store application ID for response
+        app_id_display = application.application_id
+
+        # Delete the application
+        application.delete()
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Application {app_id_display} deleted successfully'
+        })
+
+    except LoanApplication.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Application not found'})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def upload_collateral_document(request):
+    """Upload collateral document"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+    try:
+        import random
+        from django.utils import timezone
+
+        member = request.user.member_profile
+        uploaded_file = request.FILES.get('document')
+
+        if not uploaded_file:
+            return JsonResponse({'success': False, 'error': 'No file uploaded'})
+
+        # Validate file type
+        valid_types = ['application/pdf', 'image/jpeg', 'image/png',
+                       'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+        if uploaded_file.content_type not in valid_types:
+            return JsonResponse({'success': False, 'error': 'Invalid file type. Please upload PDF, JPG, PNG, or DOCX.'})
+
+        # Validate file size (10MB)
+        if uploaded_file.size > 10 * 1024 * 1024:
+            return JsonResponse({'success': False, 'error': 'File too large. Maximum size is 10MB.'})
+
+        # Create document record
+        from main.models import MemberDocument
+        document = MemberDocument.objects.create(
+            member=member,
+            document_type='collateral',
+            document_number=f'COL-{timezone.now().strftime("%Y%m%d")}-{random.randint(1000, 9999)}',
+            file=uploaded_file,
+            is_verified=False
+        )
+
+        # If application_id is provided, attach to application
+        application_id = request.POST.get('application_id')
+        if application_id:
+            try:
+                from main.models import LoanApplication, LoanAttachment
+                application = LoanApplication.objects.get(id=application_id, member=member)
+                LoanAttachment.objects.create(
+                    loan_application=application,
+                    document=document,
+                    is_reused=False
+                )
+            except Exception as e:
+                print(f"Error attaching document: {e}")
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Document uploaded successfully!',
+            'document_id': document.id,
+            'file_name': uploaded_file.name,
+            'file_size': uploaded_file.size
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+from decimal import Decimal
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from main.models import LoanApplication, LoanProduct, Notification, User
+
+
+@login_required
+def edit_application(request, app_id):
+    """Edit loan application (for revision)"""
+    try:
+        member = request.user.member_profile
+        application = get_object_or_404(LoanApplication, id=app_id, member=member)
+    except:
+        messages.error(request, 'Application not found.')
+        return redirect('main:my_applications')
+
+    # Only allow editing if status is 'needs_revision'
+    if application.status != 'needs_revision':
+        messages.error(request, 'This application cannot be edited at this time.')
+        return redirect('main:my_applications')
+
+    if request.method == 'POST':
+        # Get form data
+        amount = request.POST.get('amount')
+        purpose = request.POST.get('purpose')
+        collateral = request.POST.get('collateral')
+        loan_product_id = request.POST.get('loan_product')
+
+        # Validate
+        if not amount or float(amount) <= 0:
+            messages.error(request, 'Please enter a valid loan amount.')
+            return redirect('main:edit_application', app_id=app_id)
+
+        # Update application
+        application.amount = Decimal(amount)
+        application.purpose = purpose
+
+        # Update collateral field
+        if hasattr(application, 'collateral_offered'):
+            application.collateral_offered = collateral
+        elif hasattr(application, 'collateral'):
+            application.collateral = collateral
+
+        if loan_product_id:
+            application.loan_product_id = loan_product_id
+
+        # Change status back to pending for review
+        application.status = 'pending_staff_review'
+        application.revision_notes = None
+        application.save()
+
+        # Send notification to staff
+        staff_users = User.objects.filter(is_staff=True)
+        for staff in staff_users:
+            Notification.objects.create(
+                recipient=staff,
+                title=f'Application Revised: {application.application_id}',
+                message=f'Member {request.user.get_full_name()} has revised their application #{application.application_id}. Please review.',
+                notification_type='application',
+                link=f'/staff/applications/{application.id}/',
+                is_read=False
+            )
+
+        messages.success(request, 'Your application has been revised and submitted for review!')
+        return redirect('main:my_applications')
+
+    # GET request - show edit form
+    loan_products = LoanProduct.objects.filter(is_active=True)
+
+    context = {
+        'application': application,
+        'loan_products': loan_products,
+    }
+    return render(request, 'main/edit_application.html', context)
+
+
+import json
+import secrets
+from django.utils import timezone
+from datetime import timedelta
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from main.models import CoMakerConfirmation, LoanApplication, Notification, Member
+
+
+@login_required
+def send_co_maker_confirmation(request):
+    """Send confirmation request to co-maker"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+    try:
+        data = json.loads(request.body)
+        application_id = data.get('application_id')
+        co_maker_id = data.get('co_maker_id')
+
+        if not application_id or not co_maker_id:
+            return JsonResponse({'success': False, 'error': 'Missing application or co-maker ID'})
+
+        application = get_object_or_404(LoanApplication, id=application_id, member__user=request.user)
+        co_maker = get_object_or_404(Member, id=co_maker_id)
+
+        # Check if co-maker is the same as applicant
+        if co_maker.user == request.user:
+            return JsonResponse({'success': False, 'error': 'You cannot be your own co-maker.'})
+
+        # Get names
+        applicant_name = application.member.get_full_name() if hasattr(application.member,
+                                                                       'get_full_name') else f"{application.member.first_name} {application.member.last_name}"
+        co_maker_name = co_maker.get_full_name() if hasattr(co_maker,
+                                                            'get_full_name') else f"{co_maker.first_name} {co_maker.last_name}"
+
+        # Check existing confirmation
+        existing = CoMakerConfirmation.objects.filter(
+            application=application,
+            co_maker=co_maker
+        ).first()
+
+        if existing and existing.status == 'pending':
+            return JsonResponse(
+                {'success': False, 'error': 'Confirmation already sent. Please wait for co-maker response.'})
+
+        if existing and existing.status == 'confirmed':
+            return JsonResponse({'success': False, 'error': 'Co-maker already confirmed this application.'})
+
+        # Create confirmation
+        confirmation = CoMakerConfirmation.objects.create(
+            application=application,
+            co_maker=co_maker,
+            applicant=application.member,
+            status='pending',
+            confirmation_token=secrets.token_urlsafe(32),
+            expiry_date=timezone.now() + timedelta(days=7)
+        )
+
+        # Send notification to co-maker
+        confirmation_link = f"{request.build_absolute_uri('/')}co-maker/confirm/{confirmation.confirmation_token}/"
+
+        Notification.objects.create(
+            recipient=co_maker.user,
+            title=f'Co-Maker Request from {applicant_name}',
+            message=f'You have been requested to be a co-maker for loan application #{application.application_id}. Please confirm or reject.',
+            notification_type='application',
+            link=confirmation_link,
+            is_read=False
+        )
+
+        # Also send notification to applicant
+        Notification.objects.create(
+            recipient=request.user,
+            title=f'Co-Maker Request Sent',
+            message=f'Confirmation request sent to {co_maker_name} for application #{application.application_id}. Waiting for their response.',
+            notification_type='application',
+            link=f'/application/{application.id}/',
+            is_read=False
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Confirmation sent to {co_maker_name}.',
+            'confirmation_id': confirmation.id
+        })
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def co_maker_status_api(request, confirmation_id):
+    """Check co-maker confirmation status"""
+    try:
+        confirmation = get_object_or_404(CoMakerConfirmation, id=confirmation_id)
+
+        return JsonResponse({
+            'success': True,
+            'status': confirmation.status,
+            'confirmed_at': confirmation.confirmed_at,
+            'co_maker_name': confirmation.co_maker.get_full_name() if hasattr(confirmation.co_maker,
+                                                                              'get_full_name') else f"{confirmation.co_maker.first_name} {confirmation.co_maker.last_name}"
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def co_maker_confirm_page(request, token):
+    """Display co-maker confirmation page"""
+    confirmation = get_object_or_404(CoMakerConfirmation, confirmation_token=token)
+
+    # Check if expired
+    if confirmation.expiry_date and timezone.now() > confirmation.expiry_date:
+        confirmation.status = 'expired'
+        confirmation.save()
+
+    # Ensure the logged-in user is the co-maker
+    if confirmation.co_maker.user != request.user:
+        messages.error(request, 'You are not authorized to view this page.')
+        return redirect('main:dashboard')
+
+    context = {
+        'confirmation': confirmation,
+    }
+    return render(request, 'main/co_maker_confirm.html', context)
+
+
+@login_required
+def co_maker_confirm_action(request, token):
+    """Handle co-maker confirmation action"""
+    confirmation = get_object_or_404(CoMakerConfirmation, confirmation_token=token)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        # Ensure the logged-in user is the co-maker
+        if confirmation.co_maker.user != request.user:
+            messages.error(request, 'You are not authorized to perform this action.')
+            return redirect('main:dashboard')
+
+        if confirmation.status != 'pending':
+            messages.warning(request, f'This confirmation is already {confirmation.status}.')
+            return redirect('main:dashboard')
+
+        if confirmation.expiry_date and timezone.now() > confirmation.expiry_date:
+            confirmation.status = 'expired'
+            confirmation.save()
+            messages.error(request, 'This confirmation request has expired.')
+            return redirect('main:dashboard')
+
+        if action == 'confirm':
+            confirmation.status = 'confirmed'
+            confirmation.confirmed_at = timezone.now()
+            confirmation.save()
+
+            # Notify applicant
+            Notification.objects.create(
+                recipient=confirmation.applicant.user,
+                title=f'Co-Maker Confirmed!',
+                message=f'{confirmation.co_maker.get_full_name() if hasattr(confirmation.co_maker, "get_full_name") else confirmation.co_maker.first_name} has confirmed as your co-maker for application #{confirmation.application.application_id}.',
+                notification_type='application',
+                link=f'/application/{confirmation.application.id}/',
+                is_read=False
+            )
+
+            messages.success(request, 'You have confirmed as a co-maker!')
+
+        elif action == 'reject':
+            confirmation.status = 'rejected'
+            confirmation.rejected_at = timezone.now()
+            confirmation.save()
+
+            # Notify applicant
+            Notification.objects.create(
+                recipient=confirmation.applicant.user,
+                title=f'Co-Maker Rejected',
+                message=f'{confirmation.co_maker.get_full_name() if hasattr(confirmation.co_maker, "get_full_name") else confirmation.co_maker.first_name} has declined to be your co-maker for application #{confirmation.application.application_id}.',
+                notification_type='application',
+                link=f'/application/{confirmation.application.id}/',
+                is_read=False
+            )
+
+            messages.warning(request, 'You have rejected the co-maker request.')
+
+        return redirect('main:co_maker_confirm_page', token=token)
+
+    return redirect('main:dashboard')
 
 
 @login_required
@@ -1719,10 +2522,17 @@ def member_loans_api(request):
             if loan.amount and loan.amount > 0:
                 progress = (float(loan.paid_amount or 0) / float(loan.amount)) * 100
 
+            # FIXED: Get loan type safely - check if loan_type field exists
+            loan_type = 'Regular'
+            if hasattr(loan, 'loan_type') and loan.loan_type:
+                loan_type = loan.loan_type
+            elif hasattr(loan, 'loan_product') and loan.loan_product:
+                loan_type = loan.loan_product.name if hasattr(loan.loan_product, 'name') else 'Regular'
+
             loans_data.append({
                 'id': loan.id,
                 'loan_number': loan.loan_number,
-                'loan_type': loan.loan_product.name if loan.loan_product else 'APCP',
+                'loan_type': loan_type,  # <-- FIXED: no more loan.loan_product.name
                 'principal': float(loan.amount),
                 'monthly_payment': float(loan.monthly_payment),
                 'remaining_balance': float(loan.remaining_balance),
@@ -1775,20 +2585,7 @@ def member_payments_api(request):
         return JsonResponse({'success': False, 'error': str(e), 'payments': []})
 
 
-@login_required
-def notifications_api(request):
-    notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')
-    return JsonResponse({
-        'notifications': [{
-            'id': n.id,
-            'title': n.title,
-            'message': n.message,
-            'type': n.notification_type,
-            'link': n.link,
-            'is_read': n.is_read,
-            'created_at': n.created_at.isoformat(),
-        } for n in notifications]
-    })
+
 
 
 @login_required
@@ -1814,9 +2611,7 @@ def delete_notification_api(request, notif_id):
     return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
-@login_required
-def notifications_page(request):
-    return render(request, 'main/notifications.html')
+
 
 
 @login_required
@@ -1952,33 +2747,53 @@ def loan_payment_schedule_api(request, loan_id):
         member = request.user.member_profile
         loan = get_object_or_404(Loan, id=loan_id, member=member)
 
-        schedule = []
-        balance = float(loan.remaining_balance)
+        # FIX: Use original amount, not remaining balance
+        principal = float(loan.amount)  # Changed from remaining_balance
         monthly_payment = float(loan.monthly_payment)
         interest_rate = float(loan.interest_rate)
         term_months = loan.term_months
-        monthly_rate = interest_rate / 100 / term_months
+
+        # FIX: Divide by 12 (months), not term_months
+        monthly_rate = interest_rate / 100 / 12  # <-- THIS WAS THE BUG
 
         from datetime import date, timedelta
+        today = date.today()
         next_date = loan.due_date or (loan.disbursement_date + timedelta(days=30))
+
+        schedule = []
+        balance = principal  # Start with original amount
 
         for i in range(term_months):
             interest = balance * monthly_rate
-            principal = monthly_payment - interest
-            if principal > balance:
-                principal = balance
-                monthly_payment = interest + principal
+            principal_paid = monthly_payment - interest
 
-            balance = balance - principal
+            # Handle last payment
+            if i == term_months - 1 or principal_paid > balance:
+                principal_paid = balance
+                payment_amount = interest + principal_paid
+            else:
+                payment_amount = monthly_payment
+
+            balance = balance - principal_paid
+            if balance < 0:
+                balance = 0
+
+            # Determine status
+            status = 'pending'
+            if loan.status == 'paid':
+                status = 'paid'
+            elif next_date and next_date < today:
+                status = 'overdue'
 
             schedule.append({
                 'month': i + 1,
-                'due_date': next_date.strftime('%Y-%m-%d'),
-                'payment_amount': round(monthly_payment, 2),
+                'due_date': next_date.strftime('%Y-%m-%d') if next_date else 'TBD',
+                'payment_amount': round(payment_amount, 2),
                 'interest': round(interest, 2),
-                'principal': round(principal, 2),
+                'principal': round(principal_paid, 2),
                 'balance': round(max(0, balance), 2),
-                'status': 'pending'
+                'status': status,
+                'is_overdue': next_date and next_date < today and loan.status != 'paid'
             })
 
             next_date = next_date + timedelta(days=30)

@@ -1,4 +1,4 @@
-from decimal import Decimal
+﻿from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -40,15 +40,25 @@ except ImportError:
 # ==================== DECORATORS ====================
 
 def manager_required(view_func):
-    """Decorator to check if user is manager"""
-
+    """Decorator to check if user has manager privileges"""
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('main:login')
-        if not request.user.is_staff:
-            messages.error(request, 'Access denied. Manager privileges required.')
-            return redirect('main:dashboard')
-        return view_func(request, *args, **kwargs)
+
+        # Check if user has manager profile
+        try:
+            from .models import ManagerProfile
+            if ManagerProfile.objects.filter(user=request.user).exists():
+                return view_func(request, *args, **kwargs)
+        except:
+            pass
+
+        # Check if user is staff as fallback
+        if request.user.is_staff:
+            return view_func(request, *args, **kwargs)
+
+        messages.error(request, 'Access denied. Manager privileges required.')
+        return redirect('main:dashboard')
 
     return wrapper
 
@@ -150,7 +160,7 @@ def change_password(request):
 @login_required
 @manager_required
 def notifications_list(request):
-    """View all notifications"""
+    """View all notifications for manager"""
     notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')
 
     filter_type = request.GET.get('type', 'all')
@@ -178,14 +188,12 @@ def notifications_list(request):
     total_notifications = Notification.objects.filter(recipient=request.user).count()
     unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
     read_count = total_notifications - unread_count
-    system_count = Notification.objects.filter(recipient=request.user, notification_type='system_alert').count()
 
     context = {
         'notifications': page_obj,
         'total_notifications': total_notifications,
         'unread_count': unread_count,
         'read_count': read_count,
-        'system_count': system_count,
         'current_type': filter_type,
         'current_status': status,
         'current_search': search,
@@ -194,36 +202,78 @@ def notifications_list(request):
 
 
 @login_required
+@manager_required
 def notifications_api(request):
     """API endpoint for notification badges and list"""
-    unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
-    total_count = Notification.objects.filter(recipient=request.user).count()
-    read_count = total_count - unread_count
+    try:
+        unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+        total_count = Notification.objects.filter(recipient=request.user).count()
+        read_count = total_count - unread_count
 
-    recent_notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')[:10]
+        notification_type = request.GET.get('type', 'all')
+        status = request.GET.get('status', '')
+        search = request.GET.get('search', '')
 
-    notifications_data = []
-    for notif in recent_notifications:
-        notifications_data.append({
-            'id': notif.id,
-            'title': notif.title,
-            'message': notif.message[:80] + ('...' if len(notif.message) > 80 else ''),
-            'is_read': notif.is_read,
-            'created_at': notif.created_at.isoformat(),
-            'notification_type': getattr(notif, 'notification_type', 'info'),
-            'link': getattr(notif, 'link', '#')
+        notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')
+
+        if notification_type and notification_type != 'all':
+            notifications = notifications.filter(notification_type=notification_type)
+
+        if status == 'unread':
+            notifications = notifications.filter(is_read=False)
+        elif status == 'read':
+            notifications = notifications.filter(is_read=True)
+
+        if search:
+            notifications = notifications.filter(
+                Q(title__icontains=search) |
+                Q(message__icontains=search)
+            )
+
+        notifications = notifications[:50]
+
+        notifications_data = []
+        for notif in notifications:
+            # Fix the link to use proper URLs
+            link = notif.link or '#'
+            if link != '#' and not link.startswith('/manager/'):
+                link = f'/manager{link}' if link.startswith('/') else f'/manager/{link}'
+
+            notifications_data.append({
+                'id': notif.id,
+                'title': notif.title,
+                'message': notif.message[:80] + ('...' if len(notif.message) > 80 else ''),
+                'is_read': notif.is_read,
+                'created_at': notif.created_at.isoformat(),
+                'time_ago': get_time_ago(notif.created_at),
+                'notification_type': getattr(notif, 'notification_type', 'info'),
+                'link': link,
+                'created_at_display': notif.created_at.strftime('%b %d, %Y %I:%M %p')
+            })
+
+        return JsonResponse({
+            'success': True,
+            'unread_count': unread_count,
+            'read_count': read_count,
+            'total_count': total_count,
+            'filtered_count': len(notifications_data),
+            'notifications': notifications_data,
         })
-
-    return JsonResponse({
-        'success': True,
-        'unread_count': unread_count,
-        'read_count': read_count,
-        'total_count': total_count,
-        'notifications': notifications_data,
-    })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'unread_count': 0,
+            'read_count': 0,
+            'total_count': 0,
+            'notifications': []
+        })
 
 
 @login_required
+@manager_required
 def mark_notification_read(request, notif_id):
     """Mark a single notification as read"""
     if request.method == 'POST':
@@ -234,22 +284,66 @@ def mark_notification_read(request, notif_id):
             return JsonResponse({'success': True, 'message': 'Marked as read'})
         except Notification.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Notification not found'})
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-
-@login_required
-def mark_all_notifications_read(request):
-    """Mark all notifications as read"""
-    if request.method == 'POST':
-        try:
-            count = Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
-            return JsonResponse({'success': True, 'message': f'{count} notification(s) marked as read'})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
-# ==================== DASHBOARD - COMPLETELY REWRITTEN ====================
+@login_required
+@manager_required
+def mark_all_notifications_read(request):
+    """Mark all notifications as read"""
+    if request.method == 'POST':
+        try:
+            count = Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+            return JsonResponse({'success': True, 'message': f'{count} notification(s) marked as read', 'count': count})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@login_required
+@manager_required
+def delete_notification_api(request, notif_id):
+    """Delete a notification"""
+    if request.method == 'DELETE':
+        try:
+            notification = Notification.objects.get(id=notif_id, recipient=request.user)
+            notification.delete()
+            return JsonResponse({'success': True, 'message': 'Notification deleted'})
+        except Notification.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Notification not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+def get_time_ago(dt):
+    """Get time ago string for a datetime"""
+    from django.utils import timezone
+    if not dt:
+        return 'Just now'
+
+    now = timezone.now()
+    diff = now - dt
+
+    if diff.days > 30:
+        return f'{diff.days // 30} months ago'
+    elif diff.days > 7:
+        return f'{diff.days // 7} weeks ago'
+    elif diff.days > 0:
+        return f'{diff.days} days ago' if diff.days > 1 else '1 day ago'
+    elif diff.seconds > 3600:
+        hours = diff.seconds // 3600
+        return f'{hours} hours ago' if hours > 1 else '1 hour ago'
+    elif diff.seconds > 60:
+        minutes = diff.seconds // 60
+        return f'{minutes} minutes ago' if minutes > 1 else '1 minute ago'
+    else:
+        return 'Just now'
+
+
+# ==================== DASHBOARD ====================
 
 @login_required
 @manager_required
@@ -274,10 +368,8 @@ def dashboard(request):
         applications = applications.filter(applied_date__lte=date_to)
         loans = loans.filter(created_at__lte=date_to)
 
-    # FIX: Only filter applications by loan_type (Loan model doesn't have loan_product)
     if loan_type:
         applications = applications.filter(loan_product__name=loan_type)
-        # DO NOT filter loans with loan_product - remove this line!
 
     total_applications = applications.count()
     pending_manager_count = applications.filter(status='pending_manager_approval').count()
@@ -287,7 +379,6 @@ def dashboard(request):
     rejected_count = applications.filter(status='rejected').count()
     pending_applications = applications.filter(status='pending_manager_approval')[:10]
 
-    # Chart data - Last 7 days approvals
     today = datetime.now().date()
     approval_labels = []
     approval_data = []
@@ -300,16 +391,13 @@ def dashboard(request):
         ).count()
         approval_data.append(count)
 
-    # Loan distribution - FIX: Use applications, NOT loans
     distribution_labels = []
     distribution_data = []
     products = LoanProduct.objects.filter(is_active=True)
     for product in products:
         distribution_labels.append(product.name)
-        # Count APPLICATIONS for this product (not loans)
         distribution_data.append(applications.filter(loan_product=product).count())
 
-    # Status distribution
     status_labels = ['Pending Staff', 'With Committee', 'Line Approved', 'Manager Approved', 'Rejected']
     status_data = [
         applications.filter(status='pending_staff_review').count(),
@@ -319,10 +407,8 @@ def dashboard(request):
         applications.filter(status='rejected').count()
     ]
 
-    # Aging data
     aging_labels = ['0-30 days', '31-60 days', '61-90 days', '90+ days']
     aging_data = []
-    today = datetime.now().date()
     for days in [(0, 30), (31, 60), (61, 90), (91, 999)]:
         amount = loans.filter(
             status='active',
@@ -337,7 +423,6 @@ def dashboard(request):
     avg_loan_size = loans.aggregate(avg=Avg('amount'))['avg'] or 0
     total_portfolio = loans.aggregate(total=Sum('amount'))['total'] or 0
 
-    # Risk assessment
     overdue_loans = loans.filter(status='active', due_date__lt=today)
     high_risk_count = overdue_loans.filter(due_date__lt=today - timedelta(days=60)).count()
     medium_risk_count = overdue_loans.filter(
@@ -352,9 +437,10 @@ def dashboard(request):
 
     default_count = loans.filter(status='default').count()
     default_rate = (default_count / loans.count() * 100) if loans.count() > 0 else 0
-    at_risk_amount = \
-    loans.filter(status='active', due_date__lt=today - timedelta(days=30)).aggregate(total=Sum('remaining_balance'))[
-        'total'] or 0
+    at_risk_amount = loans.filter(
+        status='active',
+        due_date__lt=today - timedelta(days=30)
+    ).aggregate(total=Sum('remaining_balance'))['total'] or 0
     portfolio_at_risk = (at_risk_amount / total_portfolio * 100) if total_portfolio > 0 else 0
 
     context = {
@@ -669,11 +755,15 @@ def pending_approvals(request):
 @login_required
 @manager_required
 def approved_applications(request):
-    """View approved applications ready for disbursement"""
-    applications = LoanApplication.objects.filter(status='manager_approved').order_by('-applied_date')
+    """View all approved applications ready for disbursement"""
+    from main.models import LoanProduct
 
-    search = request.GET.get('search', '').strip()
-    product_id = request.GET.get('product', '')
+    applications = LoanApplication.objects.filter(
+        status__in=['manager_approved', 'ready_for_disbursement']
+    ).select_related('member', 'loan_product').order_by('-committee_approved_date')
+
+    search = request.GET.get('search', '')
+    product_id = request.GET.get('product', 'all')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
 
@@ -689,39 +779,22 @@ def approved_applications(request):
         applications = applications.filter(loan_product_id=product_id)
 
     if date_from:
-        applications = applications.filter(applied_date__gte=date_from)
+        applications = applications.filter(committee_approved_date__gte=date_from)
+
     if date_to:
-        applications = applications.filter(applied_date__lte=date_to)
+        applications = applications.filter(committee_approved_date__lte=date_to)
 
+    total_approved = applications.aggregate(total=Sum('approved_line'))['total'] or 0
+
+    total_net = 0
     for app in applications:
-        if app.approved_line and not app.service_charge:
-            service_charge = app.approved_line * Decimal('0.03')
-            cbu_retention = app.approved_line * Decimal('0.02')
-            insurance = app.approved_line * Decimal('0.0132')
-            service_fee = Decimal('35')
-            notarial_fee = Decimal('200')
-            total_deductions = service_charge + cbu_retention + insurance + service_fee + notarial_fee
-            net_proceeds = app.approved_line - total_deductions
-
-            app.service_charge = service_charge
-            app.cbu_retention = cbu_retention
-            app.insurance_charge = insurance
-            app.service_fee = service_fee
-            app.notarial_fee = notarial_fee
-            app.total_deductions = total_deductions
-            app.net_proceeds = net_proceeds
-            app.save()
-
-    total_approved = sum(float(app.approved_line) for app in applications if app.approved_line) or 0
-    total_net = sum(float(app.net_proceeds) for app in applications if app.net_proceeds) or 0
-    avg_loan = total_approved / len(applications) if applications else 0
-    loan_products = LoanProduct.objects.filter(is_active=True)
-
-    for app in applications:
-        if hasattr(app, 'committee_approved_date') and app.committee_approved_date:
-            app.approval_date = app.committee_approved_date
+        if hasattr(app, 'net_proceeds') and app.net_proceeds:
+            total_net += float(app.net_proceeds)
         else:
-            app.approval_date = app.updated_at or app.applied_date
+            total_net += float(app.approved_line or 0)
+
+    avg_loan = total_approved / applications.count() if applications.count() > 0 else 0
+    loan_products = LoanProduct.objects.filter(is_active=True)
 
     context = {
         'applications': applications,
@@ -730,6 +803,7 @@ def approved_applications(request):
         'avg_loan': avg_loan,
         'loan_products': loan_products,
     }
+
     return render(request, 'manager/approved_applications.html', context)
 
 

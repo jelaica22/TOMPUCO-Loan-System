@@ -7,10 +7,8 @@
 <style>
     /* ============================================================
        PROFESSIONAL NOTIFICATIONS MANAGEMENT STYLES
-       EXPLICIT COLORS FOR BOTH LIGHT AND DARK MODES
     ============================================================ */
 
-    /* Stats Grid */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -73,7 +71,6 @@
         color: #9ca3af;
     }
 
-    /* Filter Section - FIXED ALIGNMENT */
     .filter-section {
         background: #ffffff;
         border-radius: 20px;
@@ -110,16 +107,11 @@
         font-size: 0.85rem;
         width: 100%;
     }
-    .filter-select option {
-        color: #1f2937;
-        background: #ffffff;
-    }
     .filter-select:focus, .filter-input:focus {
         outline: none;
         border-color: #0d6e6e;
         box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
     }
-    /* Filter actions */
     .filter-actions {
         display: flex;
         gap: 10px;
@@ -151,12 +143,7 @@
         border-color: #2a2a3a;
         color: #eef2ff;
     }
-    [data-theme="dark"] .filter-select option {
-        background: #15151f;
-        color: #eef2ff;
-    }
 
-    /* Main Table Card */
     .main-card {
         background: #ffffff;
         border-radius: 20px;
@@ -200,7 +187,6 @@
         border-color: #2a2a3a;
     }
 
-    /* Professional Table */
     .table-container {
         overflow-x: auto;
         width: 100%;
@@ -227,11 +213,9 @@
         border-bottom: 1px solid #f3f4f6;
         color: #1f2937;
     }
-    .notifications-table tbody tr {
-        transition: background 0.2s ease;
-    }
     .notifications-table tbody tr:hover {
         background: #f9fafb;
+        cursor: pointer;
     }
 
     [data-theme="dark"] .notifications-table th {
@@ -252,31 +236,24 @@
         color: #1f2937;
         font-size: 0.85rem;
     }
-    [data-theme="dark"] .notification-title {
-        color: #eef2ff;
-    }
-
     .notification-message {
         font-size: 0.75rem;
         color: #6b7280;
         max-width: 300px;
         white-space: normal;
         word-wrap: break-word;
+        cursor: pointer;
     }
-    [data-theme="dark"] .notification-message {
-        color: #9ca3af;
+    .notification-message:hover {
+        color: #0d6e6e;
+        text-decoration: underline;
     }
-
     .recipient-name {
         font-size: 0.8rem;
         font-weight: 500;
         color: #1f2937;
     }
-    [data-theme="dark"] .recipient-name {
-        color: #eef2ff;
-    }
 
-    /* Professional Status Badges */
     .status-badge {
         display: inline-flex;
         align-items: center;
@@ -285,7 +262,6 @@
         border-radius: 30px;
         font-size: 0.7rem;
         font-weight: 600;
-        letter-spacing: 0.3px;
         white-space: nowrap;
     }
     .badge-read { background: #d1fae5; color: #065f46; }
@@ -294,7 +270,6 @@
     [data-theme="dark"] .badge-read { background: rgba(16, 185, 129, 0.2); color: #34d399; }
     [data-theme="dark"] .badge-unread { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
 
-    /* Action Buttons */
     .action-buttons {
         display: flex;
         gap: 8px;
@@ -310,7 +285,6 @@
         border-radius: 8px !important;
         font-size: 0.75rem !important;
         font-weight: 600 !important;
-        text-decoration: none !important;
         transition: all 0.2s ease !important;
         cursor: pointer !important;
         border: none !important;
@@ -331,7 +305,6 @@
         border-radius: 8px !important;
         font-size: 0.75rem !important;
         font-weight: 600 !important;
-        text-decoration: none !important;
         transition: all 0.2s ease !important;
         cursor: pointer !important;
         border: none !important;
@@ -344,7 +317,26 @@
         color: #ffffff !important;
     }
 
-    /* Form Buttons */
+    .btn-view {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        border: none !important;
+        background: #3b82f6 !important;
+        color: #ffffff !important;
+    }
+    .btn-view:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4) !important;
+        color: #ffffff !important;
+    }
+
     .btn-apply, .btn-reset {
         padding: 10px 24px;
         font-weight: 600;
@@ -384,7 +376,6 @@
         background: #4b5563;
     }
 
-    /* Empty State */
     .empty-state {
         text-align: center;
         padding: 60px 20px;
@@ -399,14 +390,6 @@
         margin-bottom: 20px;
     }
 
-    [data-theme="dark"] .empty-state i {
-        color: #6b7280;
-    }
-    [data-theme="dark"] .empty-state p {
-        color: #9ca3af;
-    }
-
-    /* Modal Styles */
     .modal-custom .modal-content {
         background: #ffffff;
         border: 1px solid #e5e7eb;
@@ -422,9 +405,6 @@
         color: white !important;
         font-weight: 700 !important;
         font-size: 1.1rem !important;
-    }
-    .modal-custom .modal-header .btn-close-white {
-        filter: brightness(0) invert(1);
     }
     .modal-custom .modal-body {
         padding: 24px;
@@ -443,29 +423,6 @@
         border-radius: 10px;
         font-weight: 600;
     }
-    .modal-custom .btn-secondary:hover {
-        background: #e5e7eb;
-    }
-
-    [data-theme="dark"] .modal-custom .modal-content {
-        background: #1e1e2a;
-        border-color: #2a2a3a;
-    }
-    [data-theme="dark"] .modal-custom .modal-body {
-        background: #1e1e2a;
-    }
-    [data-theme="dark"] .modal-custom .modal-footer {
-        background: #15151f;
-        border-top-color: #2a2a3a;
-    }
-    [data-theme="dark"] .modal-custom .btn-secondary {
-        background: #374151;
-        border-color: #4b5563;
-        color: #e5e7eb;
-    }
-    [data-theme="dark"] .modal-custom .btn-secondary:hover {
-        background: #4b5563;
-    }
 
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
@@ -473,6 +430,53 @@
     }
     .stat-card, .main-card, .filter-section {
         animation: fadeIn 0.4s ease forwards;
+    }
+
+    /* Toast Notification */
+    #notificationToast {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 400px;
+        width: 100%;
+    }
+    #notificationToast .card {
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    .notification-detail-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+    }
+    .notification-detail-icon i {
+        font-size: 2rem;
+        color: white;
+    }
+    .notification-full-message {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #1f2937;
+        background: #f9fafb;
+        padding: 16px;
+        border-radius: 12px;
+        border-left: 4px solid #0d6e6e;
+    }
+    [data-theme="dark"] .notification-full-message {
+        background: #15151f;
+        color: #eef2ff;
+        border-left-color: #0d6e6e;
     }
 </style>
 {% endblock %}
@@ -494,17 +498,15 @@
     </div>
 </div>
 
-<!-- Advanced Filter Section - FIXED ALIGNMENT -->
+<!-- Advanced Filter Section -->
 <div class="filter-section">
     <div class="filter-title"><i class="bi bi-funnel-fill"></i> Advanced Filters</div>
     <form method="get" id="filterForm">
         <div class="row g-3 align-items-end">
-            <!-- Search Field -->
             <div class="col-12 col-md-5">
                 <label class="filter-label"><i class="bi bi-search"></i> Search</label>
                 <input type="text" name="search" class="filter-input" id="searchInput" placeholder="Title, Message, Recipient..." value="{{ request.GET.search|default:'' }}">
             </div>
-            <!-- Status Filter -->
             <div class="col-12 col-md-4">
                 <label class="filter-label"><i class="bi bi-envelope"></i> Status</label>
                 <select name="status" class="filter-select" id="statusSelect">
@@ -513,7 +515,6 @@
                     <option value="unread" {% if request.GET.status == 'unread' %}selected{% endif %}>Unread</option>
                 </select>
             </div>
-            <!-- Action Buttons - Right aligned -->
             <div class="col-12 col-md-3">
                 <div class="filter-actions">
                     <button type="submit" class="btn-apply"><i class="bi bi-search"></i> Apply</button>
@@ -543,45 +544,46 @@
                     <th>Recipient</th>
                     <th width="100">Status</th>
                     <th width="140">Date</th>
-                    <th width="220">Actions</th>
+                    <th width="280">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for notif in notifications %}
-                <tr>
+                <tr onclick="viewNotification({{ notif.id }}, '{{ notif.title|escapejs }}', '{{ notif.message|escapejs }}', '{{ notif.created_at|date:"Y-m-d H:i" }}', '{{ notif.notification_type|default:"system" }}')" style="cursor: pointer;">
                     <td><strong class="text-primary">{{ notif.id }}</strong></td>
                     <td><div class="notification-title">{{ notif.title }}</div></td>
-                    <td class="notification-message">{{ notif.message|truncatechars:60 }}</div>
+                    <td class="notification-message" onclick="event.stopPropagation(); viewNotification({{ notif.id }}, '{{ notif.title|escapejs }}', '{{ notif.message|escapejs }}', '{{ notif.created_at|date:"Y-m-d H:i" }}', '{{ notif.notification_type|default:"system" }}')">
+                        {{ notif.message|truncatechars:60 }}
+                        <span style="color: #0d6e6e; font-weight: 600;">[Click to view]</span>
+                    </td>
                     <td class="recipient-name">
-                        {# Try different possible field names for recipient #}
                         {% if notif.recipient %}
                             {{ notif.recipient.get_full_name|default:notif.recipient.username }}
-                        {% elif notif.member %}
-                            {{ notif.member.get_full_name|default:notif.member.user.username|default:notif.member.first_name }}
-                        {% elif notif.user %}
-                            {{ notif.user.get_full_name|default:notif.user.username }}
                         {% else %}
                             System
                         {% endif %}
-                    </div>
+                    </td>
                     <td>
                         {% if notif.is_read %}
                             <span class="status-badge badge-read"><i class="bi bi-check-circle-fill"></i> Read</span>
                         {% else %}
                             <span class="status-badge badge-unread"><i class="bi bi-clock-fill"></i> Unread</span>
                         {% endif %}
-                    </div>
-                    <td>{{ notif.created_at|date:"Y-m-d H:i" }}</div>
+                    </td>
+                    <td>{{ notif.created_at|date:"Y-m-d H:i" }}</td>
                     <td class="action-buttons">
                         {% if not notif.is_read %}
-                        <button class="btn-mark-read" onclick="markAsRead({{ notif.id }})">
+                        <button class="btn-mark-read" onclick="event.stopPropagation(); markAsRead({{ notif.id }})">
                             <i class="bi bi-check-circle"></i> Mark Read
                         </button>
                         {% endif %}
-                        <button class="btn-delete-notif" onclick="deleteNotification({{ notif.id }}, '{{ notif.title|escapejs }}')">
+                        <button class="btn-view" onclick="event.stopPropagation(); viewNotification({{ notif.id }}, '{{ notif.title|escapejs }}', '{{ notif.message|escapejs }}', '{{ notif.created_at|date:"Y-m-d H:i" }}', '{{ notif.notification_type|default:"system" }}')">
+                            <i class="bi bi-eye"></i> View
+                        </button>
+                        <button class="btn-delete-notif" onclick="event.stopPropagation(); deleteNotification({{ notif.id }}, '{{ notif.title|escapejs }}')">
                             <i class="bi bi-trash"></i> Delete
                         </button>
-                    </div>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -590,11 +592,43 @@
                             <i class="bi bi-bell-slash"></i>
                             <p>No notifications found matching your criteria</p>
                         </div>
-                    </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- View Notification Modal -->
+<div class="modal fade modal-custom" id="viewNotificationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-envelope-open-fill me-2"></i> Notification Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewNotificationContent">
+                <div class="text-center mb-4">
+                    <div class="notification-detail-icon" id="notificationDetailIcon" style="background: #0d6e6e;">
+                        <i class="bi bi-bell-fill"></i>
+                    </div>
+                </div>
+                <h5 class="text-center mb-3" id="notificationDetailTitle" style="font-weight: 700; color: #1f2937;">Notification Title</h5>
+                <div class="notification-full-message" id="notificationDetailMessage">
+                    Notification message will appear here.
+                </div>
+                <div class="mt-3 text-muted small d-flex justify-content-between">
+                    <span><i class="bi bi-clock me-1"></i> <span id="notificationDetailTime">-</span></span>
+                    <span><i class="bi bi-tag me-1"></i> <span id="notificationDetailType">-</span></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>Close
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -625,27 +659,72 @@ function filterByStatus(status) {
     document.getElementById('filterForm').submit();
 }
 
+// ============================================================
+// View Notification - Opens modal with full message
+// ============================================================
+function viewNotification(id, title, message, time, type) {
+    const iconMap = {
+        'application': 'bi-file-text',
+        'payment': 'bi-cash-stack',
+        'payment_received': 'bi-cash-stack',
+        'loan_approved': 'bi-check-circle',
+        'overdue_alert': 'bi-exclamation-triangle',
+        'system': 'bi-gear',
+        'profile_update': 'bi-person-check'
+    };
+    const icon = iconMap[type] || 'bi-bell';
+    const bgColor = {
+        'application': '#0d6e6e',
+        'payment': '#10b981',
+        'payment_received': '#10b981',
+        'loan_approved': '#3b82f6',
+        'overdue_alert': '#ef4444',
+        'system': '#6b7280',
+        'profile_update': '#8b5cf6'
+    }[type] || '#6b7280';
+
+    document.getElementById('notificationDetailIcon').style.background = bgColor;
+    document.getElementById('notificationDetailIcon').innerHTML = `<i class="bi ${icon}"></i>`;
+    document.getElementById('notificationDetailTitle').textContent = title;
+    document.getElementById('notificationDetailMessage').textContent = message;
+    document.getElementById('notificationDetailTime').textContent = time || 'Just now';
+    document.getElementById('notificationDetailType').textContent = type || 'system';
+
+    new bootstrap.Modal(document.getElementById('viewNotificationModal')).show();
+}
+
+// ============================================================
 // Mark as Read
+// ============================================================
 function markAsRead(notifId) {
-    fetch(`/superadmin/notifications/${notifId}/read/`, {
+    const csrftoken = getCSRFToken();
+    const url = `/superadmin/notifications/${notifId}/read/`;
+
+    fetch(url, {
         method: 'POST',
         headers: {
-            'X-CSRFToken': getCSRFToken(),
+            'X-CSRFToken': csrftoken,
             'Content-Type': 'application/json'
         }
     })
     .then(response => response.json())
     .then(data => {
-        if(data.success) location.reload();
-        else alert('Error marking notification as read');
+        if(data.success) {
+            showToast('Notification marked as read!', 'success');
+            setTimeout(() => location.reload(), 500);
+        } else {
+            showToast('Error: ' + (data.error || 'Unknown error'), 'danger');
+        }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error marking notification as read');
+        showToast('Error marking notification as read. Please try again.', 'danger');
     });
 }
 
+// ============================================================
 // Delete Notification with confirmation modal
+// ============================================================
 function deleteNotification(notifId, notifTitle) {
     currentDeleteId = notifId;
     currentDeleteTitle = notifTitle;
@@ -664,21 +743,28 @@ function deleteNotification(notifId, notifTitle) {
 
 document.getElementById('confirmDeleteBtn')?.addEventListener('click', function() {
     if(currentDeleteId) {
-        fetch(`/superadmin/notifications/${currentDeleteId}/delete/`, {
+        const csrftoken = getCSRFToken();
+        const url = `/superadmin/notifications/${currentDeleteId}/delete/`;
+
+        fetch(url, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': getCSRFToken(),
+                'X-CSRFToken': csrftoken,
                 'Content-Type': 'application/json'
             }
         })
         .then(response => response.json())
         .then(data => {
-            if(data.success) location.reload();
-            else alert('Error deleting notification');
+            if(data.success) {
+                showToast('Notification deleted successfully!', 'success');
+                setTimeout(() => location.reload(), 500);
+            } else {
+                showToast('Error: ' + (data.error || 'Unknown error'), 'danger');
+            }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error deleting notification');
+            showToast('Error deleting notification. Please try again.', 'danger');
         });
     }
 });
@@ -689,6 +775,43 @@ document.getElementById('resetFiltersBtn')?.addEventListener('click', function()
     document.getElementById('statusSelect').value = 'all';
     document.getElementById('filterForm').submit();
 });
+
+// ============================================================
+// Toast Notification Helper
+// ============================================================
+function showToast(message, type = 'info') {
+    const existingToast = document.getElementById('notificationToast');
+    if (existingToast) existingToast.remove();
+
+    const toastContainer = document.createElement('div');
+    toastContainer.id = 'notificationToast';
+
+    const colors = {
+        success: '#10b981',
+        danger: '#ef4444',
+        warning: '#f59e0b',
+        info: '#3b82f6'
+    };
+    const bgColor = colors[type] || colors.info;
+    const icon = type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle';
+
+    toastContainer.innerHTML = `
+        <div class="card shadow-lg border-0" style="border-left: 4px solid ${bgColor};">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+                <i class="bi bi-${icon}" style="color: ${bgColor}; font-size: 1.5rem;"></i>
+                <span class="flex-grow-1">${escapeHtml(message)}</span>
+                <button type="button" class="btn-close" onclick="this.closest('#notificationToast').remove()"></button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(toastContainer);
+
+    setTimeout(() => {
+        const toast = document.getElementById('notificationToast');
+        if (toast) toast.remove();
+    }, 4000);
+}
 
 // Utility Functions
 function escapeHtml(text) {

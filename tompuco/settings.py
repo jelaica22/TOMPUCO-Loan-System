@@ -42,23 +42,10 @@ if DEBUG:
 # reCAPTCHA Configuration - Production Ready
 # ============================================
 # Read from environment variables (set on Render)
-RECAPTCHA_SITE_KEY = os.environ.get('RECAPTCHA_SITE_KEY', '')
-RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
+RECAPTCHA_SITE_KEY = os.environ.get('RECAPTCHA_SITE_KEY', '6LelneksAAAAAJ84pRMje7M5YSDRpm2xXPuiJuat')
+RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '6LelneksAAAAAKP6CjXA_y-fuAFwfzw61hx9VSHJ')
 RECAPTCHA_PUBLIC_KEY = RECAPTCHA_SITE_KEY
 RECAPTCHA_PRIVATE_KEY = RECAPTCHA_SECRET_KEY
-
-# ⚠️ IMPORTANT: Only use test keys in development, NEVER in production
-# The test keys will show "This reCAPTCHA is for testing purposes only"
-if DEBUG and not RECAPTCHA_SITE_KEY:
-    # Use test keys for local development only
-    RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
-    RECAPTCHA_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
-    RECAPTCHA_PUBLIC_KEY = RECAPTCHA_SITE_KEY
-    RECAPTCHA_PRIVATE_KEY = RECAPTCHA_SECRET_KEY
-    print("⚠️ Using Google test reCAPTCHA keys for DEVELOPMENT only")
-elif not DEBUG and not RECAPTCHA_SITE_KEY:
-    # This should NEVER happen in production - warn in logs
-    print("❌ ERROR: reCAPTCHA keys not set in production environment!")
 
 # Application definition
 INSTALLED_APPS = [
@@ -128,16 +115,21 @@ CHANNEL_LAYERS = {
 }
 
 # ============================================
-# DATABASE - PRODUCTION READY
+# DATABASE - LOCAL POSTGRESQL
 # ============================================
 
+# Check if DATABASE_URL is set (for production on Render)
 if os.environ.get('DATABASE_URL'):
+    # Check if we're connecting to localhost (disable SSL)
+    db_url = os.environ.get('DATABASE_URL')
+    ssl_required = 'localhost' not in db_url and '127.0.0.1' not in db_url
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=600,
-            ssl_require=True
+            ssl_require=ssl_required
         )
     }
+# Check if on PythonAnywhere
 elif os.environ.get('PYTHONANYWHERE_DOMAIN'):
     DATABASES = {
         'default': {
@@ -149,11 +141,16 @@ elif os.environ.get('PYTHONANYWHERE_DOMAIN'):
             'PORT': '3306',
         }
     }
+# Local development - PostgreSQL
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'tompuco_db',
+            'USER': 'tompuco_db_user',
+            'PASSWORD': 'user_123',  # Your password
+            'HOST': 'localhost',
+            'PORT': '5432',
         }
     }
 
@@ -230,11 +227,3 @@ if not DEBUG:
     # CSRF and Session
     CSRF_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SAMESITE = 'Lax'
-
-# ============================================
-# DEBUG PRINT (REMOVE IN PRODUCTION)
-# ============================================
-# Only print in development to avoid log clutter
-if DEBUG:
-    print(f"✅ reCAPTCHA Site Key: {'✓ Loaded' if RECAPTCHA_SITE_KEY else '✗ NOT SET'}")
-    print(f"🔧 DEBUG mode: {DEBUG}")

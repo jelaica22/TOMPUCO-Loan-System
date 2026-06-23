@@ -1,5 +1,3 @@
-# main/models.py - COMPLETE CORRECTED VERSION
-
 from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal
@@ -171,6 +169,12 @@ class Member(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def get_full_name(self):
+        """Return the full name of the member"""
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return self.user.get_full_name() or self.user.username
+
     def save(self, *args, **kwargs):
         if self.birthdate:
             today = date.today()
@@ -207,6 +211,7 @@ class Loan(models.Model):
     due_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    revision_notes = models.TextField(blank=True, null=True, help_text='Notes from staff/manager about what needs revision')
 
     def __str__(self):
         return f"Loan {self.loan_number} - {self.member}"
@@ -306,7 +311,33 @@ class LoanApplication(models.Model):
         ('rejected', 'Rejected'),
         ('under_review', 'Under Review'),
         ('committee', 'With Committee'),
+        ('pending_staff_review', 'Pending Staff Review'),
+        ('needs_revision', 'Needs Revision'),
+        ('manager_approved', 'Manager Approved'),
     ]
+
+    PAYMENT_MODE_CHOICES = [
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+        ('semi-annual', 'Semi-Annual'),
+        ('annual', 'Annual'),
+    ]
+
+    application_id = models.CharField(max_length=50, unique=True)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='applications')
+    loan_product = models.ForeignKey(LoanProduct, on_delete=models.SET_NULL, null=True, blank=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    purpose = models.TextField()
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='pending')
+    applied_date = models.DateField(auto_now_add=True)
+    reviewed_date = models.DateField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    remarks = models.TextField(blank=True)
+
+    # Collateral fields
+    collateral_offered = models.TextField(blank=True, null=True, help_text="Description of collateral offered")
+    mode_of_payment = models.CharField(max_length=20, choices=PAYMENT_MODE_CHOICES, default='monthly')
+    loan_term = models.IntegerField(default=12, help_text="Loan term in months")
 
     approved_line = models.DecimalField(
         max_digits=12,
@@ -326,16 +357,7 @@ class LoanApplication(models.Model):
         verbose_name="Reason for Reduction"
     )
 
-    application_id = models.CharField(max_length=50, unique=True)
-    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='applications')
-    loan_product = models.ForeignKey(LoanProduct, on_delete=models.SET_NULL, null=True, blank=True)
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
-    purpose = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    applied_date = models.DateField(auto_now_add=True)
-    reviewed_date = models.DateField(null=True, blank=True)
-    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    remarks = models.TextField(blank=True)
+    revision_notes = models.TextField(blank=True, null=True, help_text="Notes from staff/manager about what needs revision")
 
     def __str__(self):
         return f"Application {self.application_id} - {self.member}"
@@ -587,15 +609,33 @@ class AuditLog(models.Model):
     def __str__(self):
         return f"{self.user} - {self.action} - {self.entity_type}"
 
-    civil_status = models.CharField(max_length=20, blank=True, null=True)
-    employment_status = models.CharField(max_length=20, default='member')
-    employee_id = models.CharField(max_length=50, blank=True, null=True)
-    position = models.CharField(max_length=100, blank=True, null=True)
-    date_hired = models.DateField(blank=True, null=True)
-    salary_loan_eligible = models.BooleanField(default=False)
-    max_regular_loan = models.DecimalField(max_digits=15, decimal_places=2, default=10000)
-    max_salary_loan = models.DecimalField(max_digits=15, decimal_places=2, default=0)
-    max_active_loans = models.IntegerField(default=0)
-    verification_status = models.CharField(max_length=20, default='pending')
-    account_status = models.CharField(max_length=20, default='pending')
-    member_tier = models.CharField(max_length=20, default='basic')
+
+class CoMakerConfirmation(models.Model):
+    """Co-maker confirmation status for loan applications"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending Confirmation'),
+        ('confirmed', 'Confirmed'),
+        ('rejected', 'Rejected'),
+        ('expired', 'Expired'),
+    ]
+
+    application = models.ForeignKey('LoanApplication', on_delete=models.CASCADE, related_name='co_maker_confirmations')
+    co_maker = models.ForeignKey('Member', on_delete=models.CASCADE, related_name='co_maker_confirmations')
+    applicant = models.ForeignKey('Member', on_delete=models.CASCADE, related_name='co_maker_applications')
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    confirmation_token = models.CharField(max_length=100, unique=True, blank=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    rejected_at = models.DateTimeField(null=True, blank=True)
+    expiry_date = models.DateTimeField(null=True, blank=True)
+
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['application', 'co_maker']
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.co_maker} - {self.application.application_id} - {self.status}"

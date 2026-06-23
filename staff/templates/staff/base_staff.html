@@ -22,7 +22,7 @@
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 
-    <!-- Staff Portal Styles (Matching Admin Colors) -->
+    <!-- Staff Portal Styles -->
     <style>
         /* ===== CSS Variables for Light/Dark Mode ===== */
         :root {
@@ -32,7 +32,7 @@
             --sidebar-collapsed-width: 80px;
             --transition-speed: 0.3s;
 
-            /* Brand Colors - Teal & Navy Theme (Matching Admin) */
+            /* Brand Colors - Teal & Navy Theme */
             --brand-primary: #0d6e6e;
             --brand-primary-dark: #0a5a5a;
             --brand-primary-light: #1a8a8a;
@@ -132,7 +132,6 @@
             transition: background 0.3s ease;
         }
 
-        /* Theme Toggle Button */
         .theme-toggle {
             background: rgba(255, 255, 255, 0.15);
             border: none;
@@ -153,11 +152,225 @@
             transform: scale(1.05);
         }
 
-        .theme-toggle i {
+        /* ============================================================
+           NOTIFICATION BELL
+        ============================================================ */
+        .notification-dropdown {
+            position: relative;
+        }
+
+        .notification-bell {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .notification-bell:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .notification-bell i {
             font-size: 1.2rem;
         }
 
-        /* Navbar Left Section */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 600;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            border: 2px solid var(--brand-primary);
+            animation: bellPulse 2s infinite;
+        }
+
+        @keyframes bellPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Notification Dropdown Menu */
+        .notification-menu {
+            width: 420px;
+            max-width: 95vw;
+            padding: 0;
+            margin-top: 10px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .notification-header h6 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .notification-header h6 i {
+            color: var(--brand-primary);
+            margin-right: 8px;
+        }
+
+        .mark-all-read-btn {
+            background: none;
+            border: none;
+            color: var(--brand-primary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .mark-all-read-btn:hover {
+            background: rgba(13, 110, 110, 0.1);
+            text-decoration: none;
+        }
+
+        .notification-list {
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .notification-item:hover {
+            background: var(--table-hover);
+        }
+
+        .notification-item.unread {
+            background: var(--info-bg);
+            border-left: 3px solid var(--brand-primary);
+        }
+
+        [data-theme="dark"] .notification-item.unread {
+            background: rgba(13, 110, 110, 0.15);
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-icon i {
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .notification-message {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .notification-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .notification-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .view-all-link {
+            color: var(--brand-primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .view-all-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-notifications {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-notifications i {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        @media (max-width: 576px) {
+            .notification-menu {
+                width: 340px;
+                max-width: 94vw;
+                right: -60px;
+            }
+        }
+
+        /* ===== Navbar Left ===== */
         .navbar-left {
             display: flex;
             align-items: center;
@@ -222,53 +435,12 @@
             letter-spacing: 0.5px;
         }
 
-        /* Navbar Right Section */
         .navbar-right {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 5px;
         }
 
-        /* Notification Bell */
-        .notification-bell {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 12px;
-            transition: all 0.2s;
-            text-decoration: none;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .notification-bell:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
-        }
-
-        .notification-bell i {
-            font-size: 1.2rem;
-            color: white;
-        }
-
-        .top-badge {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            background: #ef4444;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            min-width: 18px;
-            text-align: center;
-            line-height: 1.2;
-        }
-
-        /* User Dropdown */
         .user-dropdown-btn {
             display: flex;
             align-items: center;
@@ -486,16 +658,6 @@
             text-align: center;
         }
 
-        .app-footer a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .app-footer a:hover {
-            color: var(--brand-primary);
-        }
-
         /* ===== Responsive ===== */
         @media (max-width: 768px) {
             .sidebar {
@@ -547,22 +709,11 @@
             transition: all 0.3s;
         }
 
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
-        }
-
         .card-header {
             background: var(--bg-card);
             border-bottom: 1px solid var(--border-color);
             padding: 18px 24px;
             border-radius: 16px 16px 0 0 !important;
-        }
-
-        .card-header h5,
-        .card-header h4 {
-            margin: 0;
-            color: var(--text-primary);
         }
 
         /* Table Styles */
@@ -589,7 +740,7 @@
             background: var(--table-hover);
         }
 
-        /* Status Badges */
+        /* Badges */
         .badge-success {
             background: var(--success-bg);
             color: var(--success-text);
@@ -638,7 +789,6 @@
             gap: 6px;
         }
 
-        /* Action Buttons */
         .btn-action {
             padding: 6px 14px;
             border-radius: 8px;
@@ -659,84 +809,6 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
             color: white;
-        }
-
-        .btn-action-outline {
-            background: transparent;
-            border: 1px solid var(--brand-primary);
-            color: var(--brand-primary);
-        }
-
-        .btn-action-outline:hover {
-            background: var(--brand-primary);
-            color: white;
-        }
-
-        [data-theme="dark"] .btn-action-outline {
-            border-color: #4ade80;
-            color: #4ade80;
-        }
-
-        [data-theme="dark"] .btn-action-outline:hover {
-            background: #4ade80;
-            color: #1a2332;
-        }
-
-        /* Button Styles */
-        .btn-primary {
-            background: var(--brand-gradient);
-            border: none;
-            transition: all 0.3s;
-            padding: 10px 24px;
-            border-radius: 10px;
-        }
-
-        .btn-primary:hover {
-            background: var(--brand-gradient-light);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
-        }
-
-        .btn-secondary {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            transition: all 0.3s;
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--brand-primary);
-            color: var(--brand-primary);
-            transform: translateY(-2px);
-        }
-
-        /* Alert Styles */
-        .alert-success {
-            background: var(--success-bg);
-            color: var(--success-text);
-            border: none;
-            border-radius: 12px;
-        }
-
-        .alert-warning {
-            background: var(--warning-bg);
-            color: var(--warning-text);
-            border: none;
-            border-radius: 12px;
-        }
-
-        .alert-danger {
-            background: var(--danger-bg);
-            color: var(--danger-text);
-            border: none;
-            border-radius: 12px;
-        }
-
-        .alert-info {
-            background: var(--info-bg);
-            color: var(--info-text);
-            border: none;
-            border-radius: 12px;
         }
 
         /* Sidebar Overlay for Mobile */
@@ -771,10 +843,6 @@
             border-radius: 3px;
         }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--brand-primary-light);
-        }
-
         /* Logout Modal */
         .logout-modal .modal-content {
             border-radius: 16px;
@@ -798,53 +866,6 @@
         .logout-icon i {
             font-size: 2.5rem;
             color: #dc2626;
-        }
-
-        /* DataTables Overrides */
-        .dataTables_wrapper .dataTables_length,
-        .dataTables_wrapper .dataTables_filter,
-        .dataTables_wrapper .dataTables_info,
-        .dataTables_wrapper .dataTables_processing,
-        .dataTables_wrapper .dataTables_paginate {
-            color: var(--text-primary);
-        }
-
-        .dataTables_wrapper .dataTables_filter input {
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            border-radius: 8px;
-            padding: 6px 12px;
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-            background: var(--brand-primary);
-            color: white;
-        }
-
-        /* Pagination */
-        .pagination .page-link {
-            background: var(--bg-card);
-            border-color: var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .pagination .page-link:hover {
-            background: var(--brand-primary);
-            color: white;
-            border-color: var(--brand-primary);
-        }
-
-        .pagination .page-item.active .page-link {
-            background: var(--brand-gradient);
-            border-color: var(--brand-primary);
-            color: white;
         }
 
         /* Staff-specific Dashboard Stats */
@@ -899,16 +920,39 @@
         </div>
 
         <div class="navbar-right">
-            <!-- Theme Toggle Button -->
+            <!-- Theme Toggle -->
             <button class="theme-toggle" id="themeToggle" title="Dark/Light Mode">
                 <i class="bi bi-moon-stars"></i>
             </button>
 
-            <!-- Notification Bell -->
-            <a href="{% url 'staff:notifications_page' %}" class="notification-bell" id="notificationBell">
-                <i class="bi bi-bell"></i>
-                <span class="top-badge" id="topNotificationBadge" style="display: none;">0</span>
-            </a>
+            <!-- ============================================================
+            NOTIFICATION BELL WITH DROPDOWN - CORRECTLY LINKED
+            ============================================================ -->
+            <div class="dropdown notification-dropdown">
+                <button class="notification-bell" data-bs-toggle="dropdown" aria-expanded="false" id="notificationBell">
+                    <i class="bi bi-bell"></i>
+                    <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end notification-menu" id="notificationMenu">
+                    <div class="notification-header">
+                        <h6><i class="bi bi-bell-fill"></i> Notifications</h6>
+                        <button class="mark-all-read-btn" id="markAllReadBtn">
+                            <i class="bi bi-check2-all"></i> Mark all as read
+                        </button>
+                    </div>
+                    <div class="notification-list" id="notificationList">
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-bell-slash" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                            <p class="mb-0">Loading notifications...</p>
+                        </div>
+                    </div>
+                    <div class="notification-footer">
+                        <a href="{% url 'staff:notifications' %}" class="view-all-link">
+                            <i class="bi bi-arrow-right-circle"></i> View All Notifications
+                        </a>
+                    </div>
+                </div>
+            </div>
 
             <!-- User Dropdown -->
             <div class="dropdown">
@@ -1029,7 +1073,7 @@
         </div>
     </footer>
 
-    <!-- Logout Confirmation Modal -->
+    <!-- Logout Modal -->
     <div class="modal fade logout-modal" id="logoutModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -1064,14 +1108,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // ============================================================
-        // DARK / LIGHT MODE TOGGLE
+        // THEME TOGGLE
         // ============================================================
-
-        // Get theme from localStorage or default to 'light'
         const theme = localStorage.getItem('staffTheme') || 'light';
         document.documentElement.setAttribute('data-theme', theme);
 
-        // Update theme toggle icon
         const themeToggle = document.getElementById('themeToggle');
         const updateThemeIcon = () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -1083,29 +1124,16 @@
         };
         updateThemeIcon();
 
-        // Theme toggle click handler
         themeToggle?.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('staffTheme', newTheme);
             updateThemeIcon();
-
-            // Reload DataTables if they exist to adjust colors
-            if ($.fn.DataTable) {
-                $('.dataTable').each(function() {
-                    $(this).DataTable().destroy();
-                    $(this).DataTable({
-                        responsive: true,
-                        pageLength: 10
-                    });
-                });
-            }
         });
 
         // ============================================================
-        // SIDEBAR COLLAPSE (Desktop)
+        // SIDEBAR
         // ============================================================
         const sidebar = document.getElementById('sidebar');
         const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
@@ -1119,21 +1147,10 @@
             sidebarCollapseBtn.addEventListener('click', function() {
                 body.classList.toggle('sidebar-collapsed');
                 localStorage.setItem('staffSidebarCollapsed', body.classList.contains('sidebar-collapsed'));
-
-                // Reload DataTables to adjust layout
-                setTimeout(() => {
-                    if ($.fn.DataTable) {
-                        $('.dataTable').each(function() {
-                            $(this).DataTable().draw();
-                        });
-                    }
-                }, 300);
             });
         }
 
-        // ============================================================
-        // MOBILE SIDEBAR
-        // ============================================================
+        // Mobile Menu
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
 
@@ -1162,7 +1179,7 @@
         });
 
         // ============================================================
-        // ACTIVE LINK HIGHLIGHTING
+        // ACTIVE NAV LINK
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             const currentPath = window.location.pathname;
@@ -1198,31 +1215,6 @@
         });
 
         // ============================================================
-        // NOTIFICATION BADGES
-        // ============================================================
-        function updateNotificationBadges() {
-            fetch('/notifications/api/')
-                .then(response => response.json())
-                .then(data => {
-                    const unreadCount = data.unread_count || 0;
-
-                    const topBadge = document.getElementById('topNotificationBadge');
-                    if (unreadCount > 0) {
-                        topBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-                        topBadge.style.display = 'block';
-                    } else {
-                        topBadge.style.display = 'none';
-                    }
-                })
-                .catch(error => console.error('Error fetching notifications:', error));
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            updateNotificationBadges();
-            setInterval(updateNotificationBadges, 30000);
-        });
-
-        // ============================================================
         // LOGOUT MODAL
         // ============================================================
         const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
@@ -1235,28 +1227,310 @@
             logoutModal.show();
         });
 
-                // Force add favicon to dashboard
+        // ============================================================
+        // NOTIFICATION SYSTEM - COMPLETE WITH CORRECT LINKS
+        // ============================================================
+        let notificationInterval = null;
+        let previousUnreadCount = 0;
+
+        function loadNotifications() {
+            const apiUrl = '/staff/notifications/api/';
+
+            fetch(apiUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const unreadCount = data.unread_count || 0;
+                    const notifications = data.notifications || [];
+
+                    if (unreadCount > previousUnreadCount && previousUnreadCount > 0) {
+                        // Optional: Play notification sound
+                    }
+
+                    previousUnreadCount = unreadCount;
+                    updateNotificationBadges(unreadCount);
+                    renderNotificationList(notifications);
+                } else {
+                    console.error('API returned error:', data.error || 'Unknown error');
+                    const container = document.getElementById('notificationList');
+                    container.innerHTML = `
+                        <div class="empty-notifications">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <p class="mb-0">Could not load notifications</p>
+                            <small class="text-muted">Please refresh the page</small>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notifications:', error);
+                const container = document.getElementById('notificationList');
+                container.innerHTML = `
+                    <div class="empty-notifications">
+                        <i class="bi bi-wifi-off"></i>
+                        <p class="mb-0">Connection error</p>
+                        <small class="text-muted">Click to retry</small>
+                    </div>
+                `;
+                setTimeout(loadNotifications, 5000);
+            });
+        }
+
+        function updateNotificationBadges(count) {
+            const bellBadge = document.getElementById('notificationBadge');
+
+            if (count > 0) {
+                const displayCount = count > 99 ? '99+' : count;
+                if (bellBadge) {
+                    bellBadge.style.display = 'flex';
+                    bellBadge.textContent = displayCount;
+                }
+            } else {
+                if (bellBadge) bellBadge.style.display = 'none';
+            }
+        }
+
+        function renderNotificationList(notifications) {
+            const container = document.getElementById('notificationList');
+
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-notifications">
+                        <i class="bi bi-bell-slash"></i>
+                        <p class="mb-0">No notifications</p>
+                        <small class="text-muted">You're all caught up!</small>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            // Show up to 5 notifications in dropdown
+            notifications.slice(0, 5).forEach(notif => {
+                // Determine icon based on notification type
+                const iconMap = {
+                    'application': 'bi-file-text',
+                    'committee': 'bi-people',
+                    'manager': 'bi-person-check',
+                    'payment': 'bi-cash-stack',
+                    'overdue': 'bi-exclamation-triangle',
+                    'document': 'bi-file-earmark-check',
+                    'loan': 'bi-bank',
+                    'report': 'bi-graph-up',
+                    'task': 'bi-clipboard-check',
+                    'system': 'bi-gear'
+                };
+                const icon = iconMap[notif.notification_type] || 'bi-bell';
+                
+                // Determine background color based on notification type
+                const bgColor = {
+                    'application': '#0d6e6e',
+                    'committee': '#3b82f6',
+                    'manager': '#10b981',
+                    'payment': '#10b981',
+                    'overdue': '#ef4444',
+                    'document': '#8b5cf6',
+                    'loan': '#f59e0b',
+                    'report': '#06b6d4',
+                    'task': '#f97316',
+                    'system': '#6b7280'
+                }[notif.notification_type] || '#6b7280';
+
+                // ============================================================
+                // BUILD CORRECT LINKS FOR EACH NOTIFICATION TYPE
+                // ============================================================
+                let link = notif.link || '#';
+                
+                // If no link provided or link is '#', generate based on notification type
+                if (link === '#' || !link) {
+                    switch (notif.notification_type) {
+                        case 'application':
+                        case 'committee':
+                        case 'manager':
+                            link = '/staff/applications/';
+                            break;
+                        case 'payment':
+                            link = '/staff/payments/';
+                            break;
+                        case 'overdue':
+                        case 'loan':
+                            link = '/staff/loans/';
+                            break;
+                        case 'document':
+                            link = '/staff/applications/';
+                            break;
+                        case 'report':
+                            link = '/staff/reports/';
+                            break;
+                        case 'task':
+                            link = '/staff/dashboard/';
+                            break;
+                        default:
+                            link = '/staff/notifications/';
+                    }
+                }
+
+                html += `
+                    <a href="${link}" class="notification-item ${notif.is_read ? '' : 'unread'}" data-id="${notif.id}" data-link="${link}">
+                        <div class="notification-icon" style="background: ${bgColor};">
+                            <i class="bi ${icon}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">${escapeHtml(notif.title)}</div>
+                            <div class="notification-message">${escapeHtml(notif.message)}</div>
+                            <div class="notification-time">
+                                <i class="bi bi-clock"></i> ${formatTimeAgo(notif.created_at)}
+                            </div>
+                        </div>
+                        ${!notif.is_read ? `<span class="badge bg-primary rounded-circle" style="width: 8px; height: 8px; padding: 0; flex-shrink: 0; margin-top: 6px;"></span>` : ''}
+                    </a>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            // Mark notification as read when clicked
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    const id = this.dataset.id;
+                    if (id) {
+                        markNotificationAsRead(id);
+                    }
+                });
+            });
+        }
+
+        function formatTimeAgo(dateString) {
+            if (!dateString) return 'Just now';
+            
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return diffMins + 'm ago';
+            if (diffHours < 24) return diffHours + 'h ago';
+            if (diffDays < 7) return diffDays + 'd ago';
+            if (diffDays < 30) return Math.floor(diffDays / 7) + 'w ago';
+            if (diffDays < 365) return Math.floor(diffDays / 30) + 'mo ago';
+            return Math.floor(diffDays / 365) + 'y ago';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function markNotificationAsRead(notificationId) {
+            const url = `/staff/notifications/${notificationId}/read/`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                }
+            })
+            .catch(error => console.error('Error marking notification as read:', error));
+        }
+
+        function markAllNotificationsAsRead() {
+            const url = '/staff/notifications/mark-all-read/';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                    // Show success message
+                    const badge = document.getElementById('notificationBadge');
+                    if (badge) badge.style.display = 'none';
+                }
+            })
+            .catch(error => console.error('Error marking all as read:', error));
+        }
+
+        function getCSRFToken() {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, 10) === 'csrftoken=') {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Initialize notifications on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadNotifications();
+            notificationInterval = setInterval(loadNotifications, 30000);
+        });
+
+        // Clean up interval on page unload
+        window.addEventListener('beforeunload', function() {
+            if (notificationInterval) {
+                clearInterval(notificationInterval);
+            }
+        });
+
+        // Mark all read button
+        document.getElementById('markAllReadBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            markAllNotificationsAsRead();
+        });
+
+        // Fix favicon
         (function() {
-            // Remove any existing favicons
             var oldLinks = document.querySelectorAll("link[rel*='icon']");
             oldLinks.forEach(function(link) {
                 link.parentNode.removeChild(link);
             });
-
-            // Create new favicon with your actual logo
             var link = document.createElement('link');
             link.rel = 'icon';
             link.type = 'image/png';
             link.href = "{% static 'images/logo.png' %}?v=" + Date.now();
             document.head.appendChild(link);
-
             var link2 = document.createElement('link');
             link2.rel = 'shortcut icon';
             link2.type = 'image/png';
             link2.href = "{% static 'images/logo.png' %}?v=" + Date.now();
             document.head.appendChild(link2);
-
-            console.log('Favicon added to dashboard');
         })();
     </script>
     {% block extra_js %}{% endblock %}

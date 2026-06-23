@@ -562,18 +562,18 @@
                 <tbody>
                     {% for app in applications %}
                     <tr data-app-id="{{ app.id }}">
-                        <td><code class="app-id">{{ app.application_id }}</code></div>
+                        <td><code class="app-id">{{ app.application_id }}</code></td>
                         <td>
                             <div class="member-name">{{ app.member.last_name }}, {{ app.member.first_name }}</div>
                             <div class="member-number">{{ app.member.membership_number|default:"N/A" }}</div>
-                        </div>
-                        <td>{{ app.loan_product.name|default:"APCP" }}</div>
-                        <td class="text-end amount-approved">₱{{ app.approved_line|floatformat:2 }}</div>
-                        <td class="text-end amount-net">₱{{ app.net_proceeds|default:app.approved_line|floatformat:2 }}</div>
-                        <td>{{ app.loan_product.interest_rate|default:20 }}%</div>
-                        <td>{{ app.loan_product.term_months|default:12 }} mo</div>
-                        <td><span class="status-approved"><i class="bi bi-check-circle-fill"></i> Approved</span></div>
-                        <!-- FIXED: Use committee_approved_date directly -->
+                        </td>
+                        <td>{{ app.loan_product.name|default:"APCP" }}</td>
+                        <td class="text-end amount-approved">₱{{ app.approved_line|floatformat:2 }}</td>
+                        <td class="text-end amount-net">₱{{ app.approved_line|floatformat:2 }}</td>
+                        <td>{{ app.loan_product.interest_rate|default:20 }}%</td>
+                        <td>{{ app.loan_product.term_months|default:12 }} mo</td>
+                        <td><span class="status-approved"><i class="bi bi-check-circle-fill"></i> Approved</span></td>
+                        <!-- FIXED: Use committee_approved_date instead of approved_date -->
                         <td>{{ app.committee_approved_date|date:"Y-m-d"|default:"-" }}</td>
                         <td class="text-center">
                             <div class="action-buttons">

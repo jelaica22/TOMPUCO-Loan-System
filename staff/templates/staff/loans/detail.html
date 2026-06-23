@@ -430,22 +430,22 @@
 
                     <div class="info-item">
                         <div class="info-label">Full Name</div>
-                        <div class="info-value">{{ loan.borrower.last_name }}, {{ loan.borrower.first_name }}</div>
+                        <div class="info-value">{{ loan.member.last_name }}, {{ loan.member.first_name }}</div>
                     </div>
 
                     <div class="info-item">
                         <div class="info-label">Membership Number</div>
-                        <div class="info-value-monospace">{{ loan.borrower.membership_number|default:"—" }}</div>
+                        <div class="info-value-monospace">{{ loan.member.membership_number|default:"—" }}</div>
                     </div>
 
                     <div class="info-item">
                         <div class="info-label">Contact Number</div>
-                        <div class="info-value">{{ loan.borrower.contact_number|default:"—" }}</div>
+                        <div class="info-value">{{ loan.member.contact_number|default:"—" }}</div>
                     </div>
 
                     <div class="info-item">
                         <div class="info-label">Loan Product</div>
-                        <div class="info-value">{{ loan.loan_product.name|default:"—" }}</div>
+                        <div class="info-value">{{ loan.loan_type|default:"Regular" }}</div>
                     </div>
                 </div>
 
@@ -458,7 +458,7 @@
 
                     <div class="info-item">
                         <div class="info-label">Principal Amount</div>
-                        <div class="info-value amount amount-positive">₱{{ loan.principal_amount|floatformat:2 }}</div>
+                        <div class="info-value amount amount-positive">₱{{ loan.amount|floatformat:2 }}</div>
                     </div>
 
                     <div class="info-item">
@@ -468,7 +468,7 @@
 
                     <div class="info-item">
                         <div class="info-label">Loan Term</div>
-                        <div class="info-value">{{ loan.term_months }} months ({{ loan.term_days }} days)</div>
+                        <div class="info-value">{{ loan.term_months }} months</div>
                     </div>
 
                     <div class="info-item">
@@ -542,10 +542,22 @@
             <div class="stat-label-detail">
                 <i class="bi bi-calendar-day"></i> Next Due Date
             </div>
-            <div class="stat-value-detail warning">{{ loan.next_due_date|date:"M d, Y"|default:"—" }}</div>
+            <div class="stat-value-detail warning">
+                {% if loan.due_date %}
+                    {% if loan.due_date < today %}
+                        <span style="color: #ef4444;">{{ loan.due_date|date:"M d, Y" }}</span>
+                    {% else %}
+                        {{ loan.due_date|date:"M d, Y" }}
+                    {% endif %}
+                {% else %}
+                    —
+                {% endif %}
+            </div>
             <div class="stat-sub">
-                {% if loan.days_overdue > 0 %}
-                    <span style="color: #ef4444;">{{ loan.days_overdue }} days overdue</span>
+                {% if loan.due_date and loan.due_date < today %}
+                    <span style="color: #ef4444;">
+                        <i class="bi bi-clock"></i> Overdue
+                    </span>
                 {% else %}
                     Upcoming payment
                 {% endif %}
@@ -669,26 +681,76 @@
         const scheduleBody = document.getElementById('scheduleBody');
         const loanId = {{ loan.id }};
 
+        // Show loading state
+        scheduleBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center">
+                    <div class="loading-spinner-small">
+                        <i class="bi bi-hourglass-split"></i> Loading schedule...
+                    </div>
+                </td>
+            </tr>
+        `;
+
         fetch(`/staff/loans/${loanId}/schedule/`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.schedule && data.schedule.length > 0) {
-                    scheduleBody.innerHTML = data.schedule.map(item => `
-                        <tr>
-                            <td>${item.month}</td>
-                            <td>${item.due_date}</td>
-                            <td class="amount amount-positive">₱${item.payment_amount.toLocaleString()}</td>
-                            <td class="amount">₱${item.principal.toLocaleString()}</td>
-                            <td class="amount">₱${item.interest.toLocaleString()}</td>
-                            <td class="amount amount-negative">₱${item.penalty ? item.penalty.toLocaleString() : '0.00'}</td>
-                            <td>
-                                <span class="payment-status ${item.status === 'paid' ? 'paid' : (item.is_overdue ? 'overdue' : 'pending')}">
-                                    <i class="bi bi-${item.status === 'paid' ? 'check-circle' : (item.is_overdue ? 'exclamation-triangle' : 'hourglass')}"></i>
-                                    ${item.status === 'paid' ? 'Paid' : (item.is_overdue ? 'Overdue' : 'Pending')}
-                                </span>
-                            </td>
-                        </tr>
-                    `).join('');
+                    let html = '';
+                    data.schedule.forEach(function(item, index) {
+                        const paymentAmount = typeof item.payment_amount === 'number' ?
+                            item.payment_amount.toFixed(2) :
+                            parseFloat(item.payment_amount || 0).toFixed(2);
+                        const principal = typeof item.principal === 'number' ?
+                            item.principal.toFixed(2) :
+                            parseFloat(item.principal || 0).toFixed(2);
+                        const interest = typeof item.interest === 'number' ?
+                            item.interest.toFixed(2) :
+                            parseFloat(item.interest || 0).toFixed(2);
+                        const penalty = typeof item.penalty === 'number' ?
+                            item.penalty.toFixed(2) :
+                            parseFloat(item.penalty || 0).toFixed(2);
+
+                        let statusClass = 'pending';
+                        let statusIcon = 'hourglass';
+                        let statusLabel = 'Pending';
+
+                        if (item.status === 'paid') {
+                            statusClass = 'paid';
+                            statusIcon = 'check-circle';
+                            statusLabel = 'Paid';
+                        } else if (item.is_overdue === true || item.status === 'overdue') {
+                            statusClass = 'overdue';
+                            statusIcon = 'exclamation-triangle';
+                            statusLabel = 'Overdue';
+                        }
+
+                        const month = item.month || index + 1;
+                        const dueDate = item.due_date || 'TBD';
+
+                        html += `
+                            <tr>
+                                <td>${month}</td>
+                                <td>${dueDate}</td>
+                                <td class="amount amount-positive">₱${paymentAmount}</td>
+                                <td class="amount">₱${principal}</td>
+                                <td class="amount">₱${interest}</td>
+                                <td class="amount amount-negative">₱${penalty}</td>
+                                <td>
+                                    <span class="payment-status ${statusClass}">
+                                        <i class="bi bi-${statusIcon}"></i>
+                                        ${statusLabel}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    scheduleBody.innerHTML = html;
                 } else {
                     scheduleBody.innerHTML = `
                         <tr>
@@ -702,14 +764,14 @@
                     `;
                 }
             })
-            .catch(error => {
+            .catch(function(error) {
                 console.error('Error loading schedule:', error);
                 scheduleBody.innerHTML = `
                     <tr>
                         <td colspan="7" class="text-center">
                             <div class="empty-state-mini">
                                 <i class="bi bi-exclamation-triangle"></i>
-                                <p>Error loading payment schedule</p>
+                                <p>Error loading payment schedule. Please refresh the page.</p>
                             </div>
                         </td>
                     </tr>
@@ -717,22 +779,47 @@
             });
     }
 
+    // FIXED: Print Schedule Function
     function printSchedule() {
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        loadingSpinner.style.display = 'block';
+        const scheduleBody = document.getElementById('scheduleBody');
+        const scheduleTable = document.getElementById('paymentScheduleTable');
 
-        // Get the schedule table content
-        const scheduleContent = document.getElementById('scheduleSection').cloneNode(true);
-        const loanDetails = document.querySelector('.info-card:first-child').cloneNode(true);
+        // Check if schedule is loaded
+        if (!scheduleBody || scheduleBody.querySelector('.loading-spinner-small')) {
+            alert('Please wait for the schedule to load first.');
+            return;
+        }
+
+        // Check if there are rows with data
+        const rows = scheduleBody.querySelectorAll('tr');
+        if (rows.length === 0 || (rows.length === 1 && rows[0].querySelector('.empty-state-mini'))) {
+            alert('No payment schedule available to print.');
+            return;
+        }
+
+        // Clone the table for printing
+        const tableClone = scheduleTable.cloneNode(true);
+
+        // Get loan info
+        const loanNumber = '{{ loan.loan_number }}';
+        const borrowerName = '{{ loan.member.last_name }}, {{ loan.member.first_name }}';
+        const principal = '₱{{ loan.amount|floatformat:2 }}';
+        const interestRate = '{{ loan.interest_rate }}%';
+        const termMonths = '{{ loan.term_months }} months';
+        const status = '{{ loan.status|title }}';
 
         const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Please allow pop-ups to print the schedule.');
+            return;
+        }
+
         printWindow.document.write(`
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Payment Schedule - {{ loan.loan_number }}</title>
+                <title>Payment Schedule - ${loanNumber}</title>
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
                 <style>
                     body {
                         font-family: 'Inter', sans-serif;
@@ -748,17 +835,33 @@
                     .header h2 {
                         color: #0d6e6e;
                         margin: 0;
+                        font-size: 24px;
+                    }
+                    .header p {
+                        color: #666;
+                        margin: 5px 0 0;
                     }
                     .loan-info {
                         margin-bottom: 30px;
-                        padding: 15px;
+                        padding: 15px 20px;
                         background: #f5f7fb;
                         border-radius: 10px;
+                        display: grid;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 10px;
+                    }
+                    .loan-info .label {
+                        font-weight: 600;
+                        color: #555;
+                    }
+                    .loan-info .value {
+                        font-weight: 500;
                     }
                     table {
                         width: 100%;
                         border-collapse: collapse;
                         margin-top: 20px;
+                        font-size: 14px;
                     }
                     th, td {
                         border: 1px solid #ddd;
@@ -768,12 +871,41 @@
                     th {
                         background: #0d6e6e;
                         color: white;
+                        font-weight: 600;
                     }
+                    tr:nth-child(even) {
+                        background: #f9f9f9;
+                    }
+                    .amount {
+                        font-weight: 600;
+                        font-family: monospace;
+                    }
+                    .amount-positive {
+                        color: #10b981;
+                    }
+                    .amount-negative {
+                        color: #ef4444;
+                    }
+                    .payment-status {
+                        padding: 3px 10px;
+                        border-radius: 20px;
+                        font-size: 12px;
+                        font-weight: 600;
+                    }
+                    .payment-status.paid { background: #d1fae5; color: #065f46; }
+                    .payment-status.pending { background: #fef3c7; color: #92400e; }
+                    .payment-status.overdue { background: #fee2e2; color: #991b1b; }
                     .footer {
                         text-align: center;
                         margin-top: 30px;
                         font-size: 0.8rem;
                         color: #666;
+                        border-top: 1px solid #ddd;
+                        padding-top: 20px;
+                    }
+                    @media print {
+                        body { padding: 20px; }
+                        .no-print { display: none; }
                     }
                 </style>
             </head>
@@ -783,31 +915,32 @@
                     <p>Generated on ${new Date().toLocaleString()}</p>
                 </div>
                 <div class="loan-info">
-                    <strong>Loan Number:</strong> {{ loan.loan_number }}<br>
-                    <strong>Borrower:</strong> {{ loan.borrower.last_name }}, {{ loan.borrower.first_name }}<br>
-                    <strong>Principal Amount:</strong> ₱{{ loan.principal_amount|floatformat:2 }}<br>
-                    <strong>Interest Rate:</strong> {{ loan.interest_rate }}%<br>
-                    <strong>Term:</strong> {{ loan.term_months }} months
+                    <div><span class="label">Loan Number:</span> <span class="value">${loanNumber}</span></div>
+                    <div><span class="label">Borrower:</span> <span class="value">${borrowerName}</span></div>
+                    <div><span class="label">Principal Amount:</span> <span class="value">${principal}</span></div>
+                    <div><span class="label">Interest Rate:</span> <span class="value">${interestRate}</span></div>
+                    <div><span class="label">Term:</span> <span class="value">${termMonths}</span></div>
+                    <div><span class="label">Status:</span> <span class="value">${status}</span></div>
                 </div>
-                ${scheduleContent.querySelector('.schedule-container').innerHTML}
+                ${tableClone.outerHTML}
                 <div class="footer">
                     <p>This is a computer-generated document. No signature required.</p>
+                    <p>TOMPUCO - Tolong Multi-Purpose Cooperative</p>
                 </div>
             </body>
             </html>
         `);
         printWindow.document.close();
 
+        // Wait for content to load then print
         setTimeout(() => {
             printWindow.print();
-            loadingSpinner.style.display = 'none';
         }, 500);
     }
 
     // Show loading spinner on page navigation
-    document.querySelectorAll('.btn-back, .btn-print, .btn-restructure').forEach(btn => {
+    document.querySelectorAll('.btn-back, .btn-restructure').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            if (this.classList.contains('btn-print')) return;
             document.getElementById('loadingSpinner').style.display = 'block';
         });
     });

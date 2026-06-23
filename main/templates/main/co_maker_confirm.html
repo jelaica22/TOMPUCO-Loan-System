@@ -1,0 +1,165 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}Co-Maker Confirmation - TOMPuCO{% endblock %}
+
+{% block extra_css %}
+<style>
+    .confirmation-card {
+        max-width: 600px;
+        margin: 50px auto;
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 40px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-hover);
+        text-align: center;
+    }
+    .confirmation-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2.5rem;
+    }
+    .icon-pending { background: #fef3c7; color: #92400e; }
+    .icon-confirmed { background: #d1fae5; color: #065f46; }
+    .icon-rejected { background: #fee2e2; color: #991b1b; }
+    .icon-expired { background: #f3f4f6; color: #6b7280; }
+    .btn-confirm {
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+        color: white;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(13,110,110,0.3); color: white; }
+    .btn-reject {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 12px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-reject:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(239,68,68,0.3); color: white; }
+    .btn-secondary-custom {
+        background: var(--bg-body);
+        border: 1.5px solid var(--border-color);
+        color: var(--text-secondary);
+        padding: 12px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-secondary-custom:hover { background: var(--border-color); transform: translateY(-2px); }
+    .application-details {
+        text-align: left;
+        background: var(--bg-body);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    .application-details tr td { padding: 6px 0; }
+    .application-details tr td:first-child { width: 40%; color: var(--text-muted); }
+    .notes-box {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin: 16px 0;
+        text-align: left;
+    }
+    .co-maker-name {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="confirmation-card">
+        {% if confirmation.status == 'pending' %}
+            <div class="confirmation-icon icon-pending">
+                <i class="bi bi-person-check"></i>
+            </div>
+            <h4 class="fw-bold mb-2">Co-Maker Confirmation</h4>
+            <p class="text-muted">You have been requested to be a co-maker for a loan application.</p>
+
+            <div class="application-details">
+                <h6 class="fw-bold mb-3"><i class="bi bi-file-text me-2"></i>Application Details</h6>
+                <table>
+                    <tr><td>Application ID:</td><td><strong>{{ confirmation.application.application_id }}</strong></td></tr>
+                    <tr><td>Applicant:</td><td><strong>{{ confirmation.applicant.get_full_name|default:confirmation.applicant.first_name }}</strong></td></tr>
+                    <tr><td>Loan Amount:</td><td><strong>₱{{ confirmation.application.amount|floatformat:2 }}</strong></td></tr>
+                    <tr><td>Purpose:</td><td>{{ confirmation.application.purpose }}</td></tr>
+                    <tr><td>Date Applied:</td><td>{{ confirmation.application.applied_date|date:"F d, Y" }}</td></tr>
+                </table>
+            </div>
+
+            <div class="notes-box">
+                <strong><i class="bi bi-info-circle me-2"></i>Important Note</strong>
+                <p class="mt-1 mb-0">By confirming as a co-maker, you agree to be jointly liable for this loan. Please review the application details carefully before confirming.</p>
+            </div>
+
+            <div class="d-flex gap-3 justify-content-center mt-4">
+                <form method="post" action="{% url 'main:co_maker_confirm_action' confirmation.confirmation_token %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="reject">
+                    <button type="submit" class="btn-reject">
+                        <i class="bi bi-x-circle me-2"></i>Reject
+                    </button>
+                </form>
+                <form method="post" action="{% url 'main:co_maker_confirm_action' confirmation.confirmation_token %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="confirm">
+                    <button type="submit" class="btn-confirm">
+                        <i class="bi bi-check-circle me-2"></i>Confirm as Co-Maker
+                    </button>
+                </form>
+            </div>
+
+            <p class="text-muted small mt-3">
+                <i class="bi bi-clock me-1"></i>This request will expire on {{ confirmation.expiry_date|date:"F d, Y" }}
+            </p>
+
+        {% elif confirmation.status == 'confirmed' %}
+            <div class="confirmation-icon icon-confirmed">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <h4 class="text-success fw-bold">✅ You have confirmed!</h4>
+            <p>You have successfully confirmed as a co-maker for loan application <strong>{{ confirmation.application.application_id }}</strong>.</p>
+            <p class="text-muted">The applicant has been notified of your confirmation.</p>
+
+        {% elif confirmation.status == 'rejected' %}
+            <div class="confirmation-icon icon-rejected">
+                <i class="bi bi-x-circle-fill"></i>
+            </div>
+            <h4 class="text-danger fw-bold">❌ You have rejected</h4>
+            <p>You have declined to be a co-maker for loan application <strong>{{ confirmation.application.application_id }}</strong>.</p>
+            <p class="text-muted">The applicant has been notified of your decision.</p>
+
+        {% elif confirmation.status == 'expired' %}
+            <div class="confirmation-icon icon-expired">
+                <i class="bi bi-clock-fill"></i>
+            </div>
+            <h4 class="text-warning fw-bold">⏰ Confirmation Expired</h4>
+            <p>This confirmation request has expired. Please contact the applicant for a new request.</p>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{% url 'main:dashboard' %}" class="btn-secondary-custom">
+                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

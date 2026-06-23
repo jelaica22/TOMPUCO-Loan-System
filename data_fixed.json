@@ -1,0 +1,1557 @@
+[
+  {
+    "model": "auth.group",
+    "pk": 1,
+    "fields": {
+      "name": "Staff",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 2,
+    "fields": {
+      "name": "Cashier",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 3,
+    "fields": {
+      "name": "Member",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 4,
+    "fields": {
+      "name": "Employee",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 5,
+    "fields": {
+      "name": "Manager",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 6,
+    "fields": {
+      "name": "Committee",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$NvYdolaAkDeZtrTvRi6oau$5p9j0MXItmrO/5Q6haz/NzOduNYlbLz2BVZ3ksmY7gY=",
+      "last_login": "2026-06-17T02:27:50.951Z",
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "",
+      "last_name": "",
+      "email": "admin23@gmail.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-05-15T01:47:45.193Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$P8FauPQyMerQezb2025Kvn$ec6A+pK8Y3F8o09KGJBX1phXKC52TrPJly4ylSGB164=",
+      "last_login": "2026-05-16T00:39:06.918Z",
+      "is_superuser": false,
+      "username": "jelaica12",
+      "first_name": "Jelaica",
+      "last_name": "Taba\u00f1ag",
+      "email": "jelaicabtabanag@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-05-15T01:49:25.276Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 4,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$erHf8h8GijpCTpLlvEhutw$kjIvzgoZpn+nbZ/YmW+tOyz13+tulYchn/Eln5IWiSE=",
+      "last_login": "2026-06-17T02:28:33.212Z",
+      "is_superuser": false,
+      "username": "staff1",
+      "first_name": "Stella",
+      "last_name": "Melendres",
+      "email": "loanofficer@gmail.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-06-17T01:23:29.093Z",
+      "groups": [
+        1
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 5,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$r1Cb09ML1Ziw09GTYjCdTi$T4PiMwF1EN1r96sYkg693MWmLkv5G6OUTrCrpaxcmxI=",
+      "last_login": "2026-06-17T04:41:09.296Z",
+      "is_superuser": false,
+      "username": "maria123",
+      "first_name": "Maria Cristy",
+      "last_name": "Luna",
+      "email": "maria.luna@tompuco.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-17T01:28:48.351Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 6,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$q7dStoym7dKHvzwvY16zHf$C1VW3PtZWK+YPe4T0jUrPlojS7UW92TYlz7QiwG1rFc=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "cashier.carla",
+      "first_name": "Carla",
+      "last_name": "Malones",
+      "email": "carlamalones@gmail.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-06-17T01:30:28.750Z",
+      "groups": [
+        2
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 7,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$MmdOCzu9QOwvnYkvEoyMbR$TiSSRP3QfLSIjH/uQMHTLnZbpsnvpRQ/28nk28W9Dog=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "juan_delacruz",
+      "first_name": "Juan",
+      "last_name": "Delacruz",
+      "email": "juan_delacruz@tompuco.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-17T02:25:04.299Z",
+      "groups": [
+        3
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 8,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$2lASbOpQGDCiAt3aOnRlUD$mVr6oulXdHtX6JcpHp1SfKeOv/KQyTiPa/IOBjQ9N4s=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "maria_santos",
+      "first_name": "Maria",
+      "last_name": "Santos",
+      "email": "maria_santos@tompuco.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-06-17T02:25:05.187Z",
+      "groups": [
+        4
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 9,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$DQZi9CuFAI5mUAb3ZXpITl$2U1+ew8PJFkXyJN1EgB/RuKJWJCXoivn5NM2bE+4JIE=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "carlos_reyes",
+      "first_name": "Carlos",
+      "last_name": "Reyes",
+      "email": "carlos_reyes@tompuco.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-06-17T02:25:06.069Z",
+      "groups": [
+        1
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 10,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$BF6SQIuj2HoPKmC33Cy2JJ$YlJKFf6XAF0w5bIm6+e5bWcg1F7GUH6rEmh2NIicWBs=",
+      "last_login": null,
+      "is_superuser": true,
+      "username": "admin_tompuco",
+      "first_name": "Admin",
+      "last_name": "Tompuco",
+      "email": "admin_tompuco@tompuco.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-17T02:25:06.954Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 11,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$cNvDZ0YcdlzNmgdylR3jYD$wbPmrIt4vrtrqam6pG2nMHOKbjQnQNOd3CTVLjnH7fU=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "ana_martinez",
+      "first_name": "Ana",
+      "last_name": "Martinez",
+      "email": "ana_martinez@tompuco.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-06-17T02:25:07.759Z",
+      "groups": [
+        2
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 12,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$99FnGUA0po5q2XeYuFKhBg$+sIfL6RmNli2wWMYxxywP7VcXn7lf+QBRXZG0sx1uHg=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "roberto_fernandez",
+      "first_name": "Roberto",
+      "last_name": "Fernandez",
+      "email": "roberto_fernandez@tompuco.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-06-17T02:25:08.560Z",
+      "groups": [
+        5
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 13,
+    "fields": {
+      "password": "pbkdf2_sha256$1200000$FtMAHRgofJUbmcFxB6vYW3$Ij7byypLG58ely33wL3fdGUeRfwH5PM/XsX1LAiR7Iw=",
+      "last_login": "2026-06-17T02:30:56.765Z",
+      "is_superuser": false,
+      "username": "luz_cruz",
+      "first_name": "Luz",
+      "last_name": "Cruz",
+      "email": "luz_cruz@tompuco.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-06-17T02:25:09.353Z",
+      "groups": [
+        6
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 14,
+    "fields": {
+      "password": "",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "maria_cristy",
+      "first_name": "Maria Cristy",
+      "last_name": "Luna",
+      "email": "maria.cristy@tompuco.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-06-17T04:49:55.303Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "0rwlc95qkg2p1m5exh0a75podzd7fsl2",
+    "fields": {
+      "session_data": ".eJxVjEEOwiAQRe_C2hAKpTgu3XsGMjCDRQ2Y0iYa4921SRe6_e_99xIel3n0S-PJZxIH0Ynd7xYwXrmsgC5YzlXGWuYpB7kqcqNNnirx7bi5f4ER2_h9q9BpMsk50xGBAgMQADvgGIe9RnYpmaRsSsppJA4DWe41gO4NIVmzRhu3lmvx_Ljn6SkO2oJWSr0_GDdArg:1wOGO1:E-e1gM0oSJm_utKqD0ECQKWBvoMnmsFqoHbclE6APS8",
+      "expire_date": "2026-06-15T14:53:05.129Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "52wkr1ec50udtsndm020k7uekw7ma0et",
+    "fields": {
+      "session_data": ".eJxVjEEOwiAQRe_C2hAKpTgu3XsGMjCDRQ2Y0iYa4921SRe6_e_99xIel3n0S-PJZxIH0Ynd7xYwXrmsgC5YzlXGWuYpB7kqcqNNnirx7bi5f4ER2_h9q9BpMsk50xGBAgMQADvgGIe9RnYpmaRsSsppJA4DWe41gO4NIVmzRhu3lmvx_Ljn6SkO2oJWSr0_GDdArg:1wZkBD:O6m4e7cfjBYGIIU5GjO2ugUHy_uh1Mjk_1IhotxjiK4",
+      "expire_date": "2026-07-17T06:55:19.205Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "chxnjkyxbv8atssw46bqc8hzq6p3f1s3",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEM5enSvd9ABphK1UBS2pXx35WkC83d3XNyXizgvpWwd1rDktmZSXb6_SKmB9UB8h3rrfHU6rYukQ-FH7Tza8v0vBzuX6BgLyNLOsJ3ArSlBGby2bioszVWqqgkCnKSEGjyMDvQ5A0B2VkrT5MAx94f07U3RQ:1wO276:RVd9-AUyCv4jsD7wL4MHP5q21kcCsOJ-rc6ydZXjXk4",
+      "expire_date": "2026-05-16T00:38:40.122Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "cu7qi84bx5omksz47r2y2maf1sp89rl9",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEM5enSvd9ABphK1UBS2pXx35WkC83d3XNyXizgvpWwd1rDktmZSXb6_SKmB9UB8h3rrfHU6rYukQ-FH7Tza8v0vBzuX6BgLyNLOsJ3ArSlBGby2bioszVWqqgkCnKSEGjyMDvQ5A0B2VkrT5MAx94f07U3RQ:1wO33a:e09YhIP2VLJWhcodl876s6vIt--7ZKlx8WFuFnYYHzo",
+      "expire_date": "2026-05-16T01:39:06.948Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "h097tycqlcx3rvf2hvc8rsqn79xlv9bz",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSE8SnFcuu83kIEZpGogKe3K-O_apAvd3nPOfYmA21rC1nkJM4mL0OL0u0VMD647oDvWW5Op1XWZo9wVedAup0b8vB7u30HBXr61itqQzd5bTQQKLEAE1MApjWeD7HO2WbmclTdIHEdyPBgAM1hCcla8P-laOD8:1wNhhl:mfwwnzvIUTYG7dCTCppi4rz3Zpfo4cjeQnMkeD1PdNg",
+      "expire_date": "2026-05-15T02:51:09.443Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "ljv7zc1am4bkigsyp5sxp5swkgdzp8ds",
+    "fields": {
+      "session_data": ".eJxVjEEOwiAQRe_C2hAKtLQu3XsGMsMMFjVgSptojHe3TbrQ7X_vv7fwsMyjXypPPpE4ilYcfjeEcOO8AbpCvhQZSp6nhHJT5E6rPBfi-2l3_wIj1HF9a0WI3LOxEdyABBgduT6wNdy03bCCoBpQQRmHsTMEHaJD1pYtNRG3aOVaU8men480vcRRt4NWSn2-YMpBtA:1wZkBD:JgxhNWlnaRvZE3Nbp4nclfPSvKedYZAUdK3PZU3QStY",
+      "expire_date": "2026-07-17T06:55:19.328Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "xf5eka5tytpmsxp2luwabwf166270q4r",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEM5enSvd9ABphK1UBS2pXx35WkC83d3XNyXizgvpWwd1rDktmZSXb6_SKmB9UB8h3rrfHU6rYukQ-FH7Tza8v0vBzuX6BgLyNLOsJ3ArSlBGby2bioszVWqqgkCnKSEGjyMDvQ5A0B2VkrT5MAx94f07U3RQ:1wNhgo:aW7JIY8Dn7E_ekYWEBVtyHj_6j2_-xt5QABLIFVe85k",
+      "expire_date": "2026-05-15T02:50:10.199Z"
+    }
+  },
+  {
+    "model": "main.member",
+    "pk": 1,
+    "fields": {
+      "user": 2,
+      "membership_number": "M-28788",
+      "first_name": "Jelaica",
+      "last_name": "Taba\u00f1ag",
+      "middle_initial": "S",
+      "nickname": "",
+      "civil_status": "S",
+      "birthdate": null,
+      "age": 0,
+      "gender": "",
+      "nationality": "Filipino",
+      "contact_number": "09618956544",
+      "residence_address": "RIZAL STREET",
+      "spouse_name": "",
+      "num_dependents": 0,
+      "farm_location": "",
+      "farm_owned_hectares": "0.00",
+      "farm_leased_hectares": "0.00",
+      "area_planted": "0.00",
+      "new_plant": "0.00",
+      "ratoon_crops": "0.00",
+      "adjacent_farm": null,
+      "employment_status": "member",
+      "employee_id": null,
+      "position": null,
+      "date_hired": null,
+      "monthly_income": "0.00",
+      "other_income_sources": null,
+      "other_loans": null,
+      "employer_name": null,
+      "employer_address": null,
+      "years_with_employer": 0,
+      "supervisor_name": null,
+      "previous_employer": null,
+      "bank_name": null,
+      "bank_account_type": null,
+      "years_in_address": null,
+      "years_in_community": null,
+      "self_employed_firm": null,
+      "self_employed_address": null,
+      "self_employed_business_kind": null,
+      "years_in_business": null,
+      "trade_reference": null,
+      "years_known_applicant": null,
+      "is_related_to_applicant": false,
+      "relationship_type": null,
+      "has_been_borrower": false,
+      "previous_lender": null,
+      "has_been_comaker": false,
+      "previous_borrower_name": null,
+      "salary_loan_eligible": false,
+      "max_regular_loan": "10000.00",
+      "max_salary_loan": "0.00",
+      "max_active_loans": 0,
+      "account_status": "active",
+      "status_updated_at": null,
+      "status_updated_by": null,
+      "status_reason": null,
+      "verification_status": "verified",
+      "verification_date": null,
+      "verified_by": null,
+      "verification_notes": null,
+      "rejection_reason": null,
+      "member_tier": "basic",
+      "valid_id_verified": false,
+      "is_active": true,
+      "is_blocked": false,
+      "is_restricted": false,
+      "restriction_reason": null,
+      "restricted_until": null,
+      "profile_picture": "",
+      "uploaded_id": "",
+      "signature": "data:image/png;base64,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",
+      "created_at": "2026-05-15T01:49:26.611Z",
+      "updated_at": "2026-06-17T01:21:43.299Z"
+    }
+  },
+  {
+    "model": "main.member",
+    "pk": 3,
+    "fields": {
+      "user": 5,
+      "membership_number": "M-57390",
+      "first_name": "Maria Cristy",
+      "last_name": "Luna",
+      "middle_initial": "",
+      "nickname": "",
+      "civil_status": "S",
+      "birthdate": null,
+      "age": 0,
+      "gender": "",
+      "nationality": "Filipino",
+      "contact_number": "09630059358",
+      "residence_address": "J.P. Rizal St., Barangay Boyco, Bayawan City, Negros Oriental",
+      "spouse_name": "",
+      "num_dependents": 0,
+      "farm_location": "",
+      "farm_owned_hectares": "0.00",
+      "farm_leased_hectares": "0.00",
+      "area_planted": "0.00",
+      "new_plant": "0.00",
+      "ratoon_crops": "0.00",
+      "adjacent_farm": null,
+      "employment_status": "employee",
+      "employee_id": "EMP-2026-1000",
+      "position": "",
+      "date_hired": null,
+      "monthly_income": "0.00",
+      "other_income_sources": null,
+      "other_loans": null,
+      "employer_name": null,
+      "employer_address": null,
+      "years_with_employer": 0,
+      "supervisor_name": null,
+      "previous_employer": null,
+      "bank_name": null,
+      "bank_account_type": null,
+      "years_in_address": null,
+      "years_in_community": null,
+      "self_employed_firm": null,
+      "self_employed_address": null,
+      "self_employed_business_kind": null,
+      "years_in_business": null,
+      "trade_reference": null,
+      "years_known_applicant": null,
+      "is_related_to_applicant": false,
+      "relationship_type": null,
+      "has_been_borrower": false,
+      "previous_lender": null,
+      "has_been_comaker": false,
+      "previous_borrower_name": null,
+      "salary_loan_eligible": true,
+      "max_regular_loan": "10000.00",
+      "max_salary_loan": "0.00",
+      "max_active_loans": 0,
+      "account_status": "active",
+      "status_updated_at": null,
+      "status_updated_by": null,
+      "status_reason": null,
+      "verification_status": "verified",
+      "verification_date": null,
+      "verified_by": null,
+      "verification_notes": null,
+      "rejection_reason": null,
+      "member_tier": "basic",
+      "valid_id_verified": false,
+      "is_active": true,
+      "is_blocked": false,
+      "is_restricted": false,
+      "restriction_reason": null,
+      "restricted_until": null,
+      "profile_picture": "profile_pics/28ce43be6124c242db762e05074a49c0.jpg",
+      "uploaded_id": "",
+      "signature": null,
+      "created_at": "2026-06-17T01:28:49.812Z",
+      "updated_at": "2026-06-17T05:22:35.750Z"
+    }
+  },
+  {
+    "model": "main.member",
+    "pk": 4,
+    "fields": {
+      "user": 7,
+      "membership_number": "MEM-2026-001",
+      "first_name": "Juan",
+      "last_name": "Delacruz",
+      "middle_initial": "M",
+      "nickname": null,
+      "civil_status": "S",
+      "birthdate": "1990-05-15",
+      "age": 36,
+      "gender": "M",
+      "nationality": "Filipino",
+      "contact_number": "09171234567",
+      "residence_address": "123 Mabini St., Brgy. San Jose, Manila",
+      "spouse_name": null,
+      "num_dependents": 0,
+      "farm_location": null,
+      "farm_owned_hectares": "0.00",
+      "farm_leased_hectares": "0.00",
+      "area_planted": "0.00",
+      "new_plant": "0.00",
+      "ratoon_crops": "0.00",
+      "adjacent_farm": null,
+      "employment_status": "employed",
+      "employee_id": null,
+      "position": "Senior Developer",
+      "date_hired": null,
+      "monthly_income": "25000.00",
+      "other_income_sources": null,
+      "other_loans": null,
+      "employer_name": "ABC Corporation",
+      "employer_address": "456 Ayala Ave., Makati City",
+      "years_with_employer": 0,
+      "supervisor_name": null,
+      "previous_employer": null,
+      "bank_name": null,
+      "bank_account_type": null,
+      "years_in_address": null,
+      "years_in_community": null,
+      "self_employed_firm": null,
+      "self_employed_address": null,
+      "self_employed_business_kind": null,
+      "years_in_business": null,
+      "trade_reference": null,
+      "years_known_applicant": null,
+      "is_related_to_applicant": false,
+      "relationship_type": null,
+      "has_been_borrower": false,
+      "previous_lender": null,
+      "has_been_comaker": false,
+      "previous_borrower_name": null,
+      "salary_loan_eligible": false,
+      "max_regular_loan": "10000.00",
+      "max_salary_loan": "0.00",
+      "max_active_loans": 0,
+      "account_status": "active",
+      "status_updated_at": null,
+      "status_updated_by": null,
+      "status_reason": null,
+      "verification_status": "verified",
+      "verification_date": null,
+      "verified_by": null,
+      "verification_notes": null,
+      "rejection_reason": null,
+      "member_tier": "basic",
+      "valid_id_verified": false,
+      "is_active": true,
+      "is_blocked": false,
+      "is_restricted": false,
+      "restriction_reason": null,
+      "restricted_until": null,
+      "profile_picture": "",
+      "uploaded_id": "",
+      "signature": null,
+      "created_at": "2026-06-17T03:39:18.070Z",
+      "updated_at": "2026-06-17T03:39:18.070Z"
+    }
+  },
+  {
+    "model": "main.loan",
+    "pk": 1,
+    "fields": {
+      "loan_number": "LN-2026-001",
+      "member": 4,
+      "amount": "25000.00",
+      "interest_rate": "2.50",
+      "term_months": 12,
+      "monthly_payment": "2083.33",
+      "total_payable": "25625.00",
+      "remaining_balance": "15000.00",
+      "paid_amount": "10000.00",
+      "status": "active",
+      "disbursement_date": "2025-12-19",
+      "due_date": "2026-12-14",
+      "created_at": "2026-06-17T03:42:28.626Z",
+      "updated_at": "2026-06-17T03:42:28.626Z"
+    }
+  },
+  {
+    "model": "main.loan",
+    "pk": 2,
+    "fields": {
+      "loan_number": "LN-2026-002",
+      "member": 4,
+      "amount": "10000.00",
+      "interest_rate": "3.00",
+      "term_months": 12,
+      "monthly_payment": "833.33",
+      "total_payable": "10300.00",
+      "remaining_balance": "0.00",
+      "paid_amount": "10000.00",
+      "status": "paid",
+      "disbursement_date": "2025-10-20",
+      "due_date": "2026-10-15",
+      "created_at": "2026-06-17T03:42:28.673Z",
+      "updated_at": "2026-06-17T03:42:28.673Z"
+    }
+  },
+  {
+    "model": "main.loan",
+    "pk": 3,
+    "fields": {
+      "loan_number": "LN-2026-003",
+      "member": 4,
+      "amount": "50000.00",
+      "interest_rate": "2.50",
+      "term_months": 12,
+      "monthly_payment": "4166.67",
+      "total_payable": "51250.00",
+      "remaining_balance": "45000.00",
+      "paid_amount": "5000.00",
+      "status": "overdue",
+      "disbursement_date": "2025-05-13",
+      "due_date": "2026-05-08",
+      "created_at": "2026-06-17T03:42:28.683Z",
+      "updated_at": "2026-06-17T03:42:28.683Z"
+    }
+  },
+  {
+    "model": "main.loan",
+    "pk": 4,
+    "fields": {
+      "loan_number": "LN-2026-004",
+      "member": 4,
+      "amount": "30000.00",
+      "interest_rate": "2.00",
+      "term_months": 12,
+      "monthly_payment": "2500.00",
+      "total_payable": "30600.00",
+      "remaining_balance": "15000.00",
+      "paid_amount": "15000.00",
+      "status": "restructured",
+      "disbursement_date": "2025-08-21",
+      "due_date": "2026-08-16",
+      "created_at": "2026-06-17T03:42:28.693Z",
+      "updated_at": "2026-06-17T03:42:28.693Z"
+    }
+  },
+  {
+    "model": "main.loan",
+    "pk": 5,
+    "fields": {
+      "loan_number": "LN-2026-005",
+      "member": 4,
+      "amount": "15000.00",
+      "interest_rate": "2.80",
+      "term_months": 12,
+      "monthly_payment": "1250.00",
+      "total_payable": "15420.00",
+      "remaining_balance": "8000.00",
+      "paid_amount": "7000.00",
+      "status": "active",
+      "disbursement_date": "2026-03-19",
+      "due_date": "2027-03-14",
+      "created_at": "2026-06-17T03:42:28.704Z",
+      "updated_at": "2026-06-17T03:42:28.704Z"
+    }
+  },
+  {
+    "model": "main.loan",
+    "pk": 18,
+    "fields": {
+      "loan_number": "LN-20260617-001",
+      "member": 3,
+      "amount": "25000.00",
+      "interest_rate": "2.50",
+      "term_months": 12,
+      "monthly_payment": "2083.33",
+      "total_payable": "25625.00",
+      "remaining_balance": "18000.00",
+      "paid_amount": "7000.00",
+      "status": "active",
+      "disbursement_date": "2026-03-19",
+      "due_date": "2027-03-14",
+      "created_at": "2026-06-17T05:15:13.852Z",
+      "updated_at": "2026-06-17T05:15:13.852Z"
+    }
+  },
+  {
+    "model": "main.loan",
+    "pk": 19,
+    "fields": {
+      "loan_number": "LN-20260617-002",
+      "member": 3,
+      "amount": "50000.00",
+      "interest_rate": "2.50",
+      "term_months": 24,
+      "monthly_payment": "2083.33",
+      "total_payable": "51250.00",
+      "remaining_balance": "35000.00",
+      "paid_amount": "15000.00",
+      "status": "active",
+      "disbursement_date": "2025-12-19",
+      "due_date": "2027-12-09",
+      "created_at": "2026-06-17T05:15:13.857Z",
+      "updated_at": "2026-06-17T05:15:13.857Z"
+    }
+  },
+  {
+    "model": "main.loan",
+    "pk": 20,
+    "fields": {
+      "loan_number": "LN-20260617-003",
+      "member": 3,
+      "amount": "15000.00",
+      "interest_rate": "3.00",
+      "term_months": 6,
+      "monthly_payment": "2500.00",
+      "total_payable": "15450.00",
+      "remaining_balance": "0.00",
+      "paid_amount": "15000.00",
+      "status": "paid",
+      "disbursement_date": "2025-11-29",
+      "due_date": "2026-05-28",
+      "created_at": "2026-06-17T05:15:13.861Z",
+      "updated_at": "2026-06-17T05:15:13.861Z"
+    }
+  },
+  {
+    "model": "main.loan",
+    "pk": 21,
+    "fields": {
+      "loan_number": "LN-20260617-004",
+      "member": 3,
+      "amount": "100000.00",
+      "interest_rate": "2.00",
+      "term_months": 36,
+      "monthly_payment": "2777.78",
+      "total_payable": "102000.00",
+      "remaining_balance": "85000.00",
+      "paid_amount": "15000.00",
+      "status": "overdue",
+      "disbursement_date": "2025-04-23",
+      "due_date": "2028-04-07",
+      "created_at": "2026-06-17T05:15:13.865Z",
+      "updated_at": "2026-06-17T05:15:13.865Z"
+    }
+  },
+  {
+    "model": "main.loanproduct",
+    "pk": 1,
+    "fields": {
+      "name": "NCL",
+      "display_name": "NCL - Non-Collateralized Loan",
+      "loan_type": "NCL",
+      "interest_rate": "20.00",
+      "term_months": 12,
+      "min_amount": "2000.00",
+      "max_amount": "50000.00",
+      "requires_comaker": true,
+      "is_active": true,
+      "description": "",
+      "penalty_rate": "2.00",
+      "created_at": "2026-05-15T02:28:40.935Z",
+      "updated_at": "2026-05-15T02:28:40.935Z"
+    }
+  },
+  {
+    "model": "main.loanproduct",
+    "pk": 2,
+    "fields": {
+      "name": "APCP",
+      "display_name": "APCP - Agricultural Production Credit Program",
+      "loan_type": "APCP",
+      "interest_rate": "15.00",
+      "term_months": 12,
+      "min_amount": "2000.00",
+      "max_amount": "50000.00",
+      "requires_comaker": true,
+      "is_active": true,
+      "description": "",
+      "penalty_rate": "2.00",
+      "created_at": "2026-05-15T02:28:40.944Z",
+      "updated_at": "2026-05-15T02:28:40.944Z"
+    }
+  },
+  {
+    "model": "main.loanproduct",
+    "pk": 3,
+    "fields": {
+      "name": "SALARY",
+      "display_name": "SALARY - Salary Loan",
+      "loan_type": "SALARY",
+      "interest_rate": "8.00",
+      "term_months": 12,
+      "min_amount": "1500.00",
+      "max_amount": "50000.00",
+      "requires_comaker": false,
+      "is_active": true,
+      "description": "",
+      "penalty_rate": "2.00",
+      "created_at": "2026-05-15T02:28:40.953Z",
+      "updated_at": "2026-05-15T02:28:40.953Z"
+    }
+  },
+  {
+    "model": "main.loanproduct",
+    "pk": 4,
+    "fields": {
+      "name": "COLLATERAL",
+      "display_name": "COLLATERAL - Secured Loan",
+      "loan_type": "COLLATERAL",
+      "interest_rate": "20.00",
+      "term_months": 12,
+      "min_amount": "2000.00",
+      "max_amount": "100000.00",
+      "requires_comaker": true,
+      "is_active": true,
+      "description": "",
+      "penalty_rate": "2.00",
+      "created_at": "2026-05-15T02:28:40.961Z",
+      "updated_at": "2026-05-15T02:28:40.961Z"
+    }
+  },
+  {
+    "model": "main.loanproduct",
+    "pk": 5,
+    "fields": {
+      "name": "PROVIDENTIAL",
+      "display_name": "PROVIDENTIAL - Providential Loan",
+      "loan_type": "PROVIDENTIAL",
+      "interest_rate": "16.00",
+      "term_months": 12,
+      "min_amount": "2000.00",
+      "max_amount": "50000.00",
+      "requires_comaker": true,
+      "is_active": true,
+      "description": "",
+      "penalty_rate": "2.00",
+      "created_at": "2026-05-15T02:28:40.970Z",
+      "updated_at": "2026-05-15T02:28:40.970Z"
+    }
+  },
+  {
+    "model": "main.loanproduct",
+    "pk": 6,
+    "fields": {
+      "name": "B2B",
+      "display_name": "B2B - Back to Back Loan",
+      "loan_type": "B2B",
+      "interest_rate": "20.00",
+      "term_months": 12,
+      "min_amount": "5000.00",
+      "max_amount": "100000.00",
+      "requires_comaker": true,
+      "is_active": true,
+      "description": "",
+      "penalty_rate": "2.00",
+      "created_at": "2026-05-15T02:28:40.978Z",
+      "updated_at": "2026-05-15T02:28:40.978Z"
+    }
+  },
+  {
+    "model": "main.loanproduct",
+    "pk": 7,
+    "fields": {
+      "name": "TRADE",
+      "display_name": "TRADE - Trade Loan",
+      "loan_type": "TRADE",
+      "interest_rate": "18.00",
+      "term_months": 1,
+      "min_amount": "2000.00",
+      "max_amount": "30000.00",
+      "requires_comaker": true,
+      "is_active": true,
+      "description": "",
+      "penalty_rate": "2.00",
+      "created_at": "2026-05-15T02:28:40.988Z",
+      "updated_at": "2026-05-15T02:28:40.988Z"
+    }
+  },
+  {
+    "model": "main.loanproduct",
+    "pk": 8,
+    "fields": {
+      "name": "Regular Loan",
+      "display_name": "",
+      "loan_type": "",
+      "interest_rate": "2.50",
+      "term_months": 12,
+      "min_amount": "5000.00",
+      "max_amount": "100000.00",
+      "requires_comaker": true,
+      "is_active": true,
+      "description": "",
+      "penalty_rate": "2.00",
+      "created_at": "2026-06-17T03:36:57.977Z",
+      "updated_at": "2026-06-17T03:36:57.977Z"
+    }
+  },
+  {
+    "model": "main.loanproduct",
+    "pk": 9,
+    "fields": {
+      "name": "Salary Loan",
+      "display_name": "",
+      "loan_type": "",
+      "interest_rate": "2.50",
+      "term_months": 12,
+      "min_amount": "5000.00",
+      "max_amount": "100000.00",
+      "requires_comaker": true,
+      "is_active": true,
+      "description": "",
+      "penalty_rate": "2.00",
+      "created_at": "2026-06-17T04:50:57.133Z",
+      "updated_at": "2026-06-17T04:50:57.133Z"
+    }
+  },
+  {
+    "model": "main.loanapplication",
+    "pk": 1,
+    "fields": {
+      "approved_line": "4500.00",
+      "committee_approved_date": "2026-06-17",
+      "committee_reduction_reason": "This is good amount.",
+      "application_id": "APP-APCP-2026-3303",
+      "member": 1,
+      "loan_product": 2,
+      "amount": "5000.00",
+      "purpose": "agriculture",
+      "status": "line_approved",
+      "applied_date": "2026-05-15",
+      "reviewed_date": null,
+      "reviewed_by": null,
+      "remarks": "Good record."
+    }
+  },
+  {
+    "model": "main.loanapplication",
+    "pk": 14,
+    "fields": {
+      "approved_line": null,
+      "committee_approved_date": null,
+      "committee_reduction_reason": null,
+      "application_id": "APP-20260617-001",
+      "member": 3,
+      "loan_product": 8,
+      "amount": "25000.00",
+      "purpose": "Home renovation",
+      "status": "manager_approved",
+      "applied_date": "2026-06-17",
+      "reviewed_date": null,
+      "reviewed_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "main.loanapplication",
+    "pk": 15,
+    "fields": {
+      "approved_line": null,
+      "committee_approved_date": null,
+      "committee_reduction_reason": null,
+      "application_id": "APP-20260617-002",
+      "member": 3,
+      "loan_product": 8,
+      "amount": "50000.00",
+      "purpose": "Business capital",
+      "status": "with_committee",
+      "applied_date": "2026-06-17",
+      "reviewed_date": null,
+      "reviewed_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "main.loanapplication",
+    "pk": 16,
+    "fields": {
+      "approved_line": null,
+      "committee_approved_date": null,
+      "committee_reduction_reason": null,
+      "application_id": "APP-20260617-003",
+      "member": 3,
+      "loan_product": 8,
+      "amount": "15000.00",
+      "purpose": "Medical emergency",
+      "status": "line_approved",
+      "applied_date": "2026-06-17",
+      "reviewed_date": null,
+      "reviewed_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "main.loanapplication",
+    "pk": 17,
+    "fields": {
+      "approved_line": null,
+      "committee_approved_date": null,
+      "committee_reduction_reason": null,
+      "application_id": "APP-20260617-004",
+      "member": 3,
+      "loan_product": 8,
+      "amount": "100000.00",
+      "purpose": "Housing loan",
+      "status": "pending_staff_review",
+      "applied_date": "2026-06-17",
+      "reviewed_date": null,
+      "reviewed_by": null,
+      "remarks": ""
+    }
+  },
+  {
+    "model": "main.notification",
+    "pk": 1,
+    "fields": {
+      "recipient": 13,
+      "notification_type": "committee",
+      "title": "Application Approved by Committee",
+      "message": "Application APP-APCP-2026-3303 has been approved with line amount ?4,500.00. Please add charges.",
+      "link": "/staff/applications/1/add-charges/",
+      "is_read": true,
+      "created_at": "2026-06-17T02:31:54.757Z"
+    }
+  },
+  {
+    "model": "main.notification",
+    "pk": 2,
+    "fields": {
+      "recipient": 13,
+      "notification_type": "application",
+      "title": "New Loan Application",
+      "message": "Juan Delacruz has submitted a loan application for \u20b125,000.00",
+      "link": null,
+      "is_read": true,
+      "created_at": "2026-06-17T03:13:57.352Z"
+    }
+  },
+  {
+    "model": "main.notification",
+    "pk": 3,
+    "fields": {
+      "recipient": 13,
+      "notification_type": "payment",
+      "title": "Payment Received",
+      "message": "Payment of \u20b12,135.42 received from Maria Santos",
+      "link": null,
+      "is_read": true,
+      "created_at": "2026-06-17T03:13:57.367Z"
+    }
+  },
+  {
+    "model": "main.notification",
+    "pk": 4,
+    "fields": {
+      "recipient": 13,
+      "notification_type": "committee",
+      "title": "Committee Decision",
+      "message": "Your application #APP-2026-001 has been approved by the committee",
+      "link": null,
+      "is_read": true,
+      "created_at": "2026-06-17T03:13:57.383Z"
+    }
+  },
+  {
+    "model": "main.notification",
+    "pk": 5,
+    "fields": {
+      "recipient": 13,
+      "notification_type": "overdue",
+      "title": "Overdue Alert",
+      "message": "Loan #LN-2026-001 is 30 days overdue",
+      "link": null,
+      "is_read": true,
+      "created_at": "2026-06-17T03:13:57.396Z"
+    }
+  },
+  {
+    "model": "main.notification",
+    "pk": 6,
+    "fields": {
+      "recipient": 13,
+      "notification_type": "system",
+      "title": "System Update",
+      "message": "System maintenance scheduled for June 20, 2026",
+      "link": null,
+      "is_read": true,
+      "created_at": "2026-06-17T03:13:57.409Z"
+    }
+  },
+  {
+    "model": "main.notification",
+    "pk": 7,
+    "fields": {
+      "recipient": 14,
+      "notification_type": "loan_approved",
+      "title": "\ud83c\udf89 Loan Approved!",
+      "message": "Your loan application APP-20260617-001 has been approved. Amount: \u20b125,000.00",
+      "link": "/my-loans/",
+      "is_read": false,
+      "created_at": "2026-06-17T05:15:13.870Z"
+    }
+  },
+  {
+    "model": "main.notification",
+    "pk": 8,
+    "fields": {
+      "recipient": 14,
+      "notification_type": "payment_reminder",
+      "title": "\ud83d\udcc5 Payment Due Reminder",
+      "message": "Your monthly payment of \u20b12,083.33 for loan LN-20260617-001 is due on July 02, 2026",
+      "link": "/payment-history/",
+      "is_read": false,
+      "created_at": "2026-06-17T05:15:13.876Z"
+    }
+  },
+  {
+    "model": "main.notification",
+    "pk": 9,
+    "fields": {
+      "recipient": 14,
+      "notification_type": "payment_received",
+      "title": "\ud83d\udcb0 Payment Received",
+      "message": "We have received your payment of \u20b12,083.33 for loan LN-20260617-001. Thank you!",
+      "link": "/payment-history/",
+      "is_read": false,
+      "created_at": "2026-06-17T05:15:13.880Z"
+    }
+  },
+  {
+    "model": "main.notification",
+    "pk": 10,
+    "fields": {
+      "recipient": 14,
+      "notification_type": "application_submitted",
+      "title": "\ud83d\udccb Application Received",
+      "message": "Your loan application APP-20260617-004 has been submitted and is now pending review.",
+      "link": "/my-applications/",
+      "is_read": false,
+      "created_at": "2026-06-17T05:15:13.885Z"
+    }
+  },
+  {
+    "model": "main.notification",
+    "pk": 11,
+    "fields": {
+      "recipient": 14,
+      "notification_type": "overdue_alert",
+      "title": "\u26a0\ufe0f Overdue Notice",
+      "message": "Your loan LN-20260617-004 is overdue. Please settle your payment of \u20b12,777.78 as soon as possible.",
+      "link": "/my-loans/",
+      "is_read": false,
+      "created_at": "2026-06-17T05:15:13.890Z"
+    }
+  },
+  {
+    "model": "main.notification",
+    "pk": 12,
+    "fields": {
+      "recipient": 14,
+      "notification_type": "profile_update",
+      "title": "\u2705 Profile Complete",
+      "message": "Congratulations! Your member profile is now 100% complete.",
+      "link": "/profile/",
+      "is_read": false,
+      "created_at": "2026-06-17T05:15:13.895Z"
+    }
+  },
+  {
+    "model": "main.auditlog",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "action": "create",
+      "entity_type": "User",
+      "entity_id": "2",
+      "old_values": null,
+      "new_values": null,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "created_at": "2026-05-15T01:49:26.632Z",
+      "civil_status": null,
+      "employment_status": "member",
+      "employee_id": null,
+      "position": null,
+      "date_hired": null,
+      "salary_loan_eligible": false,
+      "max_regular_loan": "10000.00",
+      "max_salary_loan": "0.00",
+      "max_active_loans": 0,
+      "verification_status": "pending",
+      "account_status": "pending",
+      "member_tier": "basic"
+    }
+  },
+  {
+    "model": "main.auditlog",
+    "pk": 2,
+    "fields": {
+      "user": 1,
+      "action": "create",
+      "entity_type": "User",
+      "entity_id": "3",
+      "old_values": null,
+      "new_values": null,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+      "created_at": "2026-05-15T01:52:18.690Z",
+      "civil_status": null,
+      "employment_status": "member",
+      "employee_id": null,
+      "position": null,
+      "date_hired": null,
+      "salary_loan_eligible": false,
+      "max_regular_loan": "10000.00",
+      "max_salary_loan": "0.00",
+      "max_active_loans": 0,
+      "verification_status": "pending",
+      "account_status": "pending",
+      "member_tier": "basic"
+    }
+  },
+  {
+    "model": "main.auditlog",
+    "pk": 3,
+    "fields": {
+      "user": 1,
+      "action": "create",
+      "entity_type": "User",
+      "entity_id": "4",
+      "old_values": null,
+      "new_values": null,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+      "created_at": "2026-06-17T01:23:30.515Z",
+      "civil_status": null,
+      "employment_status": "member",
+      "employee_id": null,
+      "position": null,
+      "date_hired": null,
+      "salary_loan_eligible": false,
+      "max_regular_loan": "10000.00",
+      "max_salary_loan": "0.00",
+      "max_active_loans": 0,
+      "verification_status": "pending",
+      "account_status": "pending",
+      "member_tier": "basic"
+    }
+  },
+  {
+    "model": "main.auditlog",
+    "pk": 4,
+    "fields": {
+      "user": 1,
+      "action": "delete",
+      "entity_type": "User",
+      "entity_id": "3",
+      "old_values": null,
+      "new_values": null,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+      "created_at": "2026-06-17T01:27:41.035Z",
+      "civil_status": null,
+      "employment_status": "member",
+      "employee_id": null,
+      "position": null,
+      "date_hired": null,
+      "salary_loan_eligible": false,
+      "max_regular_loan": "10000.00",
+      "max_salary_loan": "0.00",
+      "max_active_loans": 0,
+      "verification_status": "pending",
+      "account_status": "pending",
+      "member_tier": "basic"
+    }
+  },
+  {
+    "model": "main.auditlog",
+    "pk": 5,
+    "fields": {
+      "user": 1,
+      "action": "create",
+      "entity_type": "User",
+      "entity_id": "5",
+      "old_values": null,
+      "new_values": null,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+      "created_at": "2026-06-17T01:28:49.827Z",
+      "civil_status": null,
+      "employment_status": "member",
+      "employee_id": null,
+      "position": null,
+      "date_hired": null,
+      "salary_loan_eligible": false,
+      "max_regular_loan": "10000.00",
+      "max_salary_loan": "0.00",
+      "max_active_loans": 0,
+      "verification_status": "pending",
+      "account_status": "pending",
+      "member_tier": "basic"
+    }
+  },
+  {
+    "model": "main.auditlog",
+    "pk": 6,
+    "fields": {
+      "user": 1,
+      "action": "create",
+      "entity_type": "User",
+      "entity_id": "6",
+      "old_values": null,
+      "new_values": null,
+      "ip_address": "127.0.0.1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+      "created_at": "2026-06-17T01:30:30.165Z",
+      "civil_status": null,
+      "employment_status": "member",
+      "employee_id": null,
+      "position": null,
+      "date_hired": null,
+      "salary_loan_eligible": false,
+      "max_regular_loan": "10000.00",
+      "max_salary_loan": "0.00",
+      "max_active_loans": 0,
+      "verification_status": "pending",
+      "account_status": "pending",
+      "member_tier": "basic"
+    }
+  },
+  {
+    "model": "staff.staffprofile",
+    "pk": 1,
+    "fields": {
+      "user": 4,
+      "staff_id": "STF-2026-1000",
+      "position": "",
+      "department": "Loans",
+      "supervisor": null,
+      "hire_date": null,
+      "profile_picture": "",
+      "contact_number": "",
+      "is_active": true,
+      "created_at": "2026-06-17T01:23:30.497Z",
+      "updated_at": "2026-06-17T01:23:30.497Z",
+      "otp_enabled": false,
+      "otp_secret": null,
+      "otp_backup_codes": [],
+      "otp_enabled_at": null
+    }
+  },
+  {
+    "model": "staff.staffprofile",
+    "pk": 2,
+    "fields": {
+      "user": 1,
+      "staff_id": "STF-0001",
+      "position": "Administrative Staff",
+      "department": "Administration",
+      "supervisor": null,
+      "hire_date": "2024-01-01",
+      "profile_picture": "",
+      "contact_number": "",
+      "is_active": true,
+      "created_at": "2026-06-17T02:34:52.088Z",
+      "updated_at": "2026-06-17T02:34:52.088Z",
+      "otp_enabled": false,
+      "otp_secret": null,
+      "otp_backup_codes": [],
+      "otp_enabled_at": null
+    }
+  },
+  {
+    "model": "staff.staffprofile",
+    "pk": 3,
+    "fields": {
+      "user": 6,
+      "staff_id": "STF-0006",
+      "position": "Cashier",
+      "department": "Finance",
+      "supervisor": null,
+      "hire_date": "2024-01-01",
+      "profile_picture": "",
+      "contact_number": "",
+      "is_active": true,
+      "created_at": "2026-06-17T02:34:52.133Z",
+      "updated_at": "2026-06-17T02:34:52.133Z",
+      "otp_enabled": false,
+      "otp_secret": null,
+      "otp_backup_codes": [],
+      "otp_enabled_at": null
+    }
+  },
+  {
+    "model": "staff.staffprofile",
+    "pk": 4,
+    "fields": {
+      "user": 8,
+      "staff_id": "STF-0008",
+      "position": "Loan Officer",
+      "department": "Loan Processing",
+      "supervisor": null,
+      "hire_date": "2024-01-01",
+      "profile_picture": "",
+      "contact_number": "",
+      "is_active": true,
+      "created_at": "2026-06-17T02:34:52.145Z",
+      "updated_at": "2026-06-17T02:34:52.146Z",
+      "otp_enabled": false,
+      "otp_secret": null,
+      "otp_backup_codes": [],
+      "otp_enabled_at": null
+    }
+  },
+  {
+    "model": "staff.staffprofile",
+    "pk": 5,
+    "fields": {
+      "user": 9,
+      "staff_id": "STF-0009",
+      "position": "Administrative Staff",
+      "department": "Administration",
+      "supervisor": null,
+      "hire_date": "2024-01-01",
+      "profile_picture": "",
+      "contact_number": "",
+      "is_active": true,
+      "created_at": "2026-06-17T02:34:52.158Z",
+      "updated_at": "2026-06-17T02:34:52.158Z",
+      "otp_enabled": false,
+      "otp_secret": null,
+      "otp_backup_codes": [],
+      "otp_enabled_at": null
+    }
+  },
+  {
+    "model": "staff.staffprofile",
+    "pk": 6,
+    "fields": {
+      "user": 11,
+      "staff_id": "STF-0011",
+      "position": "Cashier",
+      "department": "Finance",
+      "supervisor": null,
+      "hire_date": "2024-01-01",
+      "profile_picture": "",
+      "contact_number": "",
+      "is_active": true,
+      "created_at": "2026-06-17T02:34:52.169Z",
+      "updated_at": "2026-06-17T02:34:52.169Z",
+      "otp_enabled": false,
+      "otp_secret": null,
+      "otp_backup_codes": [],
+      "otp_enabled_at": null
+    }
+  },
+  {
+    "model": "staff.staffprofile",
+    "pk": 7,
+    "fields": {
+      "user": 12,
+      "staff_id": "STF-0012",
+      "position": "Manager",
+      "department": "Operations",
+      "supervisor": null,
+      "hire_date": "2024-01-01",
+      "profile_picture": "",
+      "contact_number": "",
+      "is_active": true,
+      "created_at": "2026-06-17T02:34:52.178Z",
+      "updated_at": "2026-06-17T02:34:52.178Z",
+      "otp_enabled": false,
+      "otp_secret": null,
+      "otp_backup_codes": [],
+      "otp_enabled_at": null
+    }
+  },
+  {
+    "model": "staff.staffprofile",
+    "pk": 8,
+    "fields": {
+      "user": 13,
+      "staff_id": "STF-0013",
+      "position": "Committee Member",
+      "department": "Credit Committee",
+      "supervisor": null,
+      "hire_date": "2024-01-01",
+      "profile_picture": "",
+      "contact_number": "",
+      "is_active": true,
+      "created_at": "2026-06-17T02:34:52.187Z",
+      "updated_at": "2026-06-17T02:34:52.187Z",
+      "otp_enabled": false,
+      "otp_secret": null,
+      "otp_backup_codes": [],
+      "otp_enabled_at": null
+    }
+  },
+  {
+    "model": "cashier.cashierprofile",
+    "pk": 1,
+    "fields": {
+      "user": 6,
+      "cashier_id": "CSH-2026-1000",
+      "position": "cashier",
+      "branch": "Main Branch",
+      "hire_date": null,
+      "is_active": true,
+      "created_at": "2026-06-17T01:30:30.152Z",
+      "updated_at": "2026-06-17T01:30:30.152Z"
+    }
+  },
+  {
+    "model": "admin_panel.adminprofile",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "profile_picture": "",
+      "first_name": "",
+      "last_name": "",
+      "created_at": "2026-05-16T14:48:42.806Z",
+      "updated_at": "2026-05-16T14:48:42.806Z"
+    }
+  }
+]

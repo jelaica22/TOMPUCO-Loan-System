@@ -1684,93 +1684,287 @@ def committee_decisions_list(request):
     })
 
 
-# ==================== NOTIFICATIONS ====================
+# ============================================================
+# NOTIFICATIONS - COMPLETE FIXED VERSION
+# ============================================================
 
-@super_admin_required
+from main.models import Notification
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.core.paginator import Paginator
+from django.contrib import messages
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+# ============================================================
+# NOTIFICATIONS VIEWS - ADMIN ONLY
+# ============================================================
+
+@login_required
 def notifications_list(request):
-    notifications = Notification.objects.all().order_by('-created_at')
+    """List all notifications - Admin only"""
+    try:
+        user = request.user
 
-    total_notifications = Notification.objects.count()
-    read_count = Notification.objects.filter(is_read=True).count()
-    unread_count = Notification.objects.filter(is_read=False).count()
+        # ============================================================
+        # CRITICAL FIX: Only show admin-appropriate notifications
+        # Exclude ALL member-specific notifications
+        # ============================================================
+        notifications = Notification.objects.filter(
+            recipient=user
+        ).exclude(
+            # Exclude ALL member-specific notifications
+            Q(title__icontains='Your loan') |
+            Q(title__icontains='Your payment') |
+            Q(title__icontains='Your application') |
+            Q(title__icontains='Your member') |
+            Q(title__icontains='Profile Complete') |
+            Q(title__icontains='Payment Reminder') |
+            Q(title__icontains='Payment Due') |
+            Q(title__icontains='Application Submitted') |
+            Q(title__icontains='Application Received') |
+            Q(title__icontains='Payment Received') |
+            Q(title__icontains='Loan Approved') |
+            Q(title__icontains='Overdue Notice') |
+            Q(title__icontains='Overdue Alert') |
+            Q(title__icontains='Overdue Loan') |
+            Q(title__icontains='loan LN-') |
+            Q(title__icontains='APP-') |
+            Q(title__icontains='member profile') |
+            Q(message__icontains='your payment') |
+            Q(message__icontains='your loan') |
+            Q(message__icontains='your application') |
+            Q(message__icontains='Your monthly payment') |
+            Q(message__icontains='Your loan application') |
+            Q(message__icontains='Your member profile') |
+            Q(message__icontains='overdue by') |
+            Q(message__icontains='payment of')
+        ).order_by('-created_at')
 
-    return render(request, 'admin_panel/notifications_list.html', {
-        'notifications': notifications,
-        'total_notifications': total_notifications,
-        'read_count': read_count,
-        'unread_count': unread_count,
-    })
+        # Apply filters
+        status = request.GET.get('status', 'all')
+        search = request.GET.get('search', '')
 
+        if status == 'read':
+            notifications = notifications.filter(is_read=True)
+        elif status == 'unread':
+            notifications = notifications.filter(is_read=False)
 
-@super_admin_required
-def notification_mark_read(request, notif_id):
-    notification = get_object_or_404(Notification, id=notif_id)
-    notification.is_read = True
-    notification.save()
-    return JsonResponse({'success': True})
+        if search:
+            notifications = notifications.filter(
+                Q(title__icontains=search) |
+                Q(message__icontains=search)
+            )
 
+        # Get counts
+        total_count = notifications.count()
+        read_count = notifications.filter(is_read=True).count()
+        unread_count = notifications.filter(is_read=False).count()
 
-@super_admin_required
-def notification_delete(request, notif_id):
-    notification = get_object_or_404(Notification, id=notif_id)
-    if request.method == 'POST':
-        notification.delete()
-        return JsonResponse({'success': True})
-    return JsonResponse({'success': False})
+        # Pagination
+        paginator = Paginator(notifications, 20)
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
+
+        context = {
+            'notifications': page_obj,
+            'total_notifications': total_count,
+            'read_count': read_count,
+            'unread_count': unread_count,
+            'page_obj': page_obj,
+        }
+        return render(request, 'admin_panel/notifications_list.html', context)
+    except Exception as e:
+        logger.error(f"Error in notifications_list: {str(e)}")
+        messages.error(request, f'Error loading notifications: {str(e)}')
+        return render(request, 'admin_panel/notifications_list.html', {
+            'notifications': [],
+            'total_notifications': 0,
+            'read_count': 0,
+            'unread_count': 0,
+        })
 
 
 @login_required
+def notification_mark_read(request, notif_id):
+    """Mark a notification as read - Admin only"""
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'success': False, 'error': 'Invalid method'})
+
+        user = request.user
+        notification = Notification.objects.filter(
+            id=notif_id,
+            recipient=user
+        ).first()
+
+        if notification:
+            notification.is_read = True
+            notification.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'error': 'Notification not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def notification_delete(request, notif_id):
+    """Delete a notification - Admin only"""
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'success': False, 'error': 'Invalid method'})
+
+        user = request.user
+        notification = Notification.objects.filter(
+            id=notif_id,
+            recipient=user
+        ).first()
+
+        if notification:
+            notification.delete()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'error': 'Notification not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+# ============================================================
+# API ENDPOINTS - ADMIN ONLY
+# ============================================================
+
+@login_required
 def notifications_api(request):
-    """API endpoint for admin notifications"""
-    from main.models import Notification
+    """API endpoint for notifications - Admin only"""
+    try:
+        user = request.user
 
-    notifications = Notification.objects.filter(
-        recipient=request.user
-    ).order_by('-created_at')[:20]
+        # Build the queryset first
+        notifications_qs = Notification.objects.filter(
+            recipient=user
+        ).exclude(
+            # Exclude ALL member-specific notifications
+            Q(title__icontains='Your loan') |
+            Q(title__icontains='Your payment') |
+            Q(title__icontains='Your application') |
+            Q(title__icontains='Your member') |
+            Q(title__icontains='Profile Complete') |
+            Q(title__icontains='Payment Reminder') |
+            Q(title__icontains='Payment Due') |
+            Q(title__icontains='Application Submitted') |
+            Q(title__icontains='Application Received') |
+            Q(title__icontains='Payment Received') |
+            Q(title__icontains='Loan Approved') |
+            Q(title__icontains='Overdue Notice') |
+            Q(title__icontains='Overdue Alert') |
+            Q(title__icontains='Overdue Loan') |
+            Q(title__icontains='loan LN-') |
+            Q(title__icontains='APP-') |
+            Q(title__icontains='member profile') |
+            Q(message__icontains='your payment') |
+            Q(message__icontains='your loan') |
+            Q(message__icontains='your application') |
+            Q(message__icontains='Your monthly payment') |
+            Q(message__icontains='Your loan application') |
+            Q(message__icontains='Your member profile') |
+            Q(message__icontains='overdue by') |
+            Q(message__icontains='payment of')
+        ).order_by('-created_at')
 
-    unread_count = Notification.objects.filter(
-        recipient=request.user, is_read=False
-    ).count()
+        # Get count BEFORE slicing
+        unread_count = notifications_qs.filter(is_read=False).count()
 
-    data = {
-        'success': True,
-        'unread_count': unread_count,
-        'notifications': [{
-            'id': n.id,
-            'title': n.title,
-            'message': n.message[:100],
-            'link': n.link,
-            'notification_type': n.notification_type,
-            'created_at': n.created_at.isoformat(),
-            'is_read': n.is_read,
-        } for n in notifications]
-    }
-    return JsonResponse(data)
+        # Now slice for the results
+        notifications = notifications_qs[:20]
+
+        notification_data = []
+        for n in notifications:
+            link = n.link or '/superadmin/notifications/'
+            notification_data.append({
+                'id': n.id,
+                'title': n.title,
+                'message': n.message[:100] if n.message else '',
+                'link': link,
+                'notification_type': n.notification_type,
+                'created_at': n.created_at.isoformat(),
+                'is_read': n.is_read,
+            })
+
+        return JsonResponse({
+            'success': True,
+            'unread_count': unread_count,
+            'notifications': notification_data
+        })
+    except Exception as e:
+        logger.error(f"Error in notifications_api: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'unread_count': 0,
+            'notifications': []
+        })
 
 
 @login_required
 def mark_notification_read_api(request, notif_id):
-    """Mark notification as read"""
-    from main.models import Notification
+    """Mark notification as read - Admin only"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'})
 
-    if request.method == 'POST':
-        notification = get_object_or_404(Notification, id=notif_id, recipient=request.user)
-        notification.is_read = True
-        notification.save()
-        return JsonResponse({'success': True})
-    return JsonResponse({'success': False})
+    try:
+        user = request.user
+        notification = Notification.objects.filter(
+            id=notif_id,
+            recipient=user
+        ).first()
+
+        if notification:
+            notification.is_read = True
+            notification.save()
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'error': 'Notification not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 
 @login_required
 def mark_all_notifications_read_api(request):
-    """Mark all notifications as read"""
-    from main.models import Notification
+    """Mark all notifications as read - Admin only"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'})
 
-    if request.method == 'POST':
-        Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
-        return JsonResponse(
-            {'success': True, 'count': Notification.objects.filter(recipient=request.user, is_read=False).count()})
-    return JsonResponse({'success': False})
+    try:
+        user = request.user
+        count = Notification.objects.filter(
+            recipient=user,
+            is_read=False
+        ).exclude(
+            # Exclude member notifications from being marked as read
+            Q(title__icontains='Your loan') |
+            Q(title__icontains='Your payment') |
+            Q(title__icontains='Your application') |
+            Q(title__icontains='Profile Complete') |
+            Q(title__icontains='Payment Reminder') |
+            Q(title__icontains='Application Submitted') |
+            Q(title__icontains='Application Received') |
+            Q(title__icontains='Payment Received') |
+            Q(title__icontains='Loan Approved') |
+            Q(title__icontains='Overdue Notice') |
+            Q(title__icontains='Overdue Alert') |
+            Q(title__icontains='Overdue Loan') |
+            Q(title__icontains='loan LN-') |
+            Q(title__icontains='APP-')
+        ).update(is_read=True)
+
+        return JsonResponse({
+            'success': True,
+            'count': count
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 
 # ==================== AUDIT LOGS ====================

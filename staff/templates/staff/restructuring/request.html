@@ -6,7 +6,6 @@
 
 {% block extra_css %}
 <style>
-    /* Main Container */
     .restructuring-container {
         max-width: 1200px;
         margin: 0 auto;
@@ -20,6 +19,7 @@
         padding: 28px;
         margin-bottom: 24px;
         border: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
     }
 
     .section-title {
@@ -39,13 +39,19 @@
         font-size: 1.1rem;
     }
 
-    /* Info Card */
+    /* Cards */
     .info-card {
         background: var(--bg-card);
         border-radius: 20px;
         padding: 24px;
         margin-bottom: 24px;
         border: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+        box-shadow: var(--shadow-hover);
     }
 
     .info-title {
@@ -57,48 +63,60 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        font-size: 1rem;
     }
 
     .info-title i {
         color: #0d6e6e;
+        font-size: 1.2rem;
     }
 
     .info-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+        gap: 12px 24px;
     }
 
     @media (max-width: 768px) {
         .info-grid {
             grid-template-columns: 1fr;
+            gap: 8px;
         }
     }
 
     .info-item {
-        padding: 10px 0;
+        padding: 8px 0;
         border-bottom: 1px solid var(--border-light);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
     }
 
     .info-label {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         text-transform: uppercase;
         font-weight: 600;
         color: var(--text-secondary);
-        margin-bottom: 4px;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.3px;
     }
 
     .info-value {
         font-size: 0.95rem;
         font-weight: 500;
         color: var(--text-primary);
+        text-align: right;
     }
 
     .info-value.amount {
         font-weight: 700;
         font-family: monospace;
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 
     .info-value.amount-positive {
@@ -109,7 +127,230 @@
         color: #ef4444;
     }
 
-    /* Calculation Card */
+    /* Info Box - How Restructuring Works */
+    .info-box {
+        background: #dbeafe;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        border-left: 4px solid #3b82f6;
+    }
+
+    .info-box i {
+        font-size: 1.2rem;
+        color: #1e40af;
+        margin-top: 2px;
+    }
+
+    .info-box .info-text {
+        color: #1e40af;
+        font-size: 0.85rem;
+        line-height: 1.6;
+    }
+
+    .info-box .info-text strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    [data-theme="dark"] .info-box {
+        background: #1e3a8a;
+        border-left-color: #60a5fa;
+    }
+
+    [data-theme="dark"] .info-box i {
+        color: #bfdbfe;
+    }
+
+    [data-theme="dark"] .info-box .info-text {
+        color: #bfdbfe;
+    }
+
+    /* Alert Styles */
+    .alert-warning-custom {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .alert-warning-custom i {
+        color: #f59e0b;
+        font-size: 1.2rem;
+        margin-top: 2px;
+    }
+
+    .alert-success-custom {
+        background: #d1fae5;
+        border-left: 4px solid #10b981;
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .alert-success-custom i {
+        color: #10b981;
+        font-size: 1.2rem;
+        margin-top: 2px;
+    }
+
+    [data-theme="dark"] .alert-warning-custom {
+        background: #451a03;
+    }
+
+    [data-theme="dark"] .alert-warning-custom i {
+        color: #fbbf24;
+    }
+
+    [data-theme="dark"] .alert-success-custom {
+        background: #064e3b;
+    }
+
+    [data-theme="dark"] .alert-success-custom i {
+        color: #34d399;
+    }
+
+    /* Form Elements */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-label.required::after {
+        content: '*';
+        color: #ef4444;
+        margin-left: 4px;
+    }
+
+    .form-control {
+        border-radius: 12px;
+        border: 1.5px solid var(--border-color);
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        width: 100%;
+        transition: all 0.2s;
+        background: var(--input-bg);
+        color: var(--text-primary);
+    }
+
+    .form-control:focus {
+        border-color: #0d6e6e;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
+    }
+
+    .form-control-lg {
+        font-size: 1.1rem;
+        padding: 14px 18px;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    /* Buttons */
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(13, 110, 110, 0.35);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-success-custom {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-success-custom:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+    }
+
+    .btn-secondary-custom {
+        background: #ffffff;
+        border: 2px solid #0d6e6e;
+        color: #0d6e6e;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom:hover {
+        background: #0d6e6e;
+        color: white;
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    [data-theme="dark"] .btn-secondary-custom {
+        background: transparent;
+        border-color: #2a9d8f;
+        color: #2a9d8f;
+    }
+
+    [data-theme="dark"] .btn-secondary-custom:hover {
+        background: #0d6e6e;
+        color: white;
+    }
+
+    .btn-sm {
+        padding: 6px 14px;
+        font-size: 0.75rem;
+    }
+
+    /* Calculation Results */
     .calculation-card {
         background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
         border-radius: 20px;
@@ -122,56 +363,14 @@
         background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
     }
 
-    /* Form Styles */
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    .form-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--text-secondary);
-        margin-bottom: 8px;
-        display: block;
-    }
-
-    .form-label.required::after {
-        content: '*';
-        color: #ef4444;
-        margin-left: 4px;
-    }
-
-    .form-control, .form-select {
-        border-radius: 12px;
-        border: 1.5px solid var(--border-color);
-        padding: 10px 14px;
-        font-size: 0.9rem;
-        width: 100%;
-        transition: all 0.2s;
-        background: var(--input-bg);
-        color: var(--text-primary);
-    }
-
-    .form-control:focus, .form-select:focus {
-        border-color: #0d6e6e;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(13, 110, 110, 0.1);
-    }
-
-    textarea.form-control {
-        resize: vertical;
-        min-height: 80px;
-    }
-
-    /* Calculation Display */
     .calc-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 12px 0;
-        border-bottom: 1px solid rgba(0,0,0,0.1);
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(0,0,0,0.08);
+        flex-wrap: wrap;
+        gap: 8px;
     }
 
     .calc-row:last-child {
@@ -181,6 +380,7 @@
     .calc-label {
         font-weight: 600;
         color: #92400e;
+        font-size: 0.9rem;
     }
 
     [data-theme="dark"] .calc-label {
@@ -199,9 +399,9 @@
     }
 
     .calc-total {
-        background: rgba(0,0,0,0.05);
+        background: rgba(0,0,0,0.06);
         border-radius: 12px;
-        padding: 12px;
+        padding: 16px;
         margin-top: 12px;
     }
 
@@ -214,7 +414,7 @@
         font-weight: 800;
     }
 
-    /* Action Buttons - VISIBLE IN LIGHT MODE */
+    /* Action Buttons Container */
     .action-buttons {
         display: flex;
         gap: 12px;
@@ -223,110 +423,6 @@
         margin-top: 20px;
         padding-top: 20px;
         border-top: 1px solid var(--border-color);
-    }
-
-    .btn-primary-custom {
-        background: linear-gradient(135deg, #0d6e6e 0%, #0a5a5a 100%);
-        color: white;
-        border: none;
-        padding: 12px 28px;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        transition: all 0.3s;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-    }
-
-    .btn-primary-custom:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(13, 110, 110, 0.3);
-        color: white;
-        text-decoration: none;
-    }
-
-    .btn-success-custom {
-        background: #10b981;
-        color: white;
-        border: none;
-        padding: 12px 28px;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        transition: all 0.3s;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-success-custom:hover {
-        background: #059669;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    }
-
-    .btn-secondary-custom {
-        background: #ffffff;
-        border: 2px solid #0d6e6e;
-        color: #0d6e6e;
-        padding: 12px 28px;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        transition: all 0.3s;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-    }
-
-    .btn-secondary-custom:hover {
-        background: #0d6e6e;
-        color: white;
-        transform: translateY(-2px);
-        text-decoration: none;
-    }
-
-    /* Dark mode button overrides */
-    [data-theme="dark"] .btn-secondary-custom {
-        background: transparent;
-        border-color: #2a9d8f;
-        color: #2a9d8f;
-    }
-
-    [data-theme="dark"] .btn-secondary-custom:hover {
-        background: #0d6e6e;
-        color: white;
-    }
-
-    /* Alert Styles */
-    .alert-warning-custom {
-        background: #fef3c7;
-        border-left: 4px solid #f59e0b;
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .alert-warning-custom i {
-        color: #f59e0b;
-        font-size: 1.2rem;
-    }
-
-    [data-theme="dark"] .alert-warning-custom {
-        background: #451a03;
-    }
-
-    [data-theme="dark"] .alert-warning-custom i {
-        color: #fbbf24;
     }
 
     /* Loading Spinner */
@@ -350,6 +446,59 @@
         to { transform: rotate(360deg); }
     }
 
+    /* Results Container */
+    #results {
+        margin-bottom: 20px;
+    }
+
+    /* Table Styles */
+    .table-container {
+        overflow-x: auto;
+        margin-top: 12px;
+    }
+
+    .selection-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .selection-table th {
+        background: var(--bg-body);
+        padding: 12px;
+        text-align: left;
+        border-bottom: 2px solid var(--border-color);
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+    }
+
+    .selection-table td {
+        padding: 12px;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .selection-table tr:hover {
+        background: var(--table-hover);
+    }
+
+    /* Badge Status */
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .status-active { background: #d1fae5; color: #065f46; }
+    .status-overdue { background: #fee2e2; color: #991b1b; }
+    .status-restructured { background: #ffedd5; color: #9a3412; }
+    .status-paid { background: #dbeafe; color: #1e40af; }
+
     /* Responsive */
     @media (max-width: 768px) {
         .restructuring-container {
@@ -357,20 +506,74 @@
         }
 
         .search-section, .info-card, .calculation-card {
-            padding: 20px;
-        }
-
-        .action-buttons {
-            justify-content: center;
-        }
-
-        .btn-primary-custom, .btn-success-custom, .btn-secondary-custom {
-            width: 100%;
-            justify-content: center;
+            padding: 16px;
         }
 
         .action-buttons {
             flex-direction: column;
+            align-items: stretch;
+        }
+
+        .action-buttons .btn-primary-custom,
+        .action-buttons .btn-success-custom,
+        .action-buttons .btn-secondary-custom {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .info-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+        }
+
+        .info-value {
+            text-align: left;
+        }
+
+        .btn-primary-custom, .btn-success-custom, .btn-secondary-custom {
+            padding: 10px 20px;
+            font-size: 0.85rem;
+        }
+
+        .form-control-lg {
+            font-size: 1rem;
+            padding: 12px 14px;
+        }
+
+        .info-box {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .search-section {
+            padding: 12px;
+        }
+
+        .info-card {
+            padding: 12px;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+        }
+
+        .info-title {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .top-navbar, .sidebar, .app-footer, .search-section, .action-buttons {
+            display: none !important;
+        }
+        .info-card, .calculation-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+            box-shadow: none !important;
         }
     }
 </style>
@@ -384,15 +587,16 @@
             <i class="bi bi-person-search"></i> Find Member for Restructuring
         </div>
         <div class="row g-3 align-items-end">
-            <div class="col-12 col-md-9">
+            <div class="col-12 col-md-8">
                 <label class="form-label">Member Search</label>
                 <input type="text" class="form-control form-control-lg" id="memberSearch"
-                       placeholder="Enter Member ID, Name, Membership Number, or Loan Number...">
+                       placeholder="Enter Member ID, Name, Membership Number, or Loan Number..."
+                       value="{{ request.GET.search|default:'' }}">
                 <small class="text-muted d-block mt-1">
                     <i class="bi bi-info-circle"></i> Search by name, membership number, or loan number
                 </small>
             </div>
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-md-4">
                 <button class="btn-primary-custom w-100" id="searchMemberBtn">
                     <i class="bi bi-search"></i> Search Member
                 </button>
@@ -403,20 +607,285 @@
     <!-- Loading Spinner -->
     <div id="loadingSpinner" class="loading-spinner">
         <div class="spinner-border-custom"></div>
-        <p class="mt-2 text-muted">Searching...</p>
+        <p class="mt-2 text-muted">Loading...</p>
     </div>
 
     <!-- Results Container -->
     <div id="results"></div>
+
+    <!-- Restructuring Form -->
+    <div id="restructuringForm" style="display: none;">
+        <form id="restructureForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="memberId" name="member_id">
+            <input type="hidden" id="loanId" name="loan_id">
+
+            <!-- Member Information -->
+            <div class="info-card">
+                <div class="info-title">
+                    <i class="bi bi-person-badge"></i> Member Information
+                </div>
+                <div class="info-grid" id="memberInfoDisplay">
+                    <div class="info-item">
+                        <span class="info-label">Member Name</span>
+                        <span class="info-value" id="displayMemberName">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Membership Number</span>
+                        <span class="info-value" id="displayMembershipNumber">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Loan Details -->
+            <div class="info-card">
+                <div class="info-title">
+                    <i class="bi bi-bank2"></i> Current Loan Details
+                </div>
+                <div class="info-grid" id="loanDetailsDisplay">
+                    <div class="info-item">
+                        <span class="info-label">Loan Number</span>
+                        <span class="info-value" id="displayLoanNumber">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Remaining Balance</span>
+                        <span class="info-value amount amount-negative" id="displayBalance">₱0.00</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Unpaid Interest</span>
+                        <span class="info-value" id="displayInterest">₱0.00</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Accrued Penalty</span>
+                        <span class="info-value amount amount-negative" id="displayPenalty">₱0.00</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Total Payoff Amount</span>
+                        <span class="info-value amount amount-negative" id="displayPayoff">₱0.00</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Days Overdue</span>
+                        <span class="info-value" id="displayDaysOverdue">0 days</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Restructuring Loan Amount -->
+            <div class="info-card">
+                <div class="info-title">
+                    <i class="bi bi-calculator"></i> Restructuring Loan Amount
+                </div>
+
+                <div class="info-box">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <div class="info-text">
+                        <strong>How Restructuring Works:</strong>
+                        <small>1. Member applies for a RESTRUCTURING LOAN amount<br>
+                        2. This amount pays off: Penalty + Interest + Principal of old loan<br>
+                        3. The RESTRUCTURING LOAN AMOUNT becomes the NEW PRINCIPAL<br>
+                        4. New Principal + New Charges = Final Restructured Loan<br>
+                        5. ✅ Penalty STOPS on old loan<br>
+                        6. ✅ Interest CONTINUES on new principal<br>
+                        7. ⚠️ NO CASH released to member</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Restructuring Loan Amount (New Principal)</label>
+                    <input type="number" class="form-control form-control-lg" id="restructureAmount"
+                           placeholder="Enter amount" step="1000" min="0" required>
+                    <small class="text-muted">Minimum amount must cover the total payoff amount</small>
+                </div>
+
+                <button type="button" class="btn-primary-custom" id="calculateBtn">
+                    <i class="bi bi-calculator-fill"></i> Calculate Restructured Loan
+                </button>
+            </div>
+
+            <!-- Calculation Results -->
+            <div id="calculationResults" style="display: none;">
+                <div class="calculation-card">
+                    <div class="info-title" style="color: #92400e; border-bottom-color: rgba(146, 64, 14, 0.2);">
+                        <i class="bi bi-calculator-fill"></i> Restructuring Calculation
+                    </div>
+                    <div id="calculationContent"></div>
+                </div>
+            </div>
+
+            <!-- Reason for Restructuring -->
+            <div class="info-card">
+                <div class="info-title">
+                    <i class="bi bi-chat-text"></i> Reason for Restructuring
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">Please explain why this loan needs restructuring</label>
+                    <textarea class="form-control" id="restructureReason" rows="4"
+                              placeholder="e.g., crop failure, natural disaster, medical emergency, business loss, etc." required></textarea>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button type="button" class="btn-secondary-custom" onclick="resetForm()">
+                    <i class="bi bi-arrow-repeat"></i> Reset
+                </button>
+                <button type="submit" class="btn-success-custom" id="submitBtn">
+                    <i class="bi bi-send-check-fill"></i> Submit Restructuring Request
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
+    let selectedMember = null;
+    let selectedLoan = null;
+    let currentCalculation = null;
+
+    // Check if loan is pre-selected from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const loanIdParam = urlParams.get('loan_id');
+
+    if (loanIdParam) {
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLoanForRestructuring(parseInt(loanIdParam));
+        });
+    }
+
+    function loadLoanForRestructuring(loanId) {
+        showLoading();
+
+        fetch(`/staff/api/loan-status/${loanId}/`)
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.error) {
+                    showAlert('error', data.error);
+                    return;
+                }
+
+                selectedLoan = data;
+
+                // Check if loan data already has member info
+                if (data.member_name) {
+                    // Use member info from loan data
+                    const member = {
+                        id: data.member_id || data.member || null,
+                        name: data.member_name || 'Unknown Member',
+                        membership_id: data.membership_number || 'N/A'
+                    };
+                    selectedMember = member;
+                    populateForm(member, data);
+                } else {
+                    // Try to fetch member info
+                    const memberId = data.member_id || data.member;
+
+                    if (memberId) {
+                        fetch(`/staff/api/member-search/?id=${memberId}`)
+                            .then(res => res.json())
+                            .then(memberData => {
+                                if (memberData.member) {
+                                    selectedMember = memberData.member;
+                                    populateForm(selectedMember, data);
+                                } else {
+                                    // Create a basic member object from loan data
+                                    const member = {
+                                        id: memberId,
+                                        name: 'Member #' + memberId,
+                                        membership_id: 'N/A'
+                                    };
+                                    selectedMember = member;
+                                    populateForm(member, data);
+                                }
+                            })
+                            .catch(() => {
+                                // If fetch fails, use loan data if available
+                                if (data.member_name) {
+                                    const member = {
+                                        id: data.member_id || null,
+                                        name: data.member_name,
+                                        membership_id: data.membership_number || 'N/A'
+                                    };
+                                    selectedMember = member;
+                                    populateForm(member, data);
+                                } else {
+                                    populateForm(null, data);
+                                }
+                            });
+                    } else {
+                        // Try to get from loan data as fallback
+                        if (data.member_name) {
+                            const member = {
+                                id: null,
+                                name: data.member_name,
+                                membership_id: data.membership_number || 'N/A'
+                            };
+                            selectedMember = member;
+                            populateForm(member, data);
+                        } else {
+                            populateForm(null, data);
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                showAlert('error', 'Error loading loan details: ' + error);
+            });
+    }
+
+    function populateForm(member, loan) {
+        // Show the form
+        const form = document.getElementById('restructuringForm');
+        form.style.display = 'block';
+
+        // Populate member info
+        if (member && member.name) {
+            document.getElementById('displayMemberName').textContent = member.name;
+            document.getElementById('displayMembershipNumber').textContent = member.membership_id || 'N/A';
+            document.getElementById('memberId').value = member.id || '';
+        } else if (loan && loan.member_name) {
+            // Use member info from loan data
+            document.getElementById('displayMemberName').textContent = loan.member_name;
+            document.getElementById('displayMembershipNumber').textContent = loan.membership_number || 'N/A';
+            document.getElementById('memberId').value = loan.member_id || '';
+        } else {
+            document.getElementById('displayMemberName').textContent = '—';
+            document.getElementById('displayMembershipNumber').textContent = '—';
+        }
+
+        // Populate loan info
+        document.getElementById('displayLoanNumber').textContent = loan.number || loan.loan_number || '—';
+        document.getElementById('displayBalance').textContent = '₱' + (loan.remaining_balance || 0).toLocaleString();
+        document.getElementById('displayInterest').textContent = '₱' + (loan.interest_due || 0).toLocaleString();
+        document.getElementById('displayPenalty').textContent = '₱' + (loan.penalty_amount || 0).toLocaleString();
+
+        const totalPayoff = (loan.remaining_balance || 0) + (loan.interest_due || 0) + (loan.penalty_amount || 0);
+        document.getElementById('displayPayoff').textContent = '₱' + totalPayoff.toLocaleString();
+        document.getElementById('displayDaysOverdue').textContent = (loan.days_overdue || 0) + ' days';
+        document.getElementById('loanId').value = loan.id || '';
+
+        // Set minimum amount
+        const amountInput = document.getElementById('restructureAmount');
+        amountInput.min = totalPayoff;
+        amountInput.value = totalPayoff;
+        amountInput.placeholder = 'Minimum: ₱' + totalPayoff.toLocaleString();
+
+        // Show alert
+        showAlert('info', `Total payoff amount is ₱${totalPayoff.toLocaleString()}. The restructuring loan must be at least this amount.`);
+
+        // Scroll to form
+        setTimeout(() => {
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+    }
+
+    // Search functionality
     const searchBtn = document.getElementById('searchMemberBtn');
     const memberSearchInput = document.getElementById('memberSearch');
     const resultsDiv = document.getElementById('results');
     const loadingSpinner = document.getElementById('loadingSpinner');
 
-    // Search on Enter key
     memberSearchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -431,99 +900,62 @@
     function searchMember() {
         const searchTerm = memberSearchInput.value.trim();
         if (!searchTerm) {
-            alert('Please enter a member name, ID, or loan number to search.');
+            showAlert('warning', 'Please enter a member name, ID, or loan number to search.');
             return;
         }
 
-        // Show loading spinner
-        loadingSpinner.style.display = 'block';
+        showLoading();
         resultsDiv.innerHTML = '';
 
-        // First try to search for the member
         fetch(`/staff/api/member-search/?q=${encodeURIComponent(searchTerm)}`)
             .then(response => response.json())
             .then(data => {
-                loadingSpinner.style.display = 'none';
+                hideLoading();
 
                 if (data.member) {
-                    // Member found - redirect to restructuring form
-                    window.location.href = `/staff/restructuring/request/${data.member.id}/`;
+                    selectedMember = data.member;
+                    if (data.loans && data.loans.length > 0) {
+                        displayLoanSelection(data.member, data.loans);
+                    } else {
+                        showAlert('warning', `${data.member.name} has no active loans for restructuring.`);
+                    }
                 } else if (data.members && data.members.length > 0) {
-                    // Multiple members found - show selection
                     displayMemberSelection(data.members);
                 } else {
-                    // No member found
-                    resultsDiv.innerHTML = `
-                        <div class="info-card">
-                            <div class="alert-warning-custom">
-                                <i class="bi bi-exclamation-triangle-fill"></i>
-                                <div>
-                                    <strong>No member found</strong><br>
-                                    No member matching "${escapeHtml(searchTerm)}" was found. Please check the information and try again.
-                                </div>
-                            </div>
-                            <div class="text-center mt-3">
-                                <button class="btn-secondary-custom" onclick="clearSearch()">
-                                    <i class="bi bi-arrow-repeat"></i> Try Again
-                                </button>
-                            </div>
-                        </div>
-                    `;
+                    showAlert('error', `No member found matching "${searchTerm}"`);
                 }
             })
             .catch(error => {
-                loadingSpinner.style.display = 'none';
-                console.error('Error:', error);
-                resultsDiv.innerHTML = `
-                    <div class="info-card">
-                        <div class="alert-warning-custom">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            <div>
-                                <strong>Search Error</strong><br>
-                                An error occurred while searching. Please try again.
-                            </div>
-                        </div>
-                        <div class="text-center mt-3">
-                            <button class="btn-secondary-custom" onclick="searchMember()">
-                                <i class="bi bi-arrow-repeat"></i> Try Again
-                            </button>
-                        </div>
-                    </div>
-                `;
+                hideLoading();
+                showAlert('error', 'An error occurred while searching.');
             });
     }
 
     function displayMemberSelection(members) {
-        let membersHtml = `
+        let html = `
             <div class="info-card">
-                <div class="section-title">
-                    <i class="bi bi-people"></i> Select Member
-                </div>
-                <div class="alert-warning-custom mb-3">
-                    <i class="bi bi-info-circle-fill"></i>
-                    <div>Multiple members found. Please select the correct member to continue.</div>
-                </div>
-                <div class="table-container" style="overflow-x: auto;">
-                    <table class="payments-table" style="width: 100%; border-collapse: collapse;">
+                <div class="info-title"><i class="bi bi-people"></i> Select Member</div>
+                <div class="table-container">
+                    <table class="selection-table">
                         <thead>
                             <tr>
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">Member Name</th>
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">Membership #</th>
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">Contact</th>
-                                <th style="padding: 12px; text-align: left; border-bottom: 2px solid var(--border-color);">Action</th>
+                                <th>Member Name</th>
+                                <th>Membership #</th>
+                                <th>Contact</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
         `;
 
         members.forEach(member => {
-            membersHtml += `
-                <tr style="border-bottom: 1px solid var(--border-light);">
-                    <td style="padding: 12px;"><strong>${escapeHtml(member.name)}</strong></td>
-                    <td style="padding: 12px;"><code>${escapeHtml(member.membership_id || 'N/A')}</code></td>
-                    <td style="padding: 12px;">${escapeHtml(member.contact || '—')}</td>
-                    <td style="padding: 12px;">
-                        <button class="btn-primary-custom" onclick="selectMember(${member.id})" style="padding: 6px 16px; font-size: 0.75rem;">
+            html += `
+                <tr>
+                    <td><strong>${escapeHtml(member.name)}</strong></td>
+                    <td><code>${escapeHtml(member.membership_id || 'N/A')}</code></td>
+                    <td>${escapeHtml(member.contact || '—')}</td>
+                    <td>
+                        <button class="btn-primary-custom btn-sm" onclick="loadMemberLoans(${member.id})">
                             <i class="bi bi-check-lg"></i> Select
                         </button>
                     </td>
@@ -531,28 +963,329 @@
             `;
         });
 
-        membersHtml += `
+        html += `
                         </tbody>
                     </table>
                 </div>
-                <div class="text-center mt-3">
-                    <button class="btn-secondary-custom" onclick="clearSearch()">
-                        <i class="bi bi-arrow-left"></i> New Search
+            </div>
+        `;
+
+        resultsDiv.innerHTML = html;
+    }
+
+    function loadMemberLoans(memberId) {
+        showLoading();
+        resultsDiv.innerHTML = '';
+
+        fetch(`/staff/api/member-search/?id=${memberId}`)
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.member && data.loans && data.loans.length > 0) {
+                    selectedMember = data.member;
+                    displayLoanSelection(data.member, data.loans);
+                } else {
+                    showAlert('warning', 'No active loans found for this member.');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                showAlert('error', 'Error loading member details.');
+            });
+    }
+
+    function displayLoanSelection(member, loans) {
+        let html = `
+            <div class="info-card">
+                <div class="info-title"><i class="bi bi-bank"></i> Select Loan for ${escapeHtml(member.name)}</div>
+                <div class="table-container">
+                    <table class="selection-table">
+                        <thead>
+                            <tr>
+                                <th>Loan #</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+
+        loans.forEach(loan => {
+            html += `
+                <tr>
+                    <td><code>${escapeHtml(loan.number)}</code></td>
+                    <td>₱${(loan.balance || 0).toLocaleString()}</td>
+                    <td>${escapeHtml(loan.status)}</td>
+                    <td>
+                        <button class="btn-primary-custom btn-sm" onclick="selectLoan(${loan.id})">
+                            <i class="bi bi-arrow-right"></i> Select
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <button class="btn-secondary-custom btn-sm" onclick="clearSearch()">
+                        <i class="bi bi-arrow-left"></i> Back to Search
                     </button>
                 </div>
             </div>
         `;
 
-        resultsDiv.innerHTML = membersHtml;
+        resultsDiv.innerHTML = html;
     }
 
-    function selectMember(memberId) {
-        window.location.href = `/staff/restructuring/request/${memberId}/`;
+    function selectLoan(loanId) {
+        loadLoanForRestructuring(loanId);
+        resultsDiv.innerHTML = '';
+    }
+
+    // Calculate button
+    document.getElementById('calculateBtn').addEventListener('click', function() {
+        const restructureAmount = parseFloat(document.getElementById('restructureAmount').value);
+        const payoffText = document.getElementById('displayPayoff').textContent;
+        const totalPayoff = parseFloat(payoffText.replace(/[^0-9.-]+/g, ''));
+
+        if (isNaN(restructureAmount) || restructureAmount < totalPayoff) {
+            showAlert('warning', `Restructuring loan amount must be at least ₱${totalPayoff.toLocaleString()} to pay off the old loan.`);
+            return;
+        }
+
+        const interestRate = selectedLoan ? selectedLoan.interest_rate : 20;
+        const newPrincipal = restructureAmount;
+        const serviceCharge = newPrincipal * 0.03;
+        const cbuRetention = newPrincipal * 0.02;
+        const insurance = newPrincipal * 0.0132;
+        const serviceFee = 35;
+        const notarialFee = 200;
+        const totalNewCharges = serviceCharge + cbuRetention + insurance + serviceFee + notarialFee;
+        const finalLoanAmount = newPrincipal + totalNewCharges;
+        const monthlyRate = interestRate / 100 / 12;
+        const monthlyPayment = finalLoanAmount * (monthlyRate * Math.pow(1 + monthlyRate, 12)) / (Math.pow(1 + monthlyRate, 12) - 1);
+
+        currentCalculation = {
+            new_principal: newPrincipal,
+            final_loan_amount: finalLoanAmount,
+            service_charge: serviceCharge,
+            cbu_retention: cbuRetention,
+            insurance: insurance,
+            service_fee: serviceFee,
+            notarial_fee: notarialFee,
+            total_charges: totalNewCharges,
+            interest_rate: interestRate,
+            monthly_payment: monthlyPayment,
+            total_payoff: totalPayoff
+        };
+
+        displayCalculation(currentCalculation);
+        document.getElementById('calculationResults').style.display = 'block';
+    });
+
+    function displayCalculation(calc) {
+        document.getElementById('calculationContent').innerHTML = `
+            <div class="calc-row">
+                <span class="calc-label">💰 Restructuring Loan Amount:</span>
+                <span class="calc-value" style="color: #0d6e6e;">₱${calc.new_principal.toLocaleString()}</span>
+            </div>
+            <div class="calc-row">
+                <span class="calc-label">├─ Used to Pay Off Old Loan:</span>
+                <span class="calc-value" style="color: #ef4444;">-₱${calc.total_payoff.toLocaleString()}</span>
+            </div>
+            <div class="calc-row" style="border-bottom: 2px solid rgba(146, 64, 14, 0.2); padding-bottom: 12px; margin-bottom: 4px;">
+                <span class="calc-label fw-bold">✨ This becomes NEW PRINCIPAL:</span>
+                <span class="calc-value fw-bold" style="color: #0d6e6e; font-size: 1.1rem;">₱${calc.new_principal.toLocaleString()}</span>
+            </div>
+
+            <div style="margin-top: 8px; font-weight: 600; color: #92400e;">📋 NEW CHARGES (on new principal):</div>
+            <div class="calc-row">
+                <span class="calc-label">Service Charge (3%):</span>
+                <span class="calc-value">₱${calc.service_charge.toLocaleString()}</span>
+            </div>
+            <div class="calc-row">
+                <span class="calc-label">CBU Retention (2%):</span>
+                <span class="calc-value">₱${calc.cbu_retention.toLocaleString()}</span>
+            </div>
+            <div class="calc-row">
+                <span class="calc-label">Insurance (1.32%):</span>
+                <span class="calc-value">₱${calc.insurance.toLocaleString()}</span>
+            </div>
+            <div class="calc-row">
+                <span class="calc-label">Service Fee:</span>
+                <span class="calc-value">₱${calc.service_fee.toLocaleString()}</span>
+            </div>
+            <div class="calc-row">
+                <span class="calc-label">Notarial Fee:</span>
+                <span class="calc-value">₱${calc.notarial_fee.toLocaleString()}</span>
+            </div>
+            <div class="calc-row" style="border-bottom: 2px solid rgba(146, 64, 14, 0.2); padding-bottom: 12px;">
+                <span class="calc-label fw-bold">Total New Charges:</span>
+                <span class="calc-value fw-bold">₱${calc.total_charges.toLocaleString()}</span>
+            </div>
+
+            <div class="calc-total">
+                <div class="calc-row">
+                    <span class="calc-label fw-bold" style="font-size: 1.1rem;">🎯 FINAL RESTRUCTURED LOAN:</span>
+                    <span class="calc-value fw-bold" style="font-size: 1.3rem; color: #0d6e6e;">₱${calc.final_loan_amount.toLocaleString()}</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">Interest Rate:</span>
+                    <span class="calc-value">${calc.interest_rate}% per annum</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">New Term:</span>
+                    <span class="calc-value">12 months</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label fw-bold">New Monthly Payment:</span>
+                    <span class="calc-value fw-bold" style="color: #10b981;">₱${calc.monthly_payment.toLocaleString()}</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label" style="color: #ef4444;">⚠️ Cash Released to Member:</span>
+                    <span class="calc-value" style="color: #ef4444;">₱0.00 (NO CASH)</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label" style="color: #10b981;">✅ Penalty on Old Loan:</span>
+                    <span class="calc-value" style="color: #10b981;">STOPS immediately</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">📈 Interest Continues:</span>
+                    <span class="calc-value">On new principal at ${calc.interest_rate}%</span>
+                </div>
+            </div>
+        `;
+    }
+
+    // Form submission
+    document.getElementById('restructureForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const reason = document.getElementById('restructureReason').value.trim();
+        if (!reason) {
+            showAlert('warning', 'Please provide a reason for restructuring.');
+            return;
+        }
+
+        if (!currentCalculation) {
+            showAlert('warning', 'Please calculate the restructuring first.');
+            return;
+        }
+
+        const requestData = {
+            member_id: parseInt(document.getElementById('memberId').value) || 0,
+            loan_id: parseInt(document.getElementById('loanId').value),
+            reason: reason,
+            restructure_loan_amount: parseFloat(document.getElementById('restructureAmount').value),
+            calculation: currentCalculation
+        };
+
+        showLoading();
+
+        fetch('/staff/api/restructuring/request/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                showAlert('success', `✅ Restructuring request #${data.request_number} submitted successfully!`);
+                document.getElementById('submitBtn').disabled = true;
+                document.getElementById('submitBtn').innerHTML = '<i class="bi bi-check-circle"></i> Submitted';
+
+                setTimeout(() => {
+                    window.location.href = '/staff/restructuring/';
+                }, 3000);
+            } else {
+                showAlert('error', 'Error: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showAlert('error', 'Error submitting request: ' + error);
+        });
+    });
+
+    // Helper functions
+    function showAlert(type, message) {
+        const alertContainer = document.getElementById('results');
+        let alertClass, icon;
+
+        if (type === 'error') {
+            alertClass = 'alert-warning-custom';
+            icon = 'bi-exclamation-triangle-fill';
+        } else if (type === 'success') {
+            alertClass = 'alert-success-custom';
+            icon = 'bi-check-circle-fill';
+        } else {
+            alertClass = 'alert-warning-custom';
+            icon = 'bi-info-circle-fill';
+        }
+
+        alertContainer.innerHTML = `
+            <div class="${alertClass}">
+                <i class="bi ${icon}"></i>
+                <div style="flex: 1;">${message}</div>
+            </div>
+        `;
+
+        if (type !== 'success') {
+            setTimeout(() => {
+                if (alertContainer.innerHTML.includes(message)) {
+                    alertContainer.innerHTML = '';
+                }
+            }, 8000);
+        }
+    }
+
+    function showLoading() {
+        document.getElementById('loadingSpinner').style.display = 'block';
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingSpinner').style.display = 'none';
+    }
+
+    function getCSRFToken() {
+        let cv = null;
+        if (document.cookie) {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith('csrftoken=')) {
+                    cv = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cv;
+    }
+
+    function resetForm() {
+        document.getElementById('restructuringForm').style.display = 'none';
+        document.getElementById('calculationResults').style.display = 'none';
+        document.getElementById('results').innerHTML = '';
+        document.getElementById('memberSearch').value = '';
+        selectedMember = null;
+        selectedLoan = null;
+        currentCalculation = null;
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').innerHTML = '<i class="bi bi-send-check-fill"></i> Submit Restructuring Request';
+        memberSearchInput.focus();
     }
 
     function clearSearch() {
-        memberSearchInput.value = '';
         resultsDiv.innerHTML = '';
+        memberSearchInput.value = '';
         memberSearchInput.focus();
     }
 
@@ -565,7 +1298,9 @@
 
     // Focus on search input on page load
     document.addEventListener('DOMContentLoaded', function() {
-        memberSearchInput.focus();
+        if (!loanIdParam) {
+            memberSearchInput.focus();
+        }
     });
 </script>
 {% endblock %}

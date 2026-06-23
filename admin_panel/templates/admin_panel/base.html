@@ -144,7 +144,9 @@
             transform: scale(1.05);
         }
 
-        /* ===== NOTIFICATION BELL STYLES ===== */
+        /* ============================================================
+           NOTIFICATION BELL WITH SOUND & POP-UP
+        ============================================================ */
         .notification-dropdown {
             position: relative;
             margin-right: 10px;
@@ -190,6 +192,12 @@
             justify-content: center;
             padding: 0 5px;
             border: 2px solid var(--brand-primary);
+            animation: bellPulse 2s infinite;
+        }
+
+        @keyframes bellPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         .notification-menu {
@@ -201,6 +209,7 @@
             box-shadow: var(--shadow-lg);
             background: var(--bg-card);
             border: 1px solid var(--border-color);
+            overflow: hidden;
         }
 
         .notification-header {
@@ -255,6 +264,10 @@
             background: var(--info-bg);
         }
 
+        [data-theme="dark"] .notification-item.unread {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
         .notification-icon {
             width: 36px;
             height: 36px;
@@ -267,10 +280,12 @@
 
         .notification-icon i {
             font-size: 1.1rem;
+            color: white;
         }
 
         .notification-content {
             flex: 1;
+            min-width: 0;
         }
 
         .notification-title {
@@ -285,6 +300,10 @@
             color: var(--text-secondary);
             margin-bottom: 4px;
             line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .notification-time {
@@ -318,6 +337,13 @@
         .empty-notifications i {
             font-size: 2rem;
             margin-bottom: 10px;
+        }
+
+        @media (max-width: 576px) {
+            .notification-menu {
+                width: 320px;
+                max-width: 92vw;
+            }
         }
 
         .navbar-left {
@@ -834,7 +860,9 @@
                 <i class="bi bi-moon-stars"></i>
             </button>
 
-            <!-- NOTIFICATION BELL -->
+            <!-- ============================================================
+            NOTIFICATION BELL WITH DROPDOWN
+            ============================================================ -->
             <div class="dropdown notification-dropdown">
                 <button class="notification-bell" data-bs-toggle="dropdown" aria-expanded="false" id="notificationBell">
                     <i class="bi bi-bell"></i>
@@ -968,7 +996,6 @@
                     <a class="nav-link" href="{% url 'admin_panel:notifications_list' %}" data-nav="notifications">
                         <i class="bi bi-bell"></i>
                         <span>Notifications</span>
-                        <!-- Sidebar notification badge -->
                         <span class="nav-badge" id="sidebarNotificationBadge" style="display: none;"></span>
                     </a>
                 </div>
@@ -1060,7 +1087,9 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Theme Toggle
+        // ============================================================
+        // THEME TOGGLE
+        // ============================================================
         const theme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', theme);
 
@@ -1083,7 +1112,9 @@
             updateThemeIcon();
         });
 
-        // Sidebar Collapse
+        // ============================================================
+        // SIDEBAR
+        // ============================================================
         const sidebar = document.getElementById('sidebar');
         const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
         const body = document.body;
@@ -1127,194 +1158,9 @@
             }
         });
 
-        // NOTIFICATION SYSTEM
-        let notificationInterval = null;
-        let currentUnreadCount = 0;
-
-        function loadNotifications() {
-            fetch('/api/notifications/')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        currentUnreadCount = data.unread_count;
-                        updateNotificationBadges(currentUnreadCount);
-                        renderNotificationList(data.notifications || []);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading notifications:', error);
-                });
-        }
-
-        function updateNotificationBadges(count) {
-            const bellBadge = document.getElementById('notificationBadge');
-            const sidebarBadge = document.getElementById('sidebarNotificationBadge');
-
-            if (count > 0) {
-                bellBadge.style.display = 'flex';
-                bellBadge.textContent = count > 99 ? '99+' : count;
-                if (sidebarBadge) {
-                    sidebarBadge.style.display = 'inline-flex';
-                    sidebarBadge.textContent = count > 99 ? '99+' : count;
-                }
-            } else {
-                bellBadge.style.display = 'none';
-                if (sidebarBadge) {
-                    sidebarBadge.style.display = 'none';
-                }
-            }
-        }
-
-        function renderNotificationList(notifications) {
-            const container = document.getElementById('notificationList');
-
-            if (!notifications || notifications.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-notifications">
-                        <i class="bi bi-bell-slash"></i>
-                        <p class="mb-0">No notifications</p>
-                        <small class="text-muted">You're all caught up!</small>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = notifications.map(notif => `
-                <a href="${notif.link || '#'}" class="notification-item ${notif.is_read ? '' : 'unread'}" data-id="${notif.id}">
-                    <div class="notification-icon" style="background: ${getNotificationIconBg(notif.notification_type)}">
-                        <i class="bi ${getNotificationIcon(notif.notification_type)}" style="color: white;"></i>
-                    </div>
-                    <div class="notification-content">
-                        <div class="notification-title">${escapeHtml(notif.title)}</div>
-                        <div class="notification-message">${escapeHtml(notif.message)}</div>
-                        <div class="notification-time">${formatTimeAgo(notif.created_at)}</div>
-                    </div>
-                </a>
-            `).join('');
-
-            // Attach click handlers to mark as read
-            document.querySelectorAll('.notification-item').forEach(item => {
-                item.addEventListener('click', function(e) {
-                    const id = this.dataset.id;
-                    if (id && this.classList.contains('unread')) {
-                        markNotificationAsRead(id);
-                    }
-                });
-            });
-        }
-
-        function getNotificationIconBg(type) {
-            switch(type) {
-                case 'application': return '#0d6e6e';
-                case 'payment': return '#10b981';
-                case 'approval': return '#3b82f6';
-                case 'alert': return '#ef4444';
-                default: return '#6b7280';
-            }
-        }
-
-        function getNotificationIcon(type) {
-            switch(type) {
-                case 'application': return 'bi-file-text';
-                case 'payment': return 'bi-cash';
-                case 'approval': return 'bi-check-circle';
-                case 'alert': return 'bi-exclamation-triangle';
-                default: return 'bi-bell';
-            }
-        }
-
-        function formatTimeAgo(dateString) {
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMs / 3600000);
-            const diffDays = Math.floor(diffMs / 86400000);
-
-            if (diffMins < 1) return 'Just now';
-            if (diffMins < 60) return `${diffMins} min ago`;
-            if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-            if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-            return date.toLocaleDateString();
-        }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function markNotificationAsRead(notificationId) {
-            fetch(`/api/notifications/mark-read/${notificationId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCSRFToken(),
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    loadNotifications(); // Reload to update counts
-                }
-            })
-            .catch(error => console.error('Error marking notification as read:', error));
-        }
-
-        function markAllNotificationsAsRead() {
-            fetch('/api/notifications/mark-all-read/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCSRFToken(),
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    loadNotifications();
-                }
-            })
-            .catch(error => console.error('Error marking all as read:', error));
-        }
-
-        function getCSRFToken() {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, 10) === 'csrftoken=') {
-                        cookieValue = decodeURIComponent(cookie.substring(10));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        // Initialize notifications on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadNotifications();
-            // Refresh notifications every 30 seconds
-            notificationInterval = setInterval(loadNotifications, 30000);
-        });
-
-        // Clean up interval on page unload
-        window.addEventListener('beforeunload', function() {
-            if (notificationInterval) {
-                clearInterval(notificationInterval);
-            }
-        });
-
-        // Mark all read button
-        document.getElementById('markAllReadBtn')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            markAllNotificationsAsRead();
-        });
-
-        // Active nav link highlighting
+        // ============================================================
+        // ACTIVE NAV LINK
+        // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             const currentPath = window.location.pathname;
             const navPaths = {
@@ -1351,7 +1197,9 @@
             }
         });
 
-        // Logout modal
+        // ============================================================
+        // LOGOUT MODAL
+        // ============================================================
         const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
         document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
             e.preventDefault();
@@ -1360,6 +1208,473 @@
         document.getElementById('logoutBtnDropdown')?.addEventListener('click', function(e) {
             e.preventDefault();
             logoutModal.show();
+        });
+
+        // ============================================================
+        // NOTIFICATION SYSTEM - FIXED WITH ERROR HANDLING
+        // ============================================================
+        let notificationInterval = null;
+        let previousUnreadCount = 0;
+        let audioContext = null;
+        let notificationRetryCount = 0;
+
+        // ============================================================
+        // Play notification sound - Works in all browsers
+        // ============================================================
+        function playNotificationSound() {
+            console.log('🔊 Attempting to play notification sound...');
+
+            try {
+                // Create audio context
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!audioContext) {
+                    audioContext = new AudioContext();
+                }
+
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                if (audioContext.state !== 'running') {
+                    console.log('⚠️ Audio context not running, trying to resume...');
+                    audioContext.resume();
+                    setTimeout(() => playNotificationSound(), 100);
+                    return;
+                }
+
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.type = 'sine';
+
+                const now = audioContext.currentTime;
+                oscillator.frequency.setValueAtTime(523.25, now);
+                oscillator.frequency.setValueAtTime(659.25, now + 0.1);
+                oscillator.frequency.setValueAtTime(783.99, now + 0.2);
+
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.3, now + 0.05);
+                gainNode.gain.linearRampToValueAtTime(0.3, now + 0.25);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+                oscillator.start(now);
+                oscillator.stop(now + 0.4);
+
+                console.log('🔔 Notification sound played successfully!');
+
+            } catch (e) {
+                console.log('🔇 Sound error:', e);
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.frequency.value = 800;
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.3);
+                    console.log('🔔 Fallback sound played!');
+                } catch (fallbackError) {
+                    console.log('⚠️ All sound methods failed');
+                }
+            }
+        }
+
+        // Initialize audio on user interaction
+        function initAudio() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') {
+                    ctx.resume();
+                    console.log('🔊 Audio context initialized');
+                }
+                audioContext = ctx;
+            } catch(e) {
+                console.log('Audio init error:', e);
+            }
+        }
+
+        document.addEventListener('click', initAudio);
+        document.addEventListener('keydown', initAudio);
+
+        // ============================================================
+        // Show browser notification pop-up
+        // ============================================================
+        function showBrowserNotification(title, message, link) {
+            console.log('🔔 Showing browser notification...');
+
+            if (!('Notification' in window)) {
+                console.log('Notifications not supported');
+                return;
+            }
+
+            if (Notification.permission === 'denied') {
+                console.log('Notification permission denied');
+                return;
+            }
+
+            if (Notification.permission !== 'granted') {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        showBrowserNotification(title, message, link);
+                    }
+                });
+                return;
+            }
+
+            try {
+                const notif = new Notification('🔔 TOMPuCO Notification', {
+                    body: message,
+                    icon: '/static/images/logo.png',
+                    tag: 'tompuco-notification-' + Date.now(),
+                    requireInteraction: true,
+                    silent: false,
+                    vibrate: [200, 100, 200]
+                });
+
+                notif.onclick = function() {
+                    window.focus();
+                    if (link) {
+                        window.location.href = link;
+                    }
+                    this.close();
+                };
+
+                setTimeout(() => {
+                    if (notif) notif.close();
+                }, 15000);
+
+                console.log('🔔 Browser notification shown!');
+            } catch(e) {
+                console.log('Notification error:', e);
+            }
+        }
+
+        // ============================================================
+        // Load notifications - FIXED with better error handling
+        // ============================================================
+        function loadNotifications() {
+            const apiUrl = '/superadmin/api/notifications/';
+
+            fetch(apiUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Reset retry count on success
+                notificationRetryCount = 0;
+
+                if (data.success) {
+                    const unreadCount = data.unread_count || 0;
+                    const notifications = data.notifications || [];
+
+                    // Check if new notification arrived
+                    if (unreadCount > previousUnreadCount && previousUnreadCount > 0) {
+                        console.log('🔔 New notification detected! Playing sound...');
+                        playNotificationSound();
+
+                        if (notifications.length > 0) {
+                            const latest = notifications[0];
+                            showBrowserNotification(
+                                latest.title || 'New Notification',
+                                (latest.message || '').substring(0, 100),
+                                latest.link || '/superadmin/notifications/'
+                            );
+                        }
+                    }
+
+                    previousUnreadCount = unreadCount;
+                    updateNotificationBadges(unreadCount);
+                    renderNotificationList(notifications);
+                } else {
+                    console.error('API returned error:', data.error || 'Unknown error');
+                    showNotificationError(data.error || 'Could not load notifications');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading notifications:', error);
+                notificationRetryCount++;
+
+                // Show error message
+                const container = document.getElementById('notificationList');
+
+                if (error.message.includes('Failed to fetch') || error.message.includes('ERR_CONNECTION_REFUSED')) {
+                    container.innerHTML = `
+                        <div class="empty-notifications">
+                            <i class="bi bi-wifi-off"></i>
+                            <p class="mb-0">Cannot connect to server</p>
+                            <small class="text-muted">Check if server is running</small>
+                            <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadNotifications()">
+                                <i class="bi bi-arrow-repeat"></i> Retry
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-notifications">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <p class="mb-0">Error loading notifications</p>
+                            <small class="text-muted">${error.message || 'Please refresh the page'}</small>
+                            <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadNotifications()">
+                                <i class="bi bi-arrow-repeat"></i> Retry
+                            </button>
+                        </div>
+                    `;
+                }
+
+                // Retry after 30 seconds if failed
+                if (notificationRetryCount < 5) {
+                    setTimeout(loadNotifications, 30000);
+                }
+            });
+        }
+
+        function showNotificationError(message) {
+            const container = document.getElementById('notificationList');
+            container.innerHTML = `
+                <div class="empty-notifications">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <p class="mb-0">${message}</p>
+                    <small class="text-muted">Please refresh the page</small>
+                </div>
+            `;
+        }
+
+        function updateNotificationBadges(count) {
+            const bellBadge = document.getElementById('notificationBadge');
+            const sidebarBadge = document.getElementById('sidebarNotificationBadge');
+
+            if (count > 0) {
+                const displayCount = count > 99 ? '99+' : count;
+                if (bellBadge) {
+                    bellBadge.style.display = 'flex';
+                    bellBadge.textContent = displayCount;
+                }
+                if (sidebarBadge) {
+                    sidebarBadge.style.display = 'inline-flex';
+                    sidebarBadge.textContent = displayCount;
+                }
+            } else {
+                if (bellBadge) bellBadge.style.display = 'none';
+                if (sidebarBadge) sidebarBadge.style.display = 'none';
+            }
+        }
+
+        function renderNotificationList(notifications) {
+            const container = document.getElementById('notificationList');
+
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-notifications">
+                        <i class="bi bi-bell-slash"></i>
+                        <p class="mb-0">No notifications</p>
+                        <small class="text-muted">You're all caught up!</small>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            notifications.slice(0, 5).forEach(notif => {
+                const iconMap = {
+                    'application': 'bi-file-text',
+                    'payment': 'bi-cash-stack',
+                    'payment_received': 'bi-cash-stack',
+                    'loan_approved': 'bi-check-circle',
+                    'overdue_alert': 'bi-exclamation-triangle',
+                    'system': 'bi-gear',
+                    'profile_update': 'bi-person-check'
+                };
+                const icon = iconMap[notif.notification_type] || 'bi-bell';
+                const bgColor = {
+                    'application': '#0d6e6e',
+                    'payment': '#10b981',
+                    'payment_received': '#10b981',
+                    'loan_approved': '#3b82f6',
+                    'overdue_alert': '#ef4444',
+                    'system': '#6b7280',
+                    'profile_update': '#8b5cf6'
+                }[notif.notification_type] || '#6b7280';
+
+                let link = notif.link || '#';
+                if (link === '#' || !link) {
+                    switch (notif.notification_type) {
+                        case 'loan_approved':
+                        case 'application':
+                            link = '/superadmin/loan-applications/';
+                            break;
+                        case 'payment':
+                        case 'payment_received':
+                            link = '/superadmin/payments/';
+                            break;
+                        case 'overdue_alert':
+                            link = '/superadmin/loans/';
+                            break;
+                        case 'profile_update':
+                            link = '/superadmin/profile/';
+                            break;
+                        case 'system':
+                            link = '/superadmin/system-settings/';
+                            break;
+                        default:
+                            link = '/superadmin/notifications/';
+                    }
+                }
+
+                html += `
+                    <a href="${link}" class="notification-item ${notif.is_read ? '' : 'unread'}" data-id="${notif.id}" data-link="${link}">
+                        <div class="notification-icon" style="background: ${bgColor};">
+                            <i class="bi ${icon}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">${escapeHtml(notif.title)}</div>
+                            <div class="notification-message">${escapeHtml(notif.message)}</div>
+                            <div class="notification-time">${formatTimeAgo(notif.created_at)}</div>
+                        </div>
+                    </a>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            document.querySelectorAll('.notification-item.unread').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    const id = this.dataset.id;
+                    if (id) {
+                        markNotificationAsRead(id);
+                    }
+                });
+            });
+        }
+
+        function formatTimeAgo(dateString) {
+            if (!dateString) return 'Just now';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return diffMins + 'm ago';
+            if (diffHours < 24) return diffHours + 'h ago';
+            if (diffDays < 7) return diffDays + 'd ago';
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============================================================
+        // Mark notification as read
+        // ============================================================
+        function markNotificationAsRead(notificationId) {
+            const url = `/superadmin/notifications/${notificationId}/read/`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                }
+            })
+            .catch(error => console.error('Error marking notification as read:', error));
+        }
+
+        function markAllNotificationsAsRead() {
+            const url = '/superadmin/notifications/mark-all-read/';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                }
+            })
+            .catch(error => console.error('Error marking all as read:', error));
+        }
+
+        function getCSRFToken() {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, 10) === 'csrftoken=') {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // ============================================================
+        // Test sound function - Available in console
+        // ============================================================
+        window.testNotificationSound = function() {
+            console.log('🔊 Testing notification sound...');
+            playNotificationSound();
+            showBrowserNotification(
+                '🔔 Test Notification',
+                'This is a test notification to check sound and popup!',
+                '/superadmin/notifications/'
+            );
+        };
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Initialize notifications on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a moment before loading notifications
+            setTimeout(loadNotifications, 500);
+            notificationInterval = setInterval(loadNotifications, 30000);
+        });
+
+        // Clean up interval on page unload
+        window.addEventListener('beforeunload', function() {
+            if (notificationInterval) {
+                clearInterval(notificationInterval);
+            }
+        });
+
+        // Mark all read button
+        document.getElementById('markAllReadBtn')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            markAllNotificationsAsRead();
         });
 
         // Fix favicon

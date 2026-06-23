@@ -10,29 +10,6 @@
        EXPLICIT COLORS FOR BOTH LIGHT AND DARK MODES
     ============================================================ */
 
-    /* Header Section */
-    .page-header-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 15px;
-        margin-bottom: 24px;
-    }
-
-    .page-title-section h4 {
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin: 0;
-        color: var(--text-primary);
-    }
-
-    .page-title-section p {
-        margin: 4px 0 0;
-        font-size: 0.8rem;
-        color: var(--text-muted);
-    }
-
     /* Stats Grid */
     .stats-grid {
         display: grid;
@@ -349,9 +326,7 @@
     [data-theme="dark"] .status-approved { background: rgba(16, 185, 129, 0.2); color: #34d399; }
     [data-theme="dark"] .status-rejected { background: rgba(239, 68, 68, 0.2); color: #f87171; }
 
-    /* ============================================================
-       ACTION BUTTONS - FULLY VISIBLE IN LIGHT MODE
-    ============================================================ */
+    /* Action Buttons */
     .action-buttons {
         display: flex;
         gap: 8px;
@@ -552,19 +527,19 @@
 {% block content %}
 <!-- Stats Cards -->
 <div class="stats-grid">
-    <div class="stat-card-sm pending" onclick="filterByStatus('pending')">
+    <div class="stat-card-sm pending" onclick="filterByStatus('pending_staff_review')">
         <div class="stat-label">Pending Review</div>
         <div class="stat-value">{{ pending_count|default:0 }}</div>
     </div>
-    <div class="stat-card-sm" onclick="filterByStatus('committee')">
+    <div class="stat-card-sm" onclick="filterByStatus('with_committee')">
         <div class="stat-label">With Committee</div>
         <div class="stat-value">{{ committee_count|default:0 }}</div>
     </div>
-    <div class="stat-card-sm approved" onclick="filterByStatus('approved')">
+    <div class="stat-card-sm approved" onclick="filterByStatus('manager_approved')">
         <div class="stat-label">Approved</div>
         <div class="stat-value">{{ approved_count|default:0 }}</div>
     </div>
-    <div class="stat-card-sm" onclick="filterByStatus('ready')">
+    <div class="stat-card-sm" onclick="filterByStatus('ready_for_disbursement')">
         <div class="stat-label">Ready for Disbursement</div>
         <div class="stat-value">{{ ready_count|default:0 }}</div>
     </div>
@@ -582,13 +557,14 @@
 <div class="filter-bar">
     <div class="filter-group">
         <label><i class="bi bi-funnel me-1"></i> Status Filter</label>
-        <select id="statusFilter" class="form-select-sm">
+        <select id="statusFilter">
             <option value="">All Status</option>
-            <option value="pending">Pending Staff Review</option>
-            <option value="committee">With Committee</option>
+            <option value="pending_staff_review">Pending Staff Review</option>
+            <option value="with_committee">With Committee</option>
             <option value="line_approved">Line Approved</option>
             <option value="manager_approved">Manager Approved</option>
-            <option value="ready">Ready for Disbursement</option>
+            <option value="ready_for_disbursement">Ready for Disbursement</option>
+            <option value="disbursed">Disbursed</option>
             <option value="rejected">Rejected</option>
         </select>
     </div>
@@ -637,41 +613,49 @@
             </thead>
             <tbody>
                 {% for application in applications %}
-                <tr data-id="{{ application.id }}" data-status="{{ application.status }}" data-date="{{ application.application_date|date:'Y-m-d' }}">
+                <tr data-id="{{ application.id }}" data-status="{{ application.status }}" data-date="{{ application.applied_date|date:'Y-m-d' }}">
                     <td>
                         <div class="member-info">
                             <div class="member-avatar">
                                 {{ application.member.first_name|first|default:"M"|upper }}{{ application.member.last_name|first|default:"" }}
                             </div>
                             <div class="member-details">
-                                <div class="member-name">{{ application.member.get_full_name|default:application.member.user.username }}</div>
+                                <div class="member-name">{{ application.member.last_name }}, {{ application.member.first_name }}</div>
                                 <div class="member-id">{{ application.member.membership_number|default:"N/A" }}</div>
                             </div>
                         </div>
-                    </div>
+                    </td>
                     <td>
-                        <strong>{{ application.loan_product.name }}</strong>
-                        <div class="text-muted small">{{ application.term_months }} months term</div>
-                    </div>
-                    <td class="amount-cell">₱ {{ application.amount|floatformat:2 }}</div>
-                    <td>{{ application.application_date|date:"M d, Y" }}</div>
+                        <strong>{{ application.loan_product.name|default:"N/A" }}</strong>
+                        <div class="text-muted small">{{ application.loan_product.term_months|default:12 }} months term</div>
+                    </td>
+                    <td class="amount-cell">₱ {{ application.amount|floatformat:2 }}</td>
                     <td>
-                        {% if application.status == 'pending' %}
+                        {% if application.applied_date %}
+                            {{ application.applied_date|date:"M d, Y" }}
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if application.status == 'pending_staff_review' %}
                             <span class="status-badge status-pending"><i class="bi bi-hourglass-split"></i> Pending Review</span>
-                        {% elif application.status == 'committee' %}
+                        {% elif application.status == 'with_committee' %}
                             <span class="status-badge status-review"><i class="bi bi-people"></i> With Committee</span>
                         {% elif application.status == 'line_approved' %}
                             <span class="status-badge status-approved"><i class="bi bi-check-circle"></i> Line Approved</span>
                         {% elif application.status == 'manager_approved' %}
                             <span class="status-badge status-approved"><i class="bi bi-check-circle-fill"></i> Manager Approved</span>
-                        {% elif application.status == 'ready' %}
+                        {% elif application.status == 'ready_for_disbursement' %}
                             <span class="status-badge status-approved"><i class="bi bi-rocket-takeoff"></i> Ready for Disbursement</span>
+                        {% elif application.status == 'disbursed' %}
+                            <span class="status-badge status-approved"><i class="bi bi-bank"></i> Disbursed</span>
                         {% elif application.status == 'rejected' %}
                             <span class="status-badge status-rejected"><i class="bi bi-x-circle"></i> Rejected</span>
                         {% else %}
                             <span class="status-badge status-pending">{{ application.status|title }}</span>
                         {% endif %}
-                    </div>
+                    </td>
                     <td class="action-buttons">
                         <button class="btn-view-app" onclick="viewApplicationDetails({{ application.id }})">
                             <i class="bi bi-eye"></i> View Details
@@ -681,7 +665,7 @@
                                 <i class="bi bi-arrow-repeat"></i> Reapply
                             </button>
                         {% endif %}
-                    </div>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -690,7 +674,7 @@
                             <i class="bi bi-inbox"></i>
                             <p>No loan applications found</p>
                         </div>
-                    </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -832,11 +816,11 @@ async function viewApplicationDetails(applicationId) {
         if (response.ok) {
             data = await response.json();
         } else {
-            data = getMockApplicationData(applicationId);
+            data = getApplicationDataFromTable(applicationId);
         }
 
         renderApplicationDetails(data);
-        if (data.status !== 'rejected') {
+        if (data.status !== 'rejected' && data.status !== 'disbursed') {
             processBtn.style.display = 'inline-flex';
             processBtn.onclick = () => {
                 window.location.href = `/superadmin/loan-applications/${applicationId}/process/`;
@@ -846,30 +830,24 @@ async function viewApplicationDetails(applicationId) {
         }
     } catch (error) {
         console.error('Error:', error);
-        renderApplicationDetails(getMockApplicationData(applicationId));
+        renderApplicationDetails(getApplicationDataFromTable(applicationId));
     }
 }
 
 function renderApplicationDetails(data) {
     const modalBody = document.getElementById('modalApplicationBody');
 
-    const statusClass = {
-        'pending': 'status-pending',
-        'committee': 'status-review',
-        'line_approved': 'status-approved',
-        'manager_approved': 'status-approved',
-        'ready': 'status-approved',
-        'rejected': 'status-rejected'
-    }[data.status] || 'status-pending';
+    const statusMap = {
+        'pending_staff_review': { class: 'status-pending', icon: 'hourglass-split', label: 'Pending Staff Review' },
+        'with_committee': { class: 'status-review', icon: 'people', label: 'With Committee' },
+        'line_approved': { class: 'status-approved', icon: 'check-circle', label: 'Line Approved' },
+        'manager_approved': { class: 'status-approved', icon: 'check-circle-fill', label: 'Manager Approved' },
+        'ready_for_disbursement': { class: 'status-approved', icon: 'rocket-takeoff', label: 'Ready for Disbursement' },
+        'disbursed': { class: 'status-approved', icon: 'bank', label: 'Disbursed' },
+        'rejected': { class: 'status-rejected', icon: 'x-circle', label: 'Rejected' }
+    };
 
-    const statusIcon = {
-        'pending': 'hourglass-split',
-        'committee': 'people',
-        'line_approved': 'check-circle',
-        'manager_approved': 'check-circle-fill',
-        'ready': 'rocket-takeoff',
-        'rejected': 'x-circle'
-    }[data.status] || 'hourglass-split';
+    const statusInfo = statusMap[data.status] || { class: 'status-pending', icon: 'hourglass-split', label: data.status };
 
     modalBody.innerHTML = `
         <div class="detail-grid">
@@ -891,12 +869,12 @@ function renderApplicationDetails(data) {
             <div class="detail-label"><i class="bi bi-info-circle me-1"></i> Status Information</div>
             <div class="detail-value">
                 <strong>Current Status:</strong>
-                <span class="status-badge ${statusClass}" style="margin-left: 8px;">
-                    <i class="bi bi-${statusIcon}"></i> ${data.status_label}
+                <span class="status-badge ${statusInfo.class}" style="margin-left: 8px;">
+                    <i class="bi bi-${statusInfo.icon}"></i> ${statusInfo.label}
                 </span>
             </div>
-            <div class="detail-value"><strong>Application Date:</strong> ${data.application_date}</div>
-            <div class="detail-value"><strong>Last Updated:</strong> ${data.last_updated}</div>
+            <div class="detail-value"><strong>Application Date:</strong> ${data.application_date || 'N/A'}</div>
+            <div class="detail-value"><strong>Last Updated:</strong> ${data.last_updated || 'N/A'}</div>
         </div>
         ${data.rejection_reason ? `
         <div class="detail-section">
@@ -905,6 +883,42 @@ function renderApplicationDetails(data) {
         </div>
         ` : ''}
     `;
+}
+
+function getApplicationDataFromTable(applicationId) {
+    const rows = document.querySelectorAll('#applicationsTable tbody tr');
+    for (let row of rows) {
+        const idCell = row.dataset.id;
+        if (idCell && String(idCell) === String(applicationId)) {
+            const cells = row.querySelectorAll('td');
+            return {
+                id: applicationId,
+                member_name: cells[0]?.querySelector('.member-name')?.innerText || 'Unknown',
+                member_id: cells[0]?.querySelector('.member-id')?.innerText || 'N/A',
+                product_name: cells[1]?.querySelector('strong')?.innerText || 'N/A',
+                amount: parseFloat(cells[2]?.innerText.replace('₱', '').replace(/,/g, '')) || 0,
+                term_months: cells[1]?.querySelector('.small')?.innerText?.match(/\d+/)?.[0] || 12,
+                status: row.dataset.status || 'pending_staff_review',
+                application_date: cells[3]?.innerText.trim() || 'N/A',
+                last_updated: 'N/A',
+                purpose: 'Not specified',
+                rejection_reason: null
+            };
+        }
+    }
+    return {
+        id: applicationId,
+        member_name: 'Unknown Member',
+        member_id: 'N/A',
+        product_name: 'N/A',
+        amount: 0,
+        term_months: 12,
+        status: 'pending_staff_review',
+        application_date: 'N/A',
+        last_updated: 'N/A',
+        purpose: 'Not specified',
+        rejection_reason: null
+    };
 }
 
 // Reapply Application
@@ -927,22 +941,11 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function getMockApplicationData(id) {
-    return {
-        id: id,
-        member_name: 'Maria Santos',
-        member_id: 'M-2024-00123',
-        member_email: 'maria.santos@example.com',
-        product_name: 'Salary Loan',
-        amount: 50000,
-        term_months: 12,
-        purpose: 'Home renovation',
-        status: 'pending',
-        status_label: 'Pending Staff Review',
-        application_date: '2024-01-15',
-        last_updated: '2024-01-15 10:30 AM',
-        rejection_reason: null
-    };
-}
+// Enter key to apply filters
+document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        document.getElementById('applyFiltersBtn').click();
+    }
+});
 </script>
 {% endblock %}

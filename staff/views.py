@@ -10,6 +10,7 @@ import json
 from datetime import date, timedelta
 from decimal import Decimal
 import random
+from main.models import Notification
 import secrets
 import io
 import base64
@@ -201,6 +202,11 @@ def dashboard(request):
     overdue_loans = Loan.objects.filter(status='overdue').count()
 
     # ============================================================
+    # OVERDUE LOANS LIST - ADDED FOR WIDGET
+    # ============================================================
+    overdue_loans_list = Loan.objects.filter(status='overdue').select_related('member')[:10]
+
+    # ============================================================
     # FINANCIAL SUMMARY
     # ============================================================
     total_principal = Loan.objects.aggregate(total=Sum('amount'))['total'] or 0
@@ -253,7 +259,8 @@ def dashboard(request):
         'total_applications': total_applications,
         'pending_count': pending_count,
         'active_loans': active_loans,
-        'overdue_loans': overdue_loans,
+        'overdue_loans': overdue_loans,          # Count for stats card
+        'overdue_loans_list': overdue_loans_list, # List for widget - ADD THIS
         'total_principal': total_principal,
         'total_paid': total_paid,
         'collection_rate': round(collection_rate, 2),
@@ -271,7 +278,6 @@ def dashboard(request):
     }
 
     return render(request, 'staff/dashboard.html', context)
-
 
 # ==================== APPLICATION VIEWS ====================
 
@@ -435,68 +441,88 @@ def add_charges(request, pk):
     staff_profile = request.user.staff_profile
     application = get_object_or_404(LoanApplication, pk=pk)
 
+    # Check if application is approved by manager
     if application.status != 'manager_approved':
         messages.error(request, 'Application must be approved by manager before adding charges.')
         return redirect('staff:staff_applications')
 
-    approved_line = float(application.approved_line or 0)
+    # Get the approved line - use approved_line if set, otherwise use amount field
+    approved_line = float(application.approved_line or application.amount or 0)
+
+    # If approved_line is still 0, show a warning
+    if approved_line == 0:
+        messages.warning(request,
+                         'Warning: Approved line is 0. Please ensure the committee has approved a line amount.')
 
     if request.method == 'POST':
-        service_charge = approved_line * 0.03
-        cbu_retention = approved_line * 0.02
-        insurance = approved_line * 0.0132
-        service_fee = 35
-        notarial_fee = 200
+        try:
+            # Auto-calculated charges
+            service_charge = approved_line * 0.03
+            cbu_retention = approved_line * 0.02
+            insurance = approved_line * 0.0132
 
-        inspector_fee = float(request.POST.get('inspector_fee', 0))
-        trade_fert = float(request.POST.get('trade_fert', 0))
-        ca_int = float(request.POST.get('ca_int', 0))
+            # Manual charges from form
+            service_fee = float(request.POST.get('service_fee', 35))
+            notarial_fee = float(request.POST.get('notarial_fee', 200))
+            inspector_fee = float(request.POST.get('inspector_fee', 0))
+            trade_fert = float(request.POST.get('trade_fert', 0))
+            ca_int = float(request.POST.get('ca_int', 0))
 
-        total_auto = service_charge + cbu_retention + insurance + service_fee + notarial_fee
-        total_optional = inspector_fee + trade_fert + ca_int
-        total_deductions = total_auto + total_optional
-        net_proceeds = approved_line - total_deductions  # This calculates correctly
+            total_auto = service_charge + cbu_retention + insurance
+            total_optional = service_fee + notarial_fee + inspector_fee + trade_fert + ca_int
+            total_deductions = total_auto + total_optional
+            net_proceeds = approved_line - total_deductions
 
-        # Save all values
-        application.service_charge = service_charge
-        application.cbu_retention = cbu_retention
-        application.insurance_charge = insurance
-        application.service_fee = service_fee
-        application.notarial_fee = notarial_fee
-        application.inspector_fee = inspector_fee
-        application.trade_fert = trade_fert
-        application.ca_int = ca_int
-        application.total_deductions = total_deductions
-        application.net_proceeds = net_proceeds  # This should be saved
-        application.status = 'ready_for_disbursement'
-        application.save()
+            # Save all values to the application
+            application.service_charge = service_charge
+            application.cbu_retention = cbu_retention
+            application.insurance_charge = insurance
+            application.service_fee = service_fee
+            application.notarial_fee = notarial_fee
+            application.inspector_fee = inspector_fee
+            application.trade_fert = trade_fert
+            application.ca_int = ca_int
+            application.total_deductions = total_deductions
+            application.net_proceeds = net_proceeds
+            application.status = 'ready_for_disbursement'
+            application.save()
 
-        messages.success(request, f'Charges added. Net Proceeds: ₱{net_proceeds:,.2f}')
-        return redirect('staff:staff_applications')
+            messages.success(request, f'✅ Charges added successfully! Net Proceeds: ₱{net_proceeds:,.2f}')
+            return redirect('staff:staff_applications')
 
-    # GET request - show form
+        except Exception as e:
+            messages.error(request, f'Error adding charges: {str(e)}')
+            return redirect('staff:add_charges', pk=pk)
+
+    # GET request - calculate default values
     service_charge = approved_line * 0.03
     cbu_retention = approved_line * 0.02
     insurance = approved_line * 0.0132
     service_fee = 35
     notarial_fee = 200
-    total_auto = service_charge + cbu_retention + insurance + service_fee + notarial_fee
-    net_proceeds = approved_line - total_auto
+    total_auto = service_charge + cbu_retention + insurance
+    total_deductions = total_auto + service_fee + notarial_fee
+    net_proceeds = approved_line - total_deductions
+
+    # Get interest rate from loan product
+    interest_rate = float(application.loan_product.interest_rate) if application.loan_product else 20.0
 
     context = {
         'staff_profile': staff_profile,
         'application': application,
         'approved_line': approved_line,
+        'interest_rate': interest_rate,
         'service_charge': service_charge,
         'cbu_retention': cbu_retention,
         'insurance': insurance,
         'service_fee': service_fee,
         'notarial_fee': notarial_fee,
         'total_auto': total_auto,
+        'total_deductions': total_deductions,
         'net_proceeds': net_proceeds,
     }
 
-    return render(request, 'staff/add_charges.html', context)
+    return render(request, 'staff/applications/add_charges.html', context)
 
 
 @login_required
@@ -675,21 +701,37 @@ def loan_list(request):
 @staff_required
 def loan_detail(request, pk):
     """Loan details with payment schedule"""
+    from main.models import Payment
+    from django.db.models import Sum
+    from datetime import date
+
     staff_profile = request.user.staff_profile
     loan = get_object_or_404(Loan, pk=pk)
+
+    # Get payments for this loan
+    payments = Payment.objects.filter(loan=loan).order_by('-payment_date')[:10]
+
+    # Calculate total paid
+    total_paid = Payment.objects.filter(loan=loan, status='completed').aggregate(total=Sum('amount'))['total'] or 0
+
+    # Add today's date for comparison in template
+    today = date.today()
 
     context = {
         'staff_profile': staff_profile,
         'loan': loan,
+        'payments': payments,
+        'total_paid': total_paid,
+        'today': today,
     }
 
     return render(request, 'staff/loans/detail.html', context)
-
 
 @login_required
 @staff_required
 def loan_payment_schedule(request, pk):
     """View loan payment schedule"""
+    from datetime import date, timedelta
     loan = get_object_or_404(Loan, pk=pk)
 
     schedule = []
@@ -697,34 +739,53 @@ def loan_payment_schedule(request, pk):
     monthly_payment = float(loan.monthly_payment)
     interest_rate = float(loan.interest_rate)
     term_months = loan.term_months
-    monthly_rate = interest_rate / 100 / term_months
+
+    # FIXED: Monthly rate should be divided by 12
+    monthly_rate = interest_rate / 100 / 12
 
     next_date = loan.due_date or (loan.disbursement_date + timedelta(days=30))
+    fixed_monthly_payment = monthly_payment
+    today = date.today()
 
     for i in range(term_months):
         interest = balance * monthly_rate
-        principal = monthly_payment - interest
-        if principal > balance:
+        principal = fixed_monthly_payment - interest
+
+        if i == term_months - 1 or principal > balance:
             principal = balance
-            monthly_payment = interest + principal
+            payment_amount = interest + principal
+        else:
+            payment_amount = fixed_monthly_payment
 
         balance = balance - principal
+        if balance < 0:
+            balance = 0
+
+        # Determine status
+        status = 'pending'
+        is_overdue = False
+        if next_date and next_date < today:
+            is_overdue = True
+            status = 'overdue'
 
         schedule.append({
             'month': i + 1,
-            'due_date': next_date.strftime('%Y-%m-%d'),
-            'payment_amount': round(monthly_payment, 2),
+            'due_date': next_date.strftime('%Y-%m-%d') if next_date else 'TBD',
+            'payment_amount': round(payment_amount, 2),
             'interest': round(interest, 2),
             'principal': round(principal, 2),
-            'balance': round(max(0, balance), 2)
+            'balance': round(max(0, balance), 2),
+            'status': status,
+            'is_overdue': is_overdue,
+            'penalty': 0.0
         })
 
-        next_date = next_date + timedelta(days=30)
+        if next_date:
+            next_date = next_date + timedelta(days=30)
         if balance <= 0:
             break
 
     return JsonResponse({'schedule': schedule})
-
 
 @login_required
 @staff_required
@@ -779,11 +840,36 @@ def export_loans(request):
         cell.font = Font(bold=True, color='FFFFFF')
         cell.fill = PatternFill(start_color='1e3c72', end_color='1e3c72', fill_type='solid')
 
+    # Just get all loans with member
     loans = Loan.objects.select_related('member').all()
+
     for row, loan in enumerate(loans, 2):
         ws.cell(row=row, column=1, value=loan.loan_number)
         ws.cell(row=row, column=2, value=f"{loan.member.last_name}, {loan.member.first_name}")
-        ws.cell(row=row, column=3, value=loan.loan_product.name if loan.loan_product else 'N/A')
+
+        # If there's no loan_type field, use a default
+        # Try to get loan type from various possible sources
+        loan_type = 'N/A'
+
+        # Check if loan has a loan_type attribute
+        if hasattr(loan, 'loan_type'):
+            loan_type = loan.loan_type or 'N/A'
+        # Check if loan has a loan_product attribute
+        elif hasattr(loan, 'loan_product'):
+            if loan.loan_product:
+                if hasattr(loan.loan_product, 'name'):
+                    loan_type = loan.loan_product.name
+                else:
+                    loan_type = str(loan.loan_product)
+        # Check if loan has a product attribute
+        elif hasattr(loan, 'product'):
+            if loan.product:
+                if hasattr(loan.product, 'name'):
+                    loan_type = loan.product.name
+                else:
+                    loan_type = str(loan.product)
+
+        ws.cell(row=row, column=3, value=loan_type)
         ws.cell(row=row, column=4, value=float(loan.amount))
         ws.cell(row=row, column=5, value=float(loan.interest_rate))
         ws.cell(row=row, column=6, value=float(loan.monthly_payment))
@@ -945,17 +1031,72 @@ def payment_receipt_json(request, pk):
 
 
 # ==================== RESTRUCTURING VIEWS ====================
-
 @login_required
 @staff_required
 def restructuring_list(request):
     """Restructuring Management page"""
     staff_profile = request.user.staff_profile
 
+    # Get counts
     pending_count = RestructuringRequest.objects.filter(status__in=['pending_staff', 'with_committee']).count()
     approved_count = RestructuringRequest.objects.filter(status__in=['committee_approved', 'manager_approved']).count()
     completed_count = RestructuringRequest.objects.filter(status='completed').count()
     total_requests = RestructuringRequest.objects.count()
+
+    # Get all restructuring requests with member names
+    restructuring_requests = RestructuringRequest.objects.all().order_by('-created_at')
+
+    # Prepare data for the template
+    requests_data = []
+    for req in restructuring_requests:
+        try:
+            member = Member.objects.get(id=req.member_id)
+            member_name = f"{member.last_name}, {member.first_name}"
+        except Member.DoesNotExist:
+            member_name = "Unknown Member"
+
+        # Status display mapping
+        status_display = {
+            'pending_staff': 'Pending Staff',
+            'with_committee': 'With Committee',
+            'committee_approved': 'Committee Approved',
+            'manager_approved': 'Manager Approved',
+            'completed': 'Completed',
+            'rejected': 'Rejected'
+        }
+
+        status_class = {
+            'pending_staff': 'pending',
+            'with_committee': 'pending',
+            'committee_approved': 'approved',
+            'manager_approved': 'approved',
+            'completed': 'completed',
+            'rejected': 'rejected'
+        }
+
+        status_icon = {
+            'pending_staff': 'bi-clock-history',
+            'with_committee': 'bi-clock-history',
+            'committee_approved': 'bi-check-circle',
+            'manager_approved': 'bi-check-circle',
+            'completed': 'bi-check-circle-fill',
+            'rejected': 'bi-x-circle'
+        }
+
+        requests_data.append({
+            'id': req.id,
+            'request_number': req.request_number,
+            'member_name': member_name,
+            'restructure_amount': float(req.new_principal or 0),
+            'old_payoff': float(req.old_balance or 0),
+            'new_principal': float(req.new_principal or 0),
+            'new_monthly_payment': float(req.new_monthly_payment or 0),
+            'status': req.status,
+            'status_display': status_display.get(req.status, req.status.replace('_', ' ').title()),
+            'status_class': status_class.get(req.status, 'pending'),
+            'status_icon': status_icon.get(req.status, 'bi-clock'),
+            'created_at': req.created_at.strftime('%Y-%m-%d %H:%M') if req.created_at else 'N/A',
+        })
 
     context = {
         'staff_profile': staff_profile,
@@ -963,10 +1104,10 @@ def restructuring_list(request):
         'approved_count': approved_count,
         'completed_count': completed_count,
         'total_requests': total_requests,
+        'restructuring_requests': requests_data,
     }
 
     return render(request, 'staff/restructuring/list.html', context)
-
 
 @login_required
 @staff_required
@@ -975,9 +1116,89 @@ def restructuring_detail(request, pk):
     staff_profile = request.user.staff_profile
     restructure = get_object_or_404(RestructuringRequest, pk=pk)
 
+    # Get member details
+    try:
+        member = Member.objects.get(id=restructure.member_id)
+        member_name = f"{member.last_name}, {member.first_name}"
+        membership_number = member.membership_number
+        contact = member.contact_number or '—'
+        email = member.email or '—'
+    except:
+        member_name = "Unknown Member"
+        membership_number = "N/A"
+        contact = "—"
+        email = "—"
+
+    # Get loan details
+    try:
+        loan = Loan.objects.get(id=restructure.old_loan_id)
+        loan_number = loan.loan_number
+        original_principal = float(loan.amount)
+    except:
+        loan_number = "N/A"
+        original_principal = 0
+
+    # Calculate totals
+    total_payoff = float(restructure.old_balance or 0) + float(restructure.old_interest or 0) + float(
+        restructure.old_penalty or 0)
+
+    # Status display
+    status_display = {
+        'pending_staff': 'Pending Staff',
+        'with_committee': 'With Committee',
+        'committee_approved': 'Committee Approved',
+        'manager_approved': 'Manager Approved',
+        'completed': 'Completed',
+        'rejected': 'Rejected'
+    }
+
+    status_class = {
+        'pending_staff': 'pending',
+        'with_committee': 'pending',
+        'committee_approved': 'approved',
+        'manager_approved': 'approved',
+        'completed': 'completed',
+        'rejected': 'rejected'
+    }
+
+    # Prepare data for template
+    restructure_data = {
+        'id': restructure.id,
+        'request_number': restructure.request_number,
+        'member_name': member_name,
+        'membership_number': membership_number,
+        'contact': contact,
+        'email': email,
+        'loan_number': loan_number,
+        'original_principal': original_principal,
+        'old_balance': float(restructure.old_balance or 0),
+        'old_interest': float(restructure.old_interest or 0),
+        'old_penalty': float(restructure.old_penalty or 0),
+        'total_payoff': total_payoff,
+        'days_overdue': getattr(restructure, 'days_overdue', 0),
+        'new_principal': float(restructure.new_principal or 0),
+        'new_interest_rate': float(restructure.new_interest_rate or 20),
+        'new_monthly_payment': float(restructure.new_monthly_payment or 0),
+        'new_charges': float(restructure.new_charges or 0),
+        'service_charge': float(getattr(restructure, 'service_charge', 0)),
+        'cbu_retention': float(getattr(restructure, 'cbu_retention', 0)),
+        'insurance': float(getattr(restructure, 'insurance', 0)),
+        'service_fee': float(getattr(restructure, 'service_fee', 35)),
+        'notarial_fee': float(getattr(restructure, 'notarial_fee', 200)),
+        'final_loan_amount': float(getattr(restructure, 'final_loan_amount', 0)),
+        'reason': restructure.reason or 'No reason provided',
+        'status': restructure.status,
+        'status_display': status_display.get(restructure.status, restructure.status.replace('_', ' ').title()),
+        'status_class': status_class.get(restructure.status, 'pending'),
+        'created_at': restructure.created_at,
+        'approved_at': getattr(restructure, 'approved_at', None),
+        'completed_at': getattr(restructure, 'completed_at', None),
+    }
+
     context = {
         'staff_profile': staff_profile,
-        'restructure': restructure,
+        'restructure': restructure_data,
+        'can_approve': restructure.status in ['pending_staff', 'with_committee'],
     }
 
     return render(request, 'staff/restructuring/detail.html', context)
@@ -989,97 +1210,134 @@ def restructuring_request_form(request, member_id=None):
     """Restructuring request form"""
     staff_profile = request.user.staff_profile
 
+    loan_id = request.GET.get('loan_id')
+    loan = None
+    member = None
+
+    if loan_id:
+        try:
+            loan = Loan.objects.get(id=loan_id)
+            member = loan.member
+        except Loan.DoesNotExist:
+            pass
+
+    # If member_id is provided, get that member
+    if member_id and not member:
+        try:
+            member = Member.objects.get(id=member_id)
+        except Member.DoesNotExist:
+            pass
+
     context = {
         'staff_profile': staff_profile,
         'member_id': member_id,
+        'loan': loan,
+        'member': member,
+        'today': date.today(),
     }
 
     return render(request, 'staff/restructuring/request.html', context)
-
-
-@csrf_exempt
-@login_required
-@staff_required
-def restructuring_api_request(request):
-    """API endpoint to submit a restructuring request"""
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-
-            if not data.get('member_id'):
-                return JsonResponse({'success': False, 'error': 'Member ID is required'})
-            if not data.get('loan_id'):
-                return JsonResponse({'success': False, 'error': 'Loan ID is required'})
-            if not data.get('reason'):
-                return JsonResponse({'success': False, 'error': 'Reason for restructuring is required'})
-
-            calc = data.get('calculation', {})
-            request_number = f"RST-{datetime.now().strftime('%Y%m%d')}-{str(datetime.now().timestamp())[-6:]}"
-
-            restructuring = RestructuringRequest.objects.create(
-                request_number=request_number,
-                member_id=data.get('member_id'),
-                old_loan_id=data.get('loan_id'),
-                old_balance=calc.get('old_balance', 0),
-                old_interest=calc.get('interest_due', 0),
-                old_penalty=calc.get('penalty', 0),
-                days_overdue=calc.get('days_overdue', 0),
-                new_charges=calc.get('total_new_charges', 0),
-                new_principal=calc.get('new_principal', 0),
-                new_interest_rate=calc.get('interest_rate', 20),
-                new_term_months=12,
-                new_monthly_payment=calc.get('monthly_payment', 0),
-                reason=data.get('reason', ''),
-                status='pending_staff',
-                staff_approved_by=request.user.staff_profile,
-                staff_approved=True
-            )
-
-            return JsonResponse({
-                'success': True,
-                'request_number': request_number,
-                'request_id': restructuring.id
-            })
-
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-
-    return JsonResponse({'error': 'Invalid method'}, status=400)
 
 
 @login_required
 @staff_required
 def restructuring_api_list(request):
     """API endpoint to get list of restructuring requests"""
-    requests = RestructuringRequest.objects.all().order_by('-created_at')[:50]
+    try:
+        # Get all restructuring requests
+        requests = RestructuringRequest.objects.all().order_by('-created_at')
 
-    result = []
-    for req in requests:
-        try:
-            member = Member.objects.get(id=req.member_id)
-            member_name = f"{member.last_name}, {member.first_name}"
-        except:
-            member_name = "Unknown"
+        # Apply filters if provided
+        search = request.GET.get('search', '')
+        status = request.GET.get('status', 'all')
+        date_from = request.GET.get('date_from', '')
 
-        try:
-            loan = Loan.objects.get(id=req.old_loan_id)
-            loan_number = loan.loan_number
-        except:
-            loan_number = "N/A"
+        if search:
+            # Try to find by member name
+            try:
+                members = Member.objects.filter(
+                    Q(first_name__icontains=search) |
+                    Q(last_name__icontains=search) |
+                    Q(membership_number__icontains=search)
+                ).values_list('id', flat=True)
+                requests = requests.filter(member_id__in=members)
+            except:
+                pass
 
-        result.append({
-            'id': req.id,
-            'request_number': req.request_number,
-            'member_name': member_name,
-            'loan_number': loan_number,
-            'old_balance': float(req.old_balance),
-            'new_principal': float(req.new_principal),
-            'new_monthly_payment': float(req.new_monthly_payment),
-            'status': req.status,
-            'created_at': req.created_at.strftime('%Y-%m-%d %H:%M'),
-        })
+            # Also try by loan number
+            try:
+                loans = Loan.objects.filter(loan_number__icontains=search).values_list('id', flat=True)
+                requests = requests.filter(old_loan_id__in=loans)
+            except:
+                pass
 
-    return JsonResponse({'requests': result})
+        if status != 'all':
+            if status == 'pending':
+                requests = requests.filter(status__in=['pending_staff', 'with_committee'])
+            elif status == 'approved':
+                requests = requests.filter(status__in=['committee_approved', 'manager_approved'])
+            elif status == 'completed':
+                requests = requests.filter(status='completed')
+            elif status == 'rejected':
+                requests = requests.filter(status='rejected')
+
+        if date_from:
+            requests = requests.filter(created_at__date__gte=date_from)
+
+        result = []
+        for req in requests:
+            try:
+                member = Member.objects.get(id=req.member_id)
+                member_name = f"{member.last_name}, {member.first_name}"
+            except:
+                member_name = "Unknown Member"
+
+            # Status display mapping
+            status_display = {
+                'pending_staff': 'Pending Staff',
+                'with_committee': 'With Committee',
+                'committee_approved': 'Committee Approved',
+                'manager_approved': 'Manager Approved',
+                'completed': 'Completed',
+                'rejected': 'Rejected'
+            }
+
+            status_class = {
+                'pending_staff': 'pending',
+                'with_committee': 'pending',
+                'committee_approved': 'approved',
+                'manager_approved': 'approved',
+                'completed': 'completed',
+                'rejected': 'rejected'
+            }
+
+            status_icon = {
+                'pending_staff': 'bi-clock-history',
+                'with_committee': 'bi-clock-history',
+                'committee_approved': 'bi-check-circle',
+                'manager_approved': 'bi-check-circle',
+                'completed': 'bi-check-circle-fill',
+                'rejected': 'bi-x-circle'
+            }
+
+            result.append({
+                'id': req.id,
+                'request_number': req.request_number,
+                'member_name': member_name,
+                'restructure_amount': float(req.new_principal or 0),
+                'old_payoff': float(req.old_balance or 0),
+                'new_principal': float(req.new_principal or 0),
+                'new_monthly': float(req.new_monthly_payment or 0),
+                'status': req.status,
+                'status_display': status_display.get(req.status, req.status.replace('_', ' ').title()),
+                'status_class': status_class.get(req.status, 'pending'),
+                'status_icon': status_icon.get(req.status, 'bi-clock'),
+                'created_at': req.created_at.strftime('%Y-%m-%d %H:%M') if req.created_at else 'N/A',
+            })
+
+        return JsonResponse({'requests': result})
+    except Exception as e:
+        return JsonResponse({'requests': [], 'error': str(e)})
 
 
 @login_required
@@ -1104,6 +1362,42 @@ def restructuring_api_detail(request, pk):
         loan_number = "N/A"
         original_principal = 0
 
+    # Calculate total payoff
+    total_payoff = float(restructure.old_balance or 0) + float(restructure.old_interest or 0) + float(
+        restructure.old_penalty or 0)
+
+    # Get new loan details if exists
+    new_loan_id = None
+    new_loan_number = None
+    new_loan_created_at = None
+    if hasattr(restructure, 'new_loan_id') and restructure.new_loan_id:
+        try:
+            new_loan = Loan.objects.get(id=restructure.new_loan_id)
+            new_loan_id = new_loan.id
+            new_loan_number = new_loan.loan_number
+            new_loan_created_at = new_loan.created_at
+        except:
+            pass
+
+    # Status display
+    status_display = {
+        'pending_staff': 'Pending Staff',
+        'with_committee': 'With Committee',
+        'committee_approved': 'Committee Approved',
+        'manager_approved': 'Manager Approved',
+        'completed': 'Completed',
+        'rejected': 'Rejected'
+    }
+
+    status_class = {
+        'pending_staff': 'pending',
+        'with_committee': 'pending',
+        'committee_approved': 'approved',
+        'manager_approved': 'approved',
+        'completed': 'completed',
+        'rejected': 'rejected'
+    }
+
     return JsonResponse({
         'id': restructure.id,
         'request_number': restructure.request_number,
@@ -1111,17 +1405,98 @@ def restructuring_api_detail(request, pk):
         'membership_number': membership_number,
         'loan_number': loan_number,
         'original_principal': original_principal,
-        'old_balance': float(restructure.old_balance),
-        'old_interest': float(restructure.old_interest),
-        'old_penalty': float(restructure.old_penalty),
-        'new_principal': float(restructure.new_principal),
-        'new_interest_rate': float(restructure.new_interest_rate),
-        'new_monthly_payment': float(restructure.new_monthly_payment),
-        'reason': restructure.reason,
+        'old_balance': float(restructure.old_balance or 0),
+        'old_interest': float(restructure.old_interest or 0),
+        'old_penalty': float(restructure.old_penalty or 0),
+        'total_payoff': total_payoff,
+        'days_overdue': getattr(restructure, 'days_overdue', 0),
+        'new_principal': float(restructure.new_principal or 0),
+        'new_interest_rate': float(restructure.new_interest_rate or 20),
+        'new_monthly_payment': float(restructure.new_monthly_payment or 0),
+        'new_charges': float(restructure.new_charges or 0),
+        'service_charge': float(getattr(restructure, 'service_charge', 0)),
+        'cbu_retention': float(getattr(restructure, 'cbu_retention', 0)),
+        'insurance': float(getattr(restructure, 'insurance', 0)),
+        'service_fee': float(getattr(restructure, 'service_fee', 35)),
+        'notarial_fee': float(getattr(restructure, 'notarial_fee', 200)),
+        'final_loan_amount': float(getattr(restructure, 'final_loan_amount', 0)),
+        'reason': restructure.reason or 'No reason provided',
         'status': restructure.status,
-        'created_at': restructure.created_at.strftime('%Y-%m-%d %H:%M'),
+        'status_display': status_display.get(restructure.status, restructure.status.replace('_', ' ').title()),
+        'status_class': status_class.get(restructure.status, 'pending'),
+        'created_at': restructure.created_at.strftime('%Y-%m-%d %H:%M') if restructure.created_at else 'N/A',
+        'approved_at': restructure.approved_at.strftime('%Y-%m-%d %H:%M') if hasattr(restructure,
+                                                                                     'approved_at') and restructure.approved_at else None,
+        'completed_at': restructure.completed_at.strftime('%Y-%m-%d %H:%M') if hasattr(restructure,
+                                                                                       'completed_at') and restructure.completed_at else None,
+        'new_loan_id': new_loan_id,
+        'new_loan_number': new_loan_number,
+        'new_loan_created_at': new_loan_created_at.strftime('%Y-%m-%d %H:%M') if new_loan_created_at else None,
     })
 
+
+@login_required
+@staff_required
+def restructuring_api_request(request):
+    """API endpoint to submit a restructuring request"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+
+            # Validate required fields
+            required_fields = ['member_id', 'loan_id', 'reason', 'restructure_loan_amount']
+            for field in required_fields:
+                if not data.get(field):
+                    return JsonResponse({'success': False, 'error': f'{field} is required'})
+
+            member_id = data.get('member_id')
+            loan_id = data.get('loan_id')
+            reason = data.get('reason')
+            restructure_amount = float(data.get('restructure_loan_amount', 0))
+
+            # Get calculation data
+            calc = data.get('calculation', {})
+
+            # Generate request number
+            request_number = f"RST-{datetime.now().strftime('%Y%m%d')}-{str(datetime.now().timestamp())[-6:]}"
+
+            # Create the restructuring request
+            restructuring = RestructuringRequest.objects.create(
+                request_number=request_number,
+                member_id=member_id,
+                old_loan_id=loan_id,
+                old_balance=calc.get('total_payoff', 0),
+                old_interest=calc.get('interest_due', 0),
+                old_penalty=calc.get('penalty', 0),
+                days_overdue=calc.get('days_overdue', 0),
+                restructure_amount=restructure_amount,
+                new_principal=calc.get('new_principal', restructure_amount),
+                new_interest_rate=calc.get('interest_rate', 20),
+                new_term_months=12,
+                new_monthly_payment=calc.get('monthly_payment', 0),
+                new_charges=calc.get('total_charges', 0),
+                service_charge=calc.get('service_charge', 0),
+                cbu_retention=calc.get('cbu_retention', 0),
+                insurance=calc.get('insurance', 0),
+                service_fee=calc.get('service_fee', 35),
+                notarial_fee=calc.get('notarial_fee', 200),
+                final_loan_amount=calc.get('final_loan_amount', 0),
+                reason=reason,
+                status='pending_staff',
+                staff_approved_by=request.user.staff_profile,
+                staff_approved=True
+            )
+
+            return JsonResponse({
+                'success': True,
+                'request_number': request_number,
+                'request_id': restructuring.id
+            })
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'error': 'Invalid method'}, status=400)
 
 # ==================== REPORT VIEWS ====================
 
@@ -1428,63 +1803,179 @@ def calculate_penalty_api(request, loan_id):
         return JsonResponse({'success': False, 'error': str(e)})
 
 
-# ==================== NOTIFICATION VIEWS ====================
+# ============================================================
+# NOTIFICATION VIEWS - STAFF
+# ============================================================
 
 @login_required
-@staff_required
-def notifications_page(request):
-    """Notifications page"""
-    staff_profile = request.user.staff_profile
+def notifications_list(request):
+    """Staff notifications list page"""
+    try:
+        user = request.user
 
-    notifications = StaffNotification.objects.filter(staff=staff_profile).order_by('-created_at')
+        # Get notifications for the current user
+        notifications = Notification.objects.filter(
+            recipient=user
+        ).order_by('-created_at')
 
-    context = {
-        'staff_profile': staff_profile,
-        'notifications': notifications[:20],
-        'total_notifications': notifications.count(),
-        'unread_count': notifications.filter(is_read=False).count(),
-        'read_count': notifications.filter(is_read=True).count(),
-        'system_notifications': notifications.filter(notification_type='system_alert').count(),
-    }
+        total_count = notifications.count()
+        read_count = notifications.filter(is_read=True).count()
+        unread_count = notifications.filter(is_read=False).count()
 
-    return render(request, 'staff/notifications/list.html', context)
+        context = {
+            'notifications': notifications,
+            'total_notifications': total_count,
+            'read_count': read_count,
+            'unread_count': unread_count,
+        }
+        return render(request, 'staff/notifications/list.html', context)
+    except Exception as e:
+        print(f"Error in notifications_list: {str(e)}")
+        return render(request, 'staff/notifications/list.html', {
+            'notifications': [],
+            'total_notifications': 0,
+            'read_count': 0,
+            'unread_count': 0,
+        })
 
 
 @login_required
-@staff_required
 def notifications_api(request):
-    """API endpoint for notifications"""
-    staff_profile = request.user.staff_profile
-    unread_count = StaffNotification.objects.filter(staff=staff_profile, is_read=False).count()
-    return JsonResponse({'unread_count': unread_count})
+    """API endpoint for staff notifications"""
+    try:
+        user = request.user
+
+        print(f"🔔 Staff API called for user: {user.username} (ID: {user.id})")
+
+        # Get notifications for the current user
+        notifications = Notification.objects.filter(
+            recipient=user
+        ).order_by('-created_at')[:30]
+
+        print(f"📊 Found {notifications.count()} notifications")
+
+        unread_count = Notification.objects.filter(
+            recipient=user,
+            is_read=False
+        ).count()
+
+        notification_data = []
+        for n in notifications:
+            # Build link based on notification type
+            link = n.link or ''
+            if not link or link == '#':
+                notification_type = n.notification_type or ''
+                if 'application' in notification_type.lower():
+                    link = '/staff/applications/'
+                elif 'payment' in notification_type.lower():
+                    link = '/staff/payments/'
+                elif 'overdue' in notification_type.lower():
+                    link = '/staff/loans/'
+                elif 'committee' in notification_type.lower():
+                    link = '/staff/applications/'
+                elif 'manager' in notification_type.lower():
+                    link = '/staff/applications/'
+                else:
+                    link = '/staff/notifications/'
+
+            notification_data.append({
+                'id': n.id,
+                'title': n.title,
+                'message': n.message,
+                'link': link,
+                'notification_type': n.notification_type,
+                'created_at': n.created_at.isoformat(),
+                'is_read': n.is_read,
+                'time_ago': format_time_ago(n.created_at),
+            })
+
+        response_data = {
+            'success': True,
+            'unread_count': unread_count,
+            'notifications': notification_data
+        }
+
+        print(f"✅ Returning {len(notification_data)} notifications")
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"❌ Error in notifications_api: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'unread_count': 0,
+            'notifications': []
+        })
+
+
+def format_time_ago(date):
+    """Format time ago for notification display"""
+    from django.utils import timezone
+    from django.utils.timesince import timesince
+
+    if not date:
+        return 'Just now'
+
+    now = timezone.now()
+    diff = now - date
+
+    if diff.days > 7:
+        return date.strftime('%b %d, %Y')
+    elif diff.days > 0:
+        return f'{diff.days}d ago'
+    elif diff.seconds > 3600:
+        return f'{diff.seconds // 3600}h ago'
+    elif diff.seconds > 60:
+        return f'{diff.seconds // 60}m ago'
+    else:
+        return 'Just now'
 
 
 @login_required
-@staff_required
-def mark_notification_read(request, pk):
-    """Mark a single notification as read"""
-    if request.method == 'POST':
-        try:
-            notification = StaffNotification.objects.get(pk=pk, staff=request.user.staff_profile)
-            notification.is_read = True
-            notification.read_at = timezone.now()
-            notification.save()
-            return JsonResponse({'success': True})
-        except StaffNotification.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Notification not found'})
-    return JsonResponse({'error': 'Invalid method'}, status=400)
+def notification_mark_read(request, notif_id):
+    """Mark a notification as read"""
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'success': False, 'error': 'Invalid method'})
 
-
-@login_required
-@staff_required
-def mark_all_notifications_read(request):
-    """Mark all notifications as read"""
-    if request.method == 'POST':
-        StaffNotification.objects.filter(staff=request.user.staff_profile, is_read=False).update(is_read=True,
-                                                                                                 read_at=timezone.now())
+        user = request.user
+        notification = get_object_or_404(Notification, id=notif_id, recipient=user)
+        notification.is_read = True
+        notification.save()
         return JsonResponse({'success': True})
-    return JsonResponse({'error': 'Invalid method'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
+
+@login_required
+def notification_mark_all_read(request):
+    """Mark all notifications as read"""
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'success': False, 'error': 'Invalid method'})
+
+        user = request.user
+        count = Notification.objects.filter(recipient=user, is_read=False).update(is_read=True)
+        return JsonResponse({'success': True, 'count': count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def notification_delete(request, notif_id):
+    """Delete a notification"""
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'success': False, 'error': 'Invalid method'})
+
+        user = request.user
+        notification = get_object_or_404(Notification, id=notif_id, recipient=user)
+        notification.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 # ==================== PROFILE VIEWS ====================
 
@@ -1776,16 +2267,36 @@ def member_search(request):
 @login_required
 @staff_required
 def loan_status_api(request, loan_id):
-    """Get loan status"""
+    """Get loan status with member info"""
     loan = get_object_or_404(Loan, pk=loan_id)
+
+    # Calculate penalty if needed
+    from datetime import date
+    today = date.today()
+    days_overdue = 0
+    penalty_amount = 0
+
+    if loan.due_date and loan.due_date < today:
+        days_overdue = (today - loan.due_date).days
+        if days_overdue > 360:
+            penalty_months = (days_overdue - 360 + 29) // 30
+            penalty_amount = float(loan.remaining_balance or 0) * 0.02 * penalty_months
 
     return JsonResponse({
         'id': loan.id,
         'number': loan.loan_number,
         'remaining_balance': float(loan.remaining_balance),
-        'next_due_date': loan.due_date.strftime('%Y-%m-%d') if loan.due_date else None,
+        'due_date': loan.due_date.strftime('%Y-%m-%d') if loan.due_date else None,
         'monthly_payment': float(loan.monthly_payment),
         'status': loan.status,
+        'interest_rate': float(loan.interest_rate),
+        'interest_due': 0,
+        'penalty_amount': penalty_amount,
+        'days_overdue': days_overdue,
+        # Member information - CRITICAL for the form to show member details
+        'member_id': loan.member.id,
+        'member_name': f"{loan.member.last_name}, {loan.member.first_name}",
+        'membership_number': loan.member.membership_number,
     })
 
 

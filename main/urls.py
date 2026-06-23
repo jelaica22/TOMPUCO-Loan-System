@@ -79,6 +79,7 @@ urlpatterns = [
     path('apply-loan/', views.apply_loan, name='apply_loan'),
     path('my-applications/', views.my_applications, name='my_applications'),
     path('application/<int:app_id>/', views.view_application_details, name='view_application_details'),
+    path('member/applications/<int:app_id>/edit/', views.edit_application, name='edit_application'),  # <-- ADD THIS LINE
 
     # ============================================================
     # LOAN URLs
@@ -99,8 +100,10 @@ urlpatterns = [
     # Member Data APIs
     path('api/member/applications/', views.member_applications_api, name='member_applications_api'),
     path('api/member-payments/', views.member_payments_api, name='member_payments_api'),
+    path('api/member/applications/<int:app_id>/delete/', views.delete_application_api, name='delete_application_api'),
     path('api/member-loans/', views.member_loans_api, name='member_loans_api'),
     path('api/member-analytics/', views.member_analytics_api, name='member_analytics_api'),
+    path('api/upload-collateral-document/', views.upload_collateral_document, name='upload_collateral_document'),
     path('api/member-stats/', views.member_stats_api, name='member_stats_api'),
 
     # Loan APIs
@@ -146,7 +149,11 @@ urlpatterns = [
     path('account-suspended/', views.account_suspended, name='account_suspended'),
     path('reset-password/', views.reset_admin_password, name='reset_password'),
 
-
+    # Co-maker confirmation URLs
+    path('co-maker/confirm/<str:token>/', views.co_maker_confirm_page, name='co_maker_confirm_page'),
+    path('co-maker/confirm/<str:token>/action/', views.co_maker_confirm_action, name='co_maker_confirm_action'),
+    path('api/send-co-maker-confirmation/', views.send_co_maker_confirmation, name='send_co_maker_confirmation'),
+    path('api/co-maker/status/<int:confirmation_id>/', views.co_maker_status_api, name='co_maker_status_api'),
 ]
 
 # Static and Media files for development

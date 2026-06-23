@@ -83,7 +83,6 @@
             transition: background 0.3s ease;
         }
 
-        /* Navbar */
         .top-navbar {
             position: fixed;
             top: 0;
@@ -162,17 +161,33 @@
         .brand-title { font-size: 1.2rem; font-weight: 700; color: white; }
         .brand-subtitle { font-size: 0.65rem; color: rgba(255, 255, 255, 0.7); }
 
-        .navbar-right { display: flex; align-items: center; gap: 15px; }
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
+           NOTIFICATION BELL - FIXED POSITIONING
+        ============================================================ */
+        .notification-wrapper {
+            position: relative;
+            display: inline-block;
+        }
 
         .notification-bell {
             position: relative;
             background: rgba(255, 255, 255, 0.1);
             border: none;
             color: white;
-            padding: 8px;
+            padding: 8px 10px;
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .notification-bell:hover {
@@ -180,20 +195,46 @@
             transform: scale(1.05);
         }
 
-        .notification-bell i { font-size: 1.3rem; }
+        .notification-bell i {
+            font-size: 1.3rem;
+            line-height: 1;
+        }
 
+        /* ============================================================
+           NOTIFICATION BADGE - RESPONSIVE FIX
+        ============================================================ */
         .notification-badge {
             position: absolute;
-            top: -2px;
-            right: -2px;
+            top: -6px;
+            right: -6px;
             background: #ef4444;
             color: white;
             border-radius: 50%;
             padding: 2px 6px;
-            font-size: 0.65rem;
-            font-weight: 600;
+            font-size: 0.6rem;
+            font-weight: 700;
             min-width: 18px;
+            height: 18px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #0d6e6e;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            line-height: 1;
             text-align: center;
+            z-index: 10;
+        }
+
+        .notification-badge.show {
+            display: flex !important;
+        }
+
+        /* For larger numbers */
+        .notification-badge.badge-large {
+            min-width: 22px;
+            height: 22px;
+            font-size: 0.55rem;
+            padding: 2px 5px;
         }
 
         .user-dropdown-btn {
@@ -222,14 +263,21 @@
             color: white;
             font-weight: 600;
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .user-name { font-weight: 500; font-size: 0.9rem; }
+        .user-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
 
-        @media (max-width: 768px) { .user-name { display: none; } }
+        @media (max-width: 768px) {
+            .user-name { display: none; }
+            .navbar-right { gap: 8px; }
+        }
 
-        /* Sidebar */
         .sidebar {
             position: fixed;
             top: var(--header-height);
@@ -329,7 +377,6 @@
             margin: 10px 20px;
         }
 
-        /* Collapsed Sidebar */
         body.sidebar-collapsed .sidebar { width: var(--sidebar-collapsed-width); }
         body.sidebar-collapsed .nav-link span,
         body.sidebar-collapsed .nav-section-title,
@@ -340,7 +387,6 @@
         body.sidebar-collapsed .sidebar-collapse-btn i { transform: rotate(180deg); }
         body.sidebar-collapsed .main-content { margin-left: var(--sidebar-collapsed-width); }
 
-        /* Main Content */
         .main-content {
             margin-left: var(--sidebar-width);
             padding: 24px;
@@ -348,7 +394,6 @@
             min-height: calc(100vh - var(--header-height) - 60px);
         }
 
-        /* Footer */
         .app-footer {
             background: var(--footer-bg);
             border-top: 1px solid var(--border-color);
@@ -360,7 +405,6 @@
             transition: margin-left var(--transition-speed) ease;
         }
 
-        /* Sidebar Overlay */
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -398,13 +442,11 @@
             box-shadow: var(--shadow-hover);
         }
 
-        /* Alert styles */
         .alert {
             border-radius: 12px;
             border: none;
         }
 
-        /* Logout Modal */
         .logout-modal .modal-content { border-radius: 16px; overflow: hidden; }
         .logout-modal .modal-header {
             background: linear-gradient(135deg, #ef4444, #dc2626);
@@ -422,6 +464,154 @@
             margin: 0 auto 15px;
         }
         .logout-icon i { font-size: 2.5rem; color: #dc2626; }
+
+        /* ============================================ */
+        /* NOTIFICATION DROPDOWN STYLES */
+        /* ============================================ */
+        .notification-dropdown-menu {
+            width: 380px;
+            max-height: 500px;
+            padding: 0;
+            border: none;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .notification-dropdown-header {
+            background: var(--brand-gradient);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .notification-dropdown-header h6 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .notification-dropdown-header .btn-light {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 0.7rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .notification-dropdown-header .btn-light:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .notification-dropdown-list {
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .notification-dropdown-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .notification-dropdown-item:hover {
+            background: var(--bg-body);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .notification-dropdown-item.unread {
+            background: rgba(239, 68, 68, 0.03);
+            border-left: 3px solid #ef4444;
+        }
+
+        .notification-dropdown-item .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.9rem;
+        }
+
+        .notification-dropdown-item .icon.payment { background: rgba(16,185,129,0.1); color: #10b981; }
+        .notification-dropdown-item .icon.application { background: rgba(59,130,246,0.1); color: #3b82f6; }
+        .notification-dropdown-item .icon.overdue { background: rgba(239,68,68,0.1); color: #ef4444; }
+        .notification-dropdown-item .icon.system { background: rgba(245,158,11,0.1); color: #f59e0b; }
+        .notification-dropdown-item .icon.default { background: rgba(107,114,128,0.1); color: #6b7280; }
+
+        .notification-dropdown-item .content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-dropdown-item .title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+
+        .notification-dropdown-item .message {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .notification-dropdown-item .time {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .notification-dropdown-item .unread-dot {
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 8px;
+        }
+
+        .notification-dropdown-footer {
+            padding: 8px 16px;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-body);
+        }
+
+        .notification-dropdown-footer a {
+            font-size: 0.8rem;
+            color: var(--brand-primary);
+            text-decoration: none;
+        }
+
+        .notification-dropdown-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .notification-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .notification-empty i {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 10px;
+        }
 
         /* ============================================ */
         /* CHATBOT STYLES */
@@ -631,6 +821,10 @@
                 right: 0;
                 bottom: 80px;
             }
+            .notification-dropdown-menu {
+                width: 320px;
+                max-width: 90vw;
+            }
         }
 
         ::-webkit-scrollbar { width: 6px; }
@@ -644,6 +838,40 @@
             .mobile-menu-btn { display: block; }
             .brand-title { font-size: 1rem; }
             .brand-subtitle { display: none; }
+        }
+
+        /* ============================================================
+           RESPONSIVE FIXES FOR SMALL SCREENS
+        ============================================================ */
+        @media (max-width: 480px) {
+            .notification-badge {
+                top: -4px;
+                right: -4px;
+                min-width: 16px;
+                height: 16px;
+                font-size: 0.5rem;
+                padding: 1px 4px;
+                border-width: 1.5px;
+            }
+            .notification-bell {
+                padding: 6px 8px;
+            }
+            .notification-bell i {
+                font-size: 1.1rem;
+            }
+            .navbar-right {
+                gap: 5px;
+            }
+            .theme-toggle {
+                width: 32px;
+                height: 32px;
+                margin-right: 5px;
+            }
+            .user-avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 0.75rem;
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -671,20 +899,29 @@
                 <i class="bi bi-moon-stars"></i>
             </button>
 
-            <div class="dropdown">
-                <button class="notification-bell" data-bs-toggle="dropdown">
+            <!-- ============================================================
+            NOTIFICATION BELL WITH RESPONSIVE BADGE
+            ============================================================ -->
+            <div class="notification-wrapper">
+                <button class="notification-bell" data-bs-toggle="dropdown" id="notificationDropdownBtn" aria-expanded="false">
                     <i class="bi bi-bell"></i>
-                    <span class="notification-badge" id="topNotificationBadge" style="display: none;">0</span>
+                    <span class="notification-badge" id="topNotificationBadge">0</span>
                 </button>
-                <div class="dropdown-menu dropdown-menu-end" style="width: 350px; padding: 0;">
-                    <div class="p-3" style="background: var(--brand-gradient); color: white; border-radius: 8px 8px 0 0;">
+                <div class="dropdown-menu dropdown-menu-end notification-dropdown-menu" id="notificationDropdownMenu">
+                    <div class="notification-dropdown-header">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0"><i class="bi bi-bell"></i> Notifications</h6>
-                            <a href="{% url 'main:notifications_page' %}" class="text-white text-decoration-none small">View All</a>
+                            <h6><i class="bi bi-bell"></i> Notifications</h6>
+                            <button class="btn btn-light btn-sm" id="markAllReadBtn">Mark all as read</button>
                         </div>
                     </div>
-                    <div id="notificationDropdownList" style="max-height: 400px; overflow-y: auto;">
-                        <div class="text-center p-4 text-muted">No notifications</div>
+                    <div class="notification-dropdown-list" id="notificationDropdownList">
+                        <div class="notification-empty">
+                            <i class="bi bi-bell-slash"></i>
+                            <p class="mb-0 small">Loading notifications...</p>
+                        </div>
+                    </div>
+                    <div class="notification-dropdown-footer">
+                        <a href="{% url 'main:notifications_page' %}">View All Notifications</a>
                     </div>
                 </div>
             </div>
@@ -806,7 +1043,7 @@
     </footer>
 
     <!-- ============================================ -->
-    <!-- PERSISTENT CHATBOT - Works Across All Pages -->
+    <!-- PERSISTENT CHATBOT -->
     <!-- ============================================ -->
     <div class="chatbot-container">
         <div class="chatbot-window" id="chatbotWindow">
@@ -981,38 +1218,383 @@
             logoutModal.show();
         });
 
-        // Notification Badges
-        function updateBadges() {
-            fetch('/api/notifications/')
-                .then(r => r.json())
-                .then(data => {
-                    const unread = data.unread_count || 0;
-                    const topBadge = document.getElementById('topNotificationBadge');
-                    const sidebarBadge = document.getElementById('sidebarNotificationBadge');
-                    if (topBadge) {
-                        topBadge.textContent = unread > 99 ? '99+' : unread;
-                        topBadge.style.display = unread > 0 ? 'inline-block' : 'none';
-                    }
-                    if (sidebarBadge) {
-                        sidebarBadge.textContent = unread > 99 ? '99+' : unread;
-                        sidebarBadge.style.display = unread > 0 ? 'inline-block' : 'none';
-                    }
-                }).catch(() => {});
+        // ============================================================
+        // NOTIFICATION SYSTEM - COMPLETE FIXED
+        // ============================================================
+
+        function getNotificationLink(notification) {
+            var title = notification.title || '';
+            var type = notification.type || notification.notification_type || '';
+            var link = notification.link || '';
+            var lowerTitle = title.toLowerCase();
+            var lowerType = type.toLowerCase();
+
+            if (link && link !== '#' && link !== '/' && !link.includes('/member/')) {
+                return link;
+            }
+            if (link && link.includes('/member/')) {
+                return link.replace('/member/', '/');
+            }
+
+            if (lowerTitle.includes('loan approved') ||
+                lowerTitle.includes('application') ||
+                lowerType.includes('application') ||
+                lowerType.includes('loan') ||
+                lowerTitle.includes('approved') ||
+                lowerTitle.includes('app-') ||
+                lowerTitle.includes('app_')) {
+                return '/my-applications/';
+            }
+
+            if (lowerTitle.includes('payment') ||
+                lowerType.includes('payment') ||
+                lowerTitle.includes('reminder') ||
+                lowerTitle.includes('due') ||
+                lowerTitle.includes('payment received') ||
+                lowerTitle.includes('payment due')) {
+                return '/payment-history/';
+            }
+
+            if (lowerTitle.includes('overdue') ||
+                lowerType.includes('overdue') ||
+                lowerTitle.includes('overdue notice') ||
+                lowerTitle.includes('overdue alert') ||
+                lowerTitle.includes('loan ln-')) {
+                return '/my-loans/';
+            }
+
+            if (lowerTitle.includes('profile') ||
+                lowerType.includes('profile')) {
+                return '/profile/';
+            }
+
+            if (lowerTitle.includes('welcome') ||
+                lowerTitle.includes('employee') ||
+                lowerTitle.includes('member registration')) {
+                return '/dashboard/';
+            }
+
+            if (lowerTitle.includes('notification system')) {
+                return '/notifications/';
+            }
+
+            if (lowerTitle.includes('committee') ||
+                lowerTitle.includes('decision')) {
+                return '/my-applications/';
+            }
+
+            return '/dashboard/';
         }
-        document.addEventListener('DOMContentLoaded', () => {
-            updateBadges();
-            setInterval(updateBadges, 30000);
+
+        // ============================================================
+        // UPDATE BADGE - RESPONSIVE WITH ANIMATION
+        // ============================================================
+        function updateBadge() {
+            fetch('/api/notifications/')
+                .then(function(response) {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.json();
+                })
+                .then(function(data) {
+                    var unreadCount = data.unread_count || 0;
+                    var topBadge = document.getElementById('topNotificationBadge');
+
+                    if (topBadge) {
+                        if (unreadCount > 0) {
+                            var displayCount = unreadCount > 99 ? '99+' : unreadCount;
+                            topBadge.textContent = displayCount;
+                            topBadge.classList.add('show');
+                            // Add large class for numbers > 9
+                            if (unreadCount > 9) {
+                                topBadge.classList.add('badge-large');
+                            } else {
+                                topBadge.classList.remove('badge-large');
+                            }
+                        } else {
+                            topBadge.classList.remove('show');
+                            topBadge.classList.remove('badge-large');
+                        }
+                    }
+
+                    // Update sidebar badge
+                    var sidebarBadge = document.getElementById('sidebarNotificationBadge');
+                    if (sidebarBadge) {
+                        if (unreadCount > 0) {
+                            sidebarBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                            sidebarBadge.style.display = 'inline-block';
+                        } else {
+                            sidebarBadge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error updating badge:', error);
+                });
+        }
+
+        function loadNotificationDropdown() {
+            var list = document.getElementById('notificationDropdownList');
+            if (!list) return;
+
+            fetch('/api/notifications/')
+                .then(function(response) {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.json();
+                })
+                .then(function(data) {
+                    var notifications = data.notifications || [];
+                    var unreadCount = data.unread_count || 0;
+
+                    // Update badge
+                    updateBadge();
+
+                    // Render notifications
+                    if (notifications.length > 0) {
+                        var html = '';
+                        var recent = notifications.slice(0, 5);
+                        for (var i = 0; i < recent.length; i++) {
+                            var n = recent[i];
+                            var iconClass = 'default';
+                            var icon = 'bi-bell';
+
+                            if (n.type === 'payment' || n.type === 'payment_received' || n.type === 'payment_reminder') {
+                                iconClass = 'payment';
+                                icon = 'bi-cash-stack';
+                            } else if (n.type === 'application' || n.type === 'application_submitted' || n.type === 'app_submitted') {
+                                iconClass = 'application';
+                                icon = 'bi-file-text';
+                            } else if (n.type === 'overdue_alert' || n.type === 'overdue') {
+                                iconClass = 'overdue';
+                                icon = 'bi-exclamation-triangle';
+                            } else if (n.type === 'system' || n.type === 'system_alert') {
+                                iconClass = 'system';
+                                icon = 'bi-gear';
+                            }
+
+                            var link = getNotificationLink(n);
+                            var timeAgo = getTimeAgoShort(n.created_at);
+                            var isUnread = !n.is_read;
+
+                            html += '<a href="' + link + '" class="notification-dropdown-item' + (isUnread ? ' unread' : '') + '">';
+                            html += '<div class="icon ' + iconClass + '"><i class="bi ' + icon + '"></i></div>';
+                            html += '<div class="content">';
+                            html += '<div class="title">' + escapeHtml(n.title) + '</div>';
+                            html += '<div class="message">' + escapeHtml(n.message.substring(0, 60)) + (n.message.length > 60 ? '...' : '') + '</div>';
+                            html += '<div class="time">' + timeAgo + '</div>';
+                            html += '</div>';
+                            if (isUnread) {
+                                html += '<div class="unread-dot"></div>';
+                            }
+                            html += '</a>';
+                        }
+                        list.innerHTML = html;
+                    } else {
+                        list.innerHTML = '<div class="notification-empty"><i class="bi bi-bell-slash"></i><p class="mb-0 small">No notifications</p></div>';
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error loading notifications:', error);
+                    list.innerHTML = '<div class="notification-empty"><i class="bi bi-exclamation-triangle"></i><p class="mb-0 small">Error loading notifications</p></div>';
+                });
+        }
+
+        function getTimeAgoShort(dateString) {
+            if (!dateString) return 'Just now';
+            var date = new Date(dateString);
+            var now = new Date();
+            var diffMs = now - date;
+            var diffMins = Math.floor(diffMs / 60000);
+            var diffHours = Math.floor(diffMs / 3600000);
+            var diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return diffMins + 'm ago';
+            if (diffHours < 24) return diffHours + 'h ago';
+            if (diffDays < 7) return diffDays + 'd ago';
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Mark all as read
+        document.getElementById('markAllReadBtn')?.addEventListener('click', function(e) {
+            e.stopPropagation();
+            fetch('/api/notifications/mark-all-read/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    loadNotificationDropdown();
+                    updateBadge();
+                }
+            })
+            .catch(function(error) { console.error('Error:', error); });
         });
 
+        function getCSRFToken() {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.substring(0, 10) === 'csrftoken=') {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Load notifications when dropdown opens
+        document.getElementById('notificationDropdownBtn')?.addEventListener('click', function() {
+            loadNotificationDropdown();
+        });
+
+        // Initial badge update
+        document.addEventListener('DOMContentLoaded', function() {
+            updateBadge();
+            setInterval(updateBadge, 30000);
+        });
+
+        // ============================================================
+        // NOTIFICATION SOUND & POP-UP SYSTEM
+        // ============================================================
+
+        function playNotificationSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const frequencies = [800, 1000, 1200];
+                const duration = 0.12;
+
+                frequencies.forEach((freq, index) => {
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = freq;
+
+                    gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+
+                    oscillator.start(audioCtx.currentTime + (index * 0.08));
+                    oscillator.stop(audioCtx.currentTime + (index * 0.08) + duration);
+                });
+                console.log('🔔 Notification sound played!');
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        function showBrowserNotification(title, message, link) {
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'granted') {
+                try {
+                    const notif = new Notification('🔔 TOMPuCO Notification', {
+                        body: message,
+                        icon: '/static/images/logo.png',
+                        tag: 'tompuco-notification',
+                        requireInteraction: true,
+                        silent: false
+                    });
+
+                    notif.onclick = function() {
+                        window.focus();
+                        if (link) {
+                            window.location.href = link;
+                        }
+                        this.close();
+                    };
+                } catch(e) {
+                    console.log('Notification error:', e);
+                }
+            } else if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        let previousNotificationCount = 0;
+
+        function checkNotificationsWithSound() {
+            fetch('/api/notifications/')
+                .then(function(response) {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.json();
+                })
+                .then(function(data) {
+                    var unreadCount = data.unread_count || 0;
+                    var notifications = data.notifications || [];
+                    var latest = notifications.length > 0 ? notifications[0] : null;
+
+                    updateBadge();
+
+                    if (unreadCount > previousNotificationCount && previousNotificationCount > 0) {
+                        playNotificationSound();
+                        if (latest) {
+                            var title = latest.title || 'New Notification';
+                            var message = latest.message || 'You have a new notification';
+                            var link = getNotificationLink(latest);
+                            showBrowserNotification(title, message.substring(0, 100), link);
+                        }
+                    }
+
+                    previousNotificationCount = unreadCount;
+                })
+                .catch(function(error) {
+                    console.error('Error checking notifications:', error);
+                });
+        }
+
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        setInterval(checkNotificationsWithSound, 15000);
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                checkNotificationsWithSound();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkNotificationsWithSound, 2000);
+            setTimeout(function() {
+                fetch('/api/notifications/')
+                    .then(r => r.json())
+                    .then(data => {
+                        var unread = data.unread_count || 0;
+                        if (unread > 0) {
+                            previousNotificationCount = unread;
+                            updateBadge();
+                        }
+                    })
+                    .catch(() => {});
+            }, 1000);
+        });
+
+        console.log('🔔 Notification system initialized!');
+
         // ============================================
-        // PERSISTENT CHATBOT - CROSS-PAGE HISTORY
+        // PERSISTENT CHATBOT
         // ============================================
 
-        // Storage keys
         const CHAT_STORAGE_KEY = 'tompuco_chat_messages_v2';
         const CHAT_LANG_KEY = 'tompuco_chat_language_v2';
 
-        // DOM Elements
         const chatbotWindow = document.getElementById('chatbotWindow');
         const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
         const chatbotMessages = document.getElementById('chatbotMessages');
@@ -1020,12 +1602,11 @@
         const chatbotLanguage = document.getElementById('chatbotLanguage');
         const chatbotBadge = document.getElementById('chatbotBadge');
 
-        // Multi-language responses
         const responses = {
             en: {
                 greeting: "👋 Hello! Welcome to TOMPuCO Assistant! How can I help you today?",
                 loan_req: "📋 **Loan Requirements:**\n\n✅ Valid Government ID\n✅ Proof of Income\n✅ Collateral Documents\n✅ Co-maker (for most loans)\n✅ Completed Application Form\n\n💡 Salary Loan does NOT require a co-maker!",
-                interest: "💰 **Interest Rates:**\n\n• NCL: 20% per annum\n• APCP: 15% per annum\n• Salary Loan: 8% per annum (for employees)\n• Collateral: 20% per annum\n\n💡 Interest is diminishing - you pay interest only on remaining balance!",
+                interest: "💰 **Interest Rates:**\n\n• NCL: 20% per annum\n• APCP: 15% per annum\n• Salary Loan: 8% per annum (for employees)\n• Collateral: 20% per annum\n\n💡 Interest is diminishing!",
                 payment: "💳 **How to Pay:**\n\n1️⃣ Go to STAFF - get Payment Instruction Slip\n2️⃣ Take slip to CASHIER\n3️⃣ Pay via Cash, Pesada, or Quedan\n\nYou can pay anytime, even before due date!",
                 status: "📌 **Application Status Meanings:**\n\n• Pending Review - Staff checking documents\n• With Committee - Committee reviewing\n• Line Approved - Amount approved\n• Active - Loan disbursed\n• Rejected - Application denied",
                 how_to_apply: "📝 **How to Apply:**\n\n1️⃣ Login to your account\n2️⃣ Click 'Apply for Loan'\n3️⃣ Fill out application form\n4️⃣ Upload required documents\n5️⃣ Provide co-maker details\n6️⃣ Draw digital signature\n7️⃣ Submit!\n\n⏱️ Processing takes 24-48 hours.",
@@ -1040,11 +1621,11 @@
             tl: {
                 greeting: "👋 Kamusta! Maligayang pagdating sa TOMPuCO Assistant! Paano kita matutulungan ngayon?",
                 loan_req: "📋 **Mga Kinakailangan sa Loan:**\n\n✅ Valid Government ID\n✅ Patunay ng Kita\n✅ Collateral Documents\n✅ Co-maker (sa karamihan ng loans)\n✅ Nakumpletong Application Form\n\n💡 Ang Salary Loan ay HINDI nangangailangan ng co-maker!",
-                interest: "💰 **Mga Interest Rates:**\n\n• NCL: 20% bawat taon\n• APCP: 15% bawat taon\n• Salary Loan: 8% bawat taon\n• Collateral: 20% bawat taon\n\n💡 Diminishing interest - interes lang sa natitirang balanse ang babayaran!",
-                payment: "💳 **Paano Magbayad:**\n\n1️⃣ Pumunta sa STAFF - kumuha ng Payment Instruction Slip\n2️⃣ Dalhin ang slip sa CASHIER\n3️⃣ Magbayad sa pamamagitan ng Cash, Pesada, o Quedan\n\nPwedeng magbayad kahit kailan, kahit bago ang due date!",
-                status: "📌 **Kahulugan ng Application Status:**\n\n• Pending Review - Sinusuri ng staff ang documents\n• With Committee - Sinusuri ng committee\n• Line Approved - Naaprubahan ang halaga\n• Active - Na-release na ang loan\n• Rejected - Hindi naaprubahan",
-                how_to_apply: "📝 **Paano Mag-apply:**\n\n1️⃣ Mag-login sa account\n2️⃣ I-click ang 'Apply for Loan'\n3️⃣ Punan ang application form\n4️⃣ Mag-upload ng requirements\n5️⃣ Magbigay ng co-maker details\n6️⃣ Gumuhit ng digital signature\n7️⃣ Mag-verify gamit ang OTP\n8️⃣ I-submit!\n\n⏱️ 24-48 hours ang processing.",
-                restructuring: "🔄 **Loan Restructuring:**\n\nKung nahihirapan kang magbayad:\n• Walang penalty sa lumang loan\n• Pareho ang interest rate\n• Bagong payment schedule ayon sa kakayahan\n• WALANG karagdagang cash na ilalabas\n\nMakipag-ugnayan sa aming staff!",
+                interest: "💰 **Mga Interest Rates:**\n\n• NCL: 20% bawat taon\n• APCP: 15% bawat taon\n• Salary Loan: 8% bawat taon\n• Collateral: 20% bawat taon\n\n💡 Diminishing interest!",
+                payment: "💳 **Paano Magbayad:**\n\n1️⃣ Pumunta sa STAFF - kumuha ng Payment Instruction Slip\n2️⃣ Dalhin ang slip sa CASHIER\n3️⃣ Magbayad sa pamamagitan ng Cash, Pesada, o Quedan\n\nPwedeng magbayad kahit kailan!",
+                status: "📌 **Kahulugan ng Application Status:**\n\n• Pending Review - Sinusuri ng staff\n• With Committee - Sinusuri ng committee\n• Line Approved - Naaprubahan\n• Active - Na-release na\n• Rejected - Hindi naaprubahan",
+                how_to_apply: "📝 **Paano Mag-apply:**\n\n1️⃣ Mag-login sa account\n2️⃣ I-click ang 'Apply for Loan'\n3️⃣ Punan ang application form\n4️⃣ Mag-upload ng requirements\n5️⃣ Magbigay ng co-maker details\n6️⃣ Gumuhit ng digital signature\n7️⃣ I-submit!\n\n⏱️ 24-48 hours!",
+                restructuring: "🔄 **Loan Restructuring:**\n\nKung nahihirapan kang magbayad:\n• Walang penalty sa lumang loan\n• Pareho ang interest rate\n• Bagong payment schedule\n• WALANG karagdagang cash\n\nMakipag-ugnayan sa aming staff!",
                 salary_loan: "💼 **Salary Loan:**\n\n• Interest: 8% bawat taon (pinakamababa!)\n• Hindi kailangan ng co-maker!\n• Para sa mga empleyado lamang\n• Max amount: ₱500,000",
                 employee_benefits: "👔 **Mga Benepisyo ng Employee Member:**\n\n✅ Salary Loan access (8% interest)\n✅ Mas mataas na loan limits\n✅ Mas mabilis na processing\n✅ Walang co-maker para sa Salary Loan\n✅ Opsyon ng salary deduction",
                 contact: "📞 **Makipag-ugnayan:**\n\n📱 Telepono: (035) 123-4567\n📧 Email: info@tompuco.ph\n📍 Villareal, Bayawan City, Negros Oriental\n\n🕐 Lunes-Biyernes: 8AM-5PM\n🕐 Sabado: 9AM-12PM",
@@ -1055,11 +1636,11 @@
             bis: {
                 greeting: "👋 Kumusta! Maayong pag-abot sa TOMPuCO Assistant! Unsaon tika pagtabang?",
                 loan_req: "📋 **Mga Kinahanglanon sa Loan:**\n\n✅ Valid Government ID\n✅ Pamatuod sa Kita\n✅ Collateral Documents\n✅ Co-maker (saadaghanang loans)\n✅ Nakumpleto nga Application Form\n\n💡 Ang Salary Loan WALAY kinahanglan nga co-maker!",
-                interest: "💰 **Mga Interest Rates:**\n\n• NCL: 20% matag tuig\n• APCP: 15% matag tuig\n• Salary Loan: 8% matag tuig\n• Collateral: 20% matag tuig\n\n💡 Diminishing interest - interes lang sa nahabilin nga balanse ang bayaran!",
-                payment: "💳 **Paano Magbayad:**\n\n1️⃣ Adto sa STAFF - kuha ug Payment Instruction Slip\n2️⃣ Dad-a ang slip sa CASHIER\n3️⃣ Pagbayad pinaagi sa Cash, Pesada, o Quedan\n\nPwede magbayad bisan kanus-a, bisan sa wala pa ang due date!",
-                status: "📌 **Kahulugan sa Application Status:**\n\n• Pending Review - Gisusi sa staff ang documents\n• With Committee - Gisusi sa committee\n• Line Approved - Naaprubahan ang kantidad\n• Active - Na-release na ang loan\n• Rejected - Wala maaprubahan",
-                how_to_apply: "📝 **Paano Mag-apply:**\n\n1️⃣ Mag-login sa account\n2️⃣ I-klik ang 'Apply for Loan'\n3️⃣ Pun-an ang application form\n4️⃣ Mag-upload sa requirements\n5️⃣ Paghatag sa co-maker details\n6️⃣ Pagdrawing sa digital signature\n7️⃣ Pag-verify gamit ang OTP\n8️⃣ I-submit!\n\n⏱️ 24-48 hours ang processing.",
-                restructuring: "🔄 **Loan Restructuring:**\n\nKung naglisod ka sa pagbayad:\n• Walay penalty sa daan nga loan\n• Pareho ang interest rate\n• Bag-ong payment schedule base sa kakayahan\n• WALAY dugang nga cash nga igawas\n\nMakig-ugnayan sa among staff!",
+                interest: "💰 **Mga Interest Rates:**\n\n• NCL: 20% matag tuig\n• APCP: 15% matag tuig\n• Salary Loan: 8% matag tuig\n• Collateral: 20% matag tuig\n\n💡 Diminishing interest!",
+                payment: "💳 **Paano Magbayad:**\n\n1️⃣ Adto sa STAFF - kuha ug Payment Instruction Slip\n2️⃣ Dad-a ang slip sa CASHIER\n3️⃣ Pagbayad pinaagi sa Cash, Pesada, o Quedan\n\nPwede magbayad bisan kanus-a!",
+                status: "📌 **Kahulugan sa Application Status:**\n\n• Pending Review - Gisusi sa staff\n• With Committee - Gisusi sa committee\n• Line Approved - Naaprubahan\n• Active - Na-release na\n• Rejected - Wala maaprubahan",
+                how_to_apply: "📝 **Paano Mag-apply:**\n\n1️⃣ Mag-login sa account\n2️⃣ I-klik ang 'Apply for Loan'\n3️⃣ Pun-an ang application form\n4️⃣ Mag-upload sa requirements\n5️⃣ Paghatag sa co-maker details\n6️⃣ Pagdrawing sa digital signature\n7️⃣ I-submit!\n\n⏱️ 24-48 hours!",
+                restructuring: "🔄 **Loan Restructuring:**\n\nKung naglisod ka sa pagbayad:\n• Walay penalty sa daan nga loan\n• Pareho ang interest rate\n• Bag-ong payment schedule\n• WALAY dugang nga cash\n\nMakig-ugnayan sa among staff!",
                 salary_loan: "💼 **Salary Loan:**\n\n• Interest: 8% matag tuig (pinakaubos!)\n• DILI kinahanglan ug co-maker!\n• Para sa mga empleyado lamang\n• Max amount: ₱500,000",
                 employee_benefits: "👔 **Mga Benepisyo sa Employee Member:**\n\n✅ Salary Loan access (8% interest)\n✅ Mas taas nga loan limits\n✅ Mas paspas nga processing\n✅ Walay co-maker para sa Salary Loan\n✅ Opsyon sa salary deduction",
                 contact: "📞 **Pakig-ugnayan:**\n\n📱 Telepono: (035) 123-4567\n📧 Email: info@tompuco.ph\n📍 Villareal, Bayawan City, Negros Oriental\n\n🕐 Lunes-Biyernes: 8AM-5PM\n🕐 Sabado: 9AM-12PM",
@@ -1070,18 +1651,11 @@
         };
 
         let currentLang = 'en';
-        let isMinimized = false;
-
-        // Load saved language
         const savedLang = localStorage.getItem(CHAT_LANG_KEY);
         if (savedLang && responses[savedLang]) {
             currentLang = savedLang;
             chatbotLanguage.value = savedLang;
         }
-
-        // ============================================
-        // CHAT MESSAGE FUNCTIONS
-        // ============================================
 
         function addMessage(content, isUser = false, save = true) {
             const messageDiv = document.createElement('div');
@@ -1127,7 +1701,7 @@
             return r.default;
         }
 
-        async function sendChatMessage() {
+        function sendChatMessage() {
             const message = chatbotInput.value.trim();
             if (!message) return;
 
@@ -1152,10 +1726,6 @@
                 addMessage(response, false);
             }, 300);
         }
-
-        // ============================================
-        // PERSISTENT STORAGE FUNCTIONS
-        // ============================================
 
         function saveMessages() {
             const messages = [];
@@ -1218,12 +1788,10 @@
             }
         }
 
-        // Language change handler
         chatbotLanguage.addEventListener('change', () => {
             currentLang = chatbotLanguage.value;
             localStorage.setItem(CHAT_LANG_KEY, currentLang);
 
-            // Reload messages to retranslate bot messages
             const messages = [];
             const messageElements = document.querySelectorAll('#chatbotMessages .message');
             messageElements.forEach(msg => {
@@ -1246,10 +1814,6 @@
             if (chatbotMessages.children.length === 0) loadWelcomeMessage();
             saveMessages();
         });
-
-        // ============================================
-        // CHATBOT CONTROLS
-        // ============================================
 
         const closeChatBtn = document.getElementById('closeChatBtn');
         const clearChatBtn = document.getElementById('clearChatBtn');
@@ -1289,14 +1853,11 @@
             if (e.key === 'Enter') sendChatMessage();
         });
 
-        // Save before page unload
         window.addEventListener('beforeunload', () => saveMessages());
 
-        // Make functions global for quick replies
         window.sendQuickReply = sendQuickReply;
         window.sendChatMessage = sendChatMessage;
 
-        // Load chat history on page load if chat is open
         if (chatbotWindow.classList.contains('open')) {
             const hasHistory = loadMessages();
             if (!hasHistory) loadWelcomeMessage();

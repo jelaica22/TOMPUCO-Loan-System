@@ -118,9 +118,11 @@
     .alert-info { background: #dbeafe; color: #1e40af; border: none; border-radius: 12px; padding: 12px 16px; }
     .alert-warning { background: #fef3c7; color: #92400e; border: none; border-radius: 12px; padding: 12px 16px; }
     .alert-success { background: #d1fae5; color: #065f46; border: none; border-radius: 12px; padding: 12px 16px; }
+    .alert-danger { background: #fee2e2; color: #991b1b; border: none; border-radius: 12px; padding: 12px 16px; }
     [data-theme="dark"] .alert-info { background: #1e3a5f; color: #bfdbfe; }
     [data-theme="dark"] .alert-warning { background: #451a03; color: #fde68a; }
     [data-theme="dark"] .alert-success { background: #064e3b; color: #a7f3d0; }
+    [data-theme="dark"] .alert-danger { background: #7f1d1d; color: #fecaca; }
 
     .text-muted { color: #6b7280 !important; }
     [data-theme="dark"] .text-muted { color: #9aaebf !important; }
@@ -130,11 +132,98 @@
     .step { display: none; }
     .step.active { display: block; }
 
+    .co-maker-confirmation-box {
+        background: #f8fafc;
+        border: 2px dashed #0d6e6e;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 15px;
+        text-align: center;
+    }
+    [data-theme="dark"] .co-maker-confirmation-box { background: #1a2332; border-color: #4ade80; }
+    .co-maker-confirmation-box .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e5e7eb;
+        border-top: 4px solid #0d6e6e;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 10px auto;
+    }
+    [data-theme="dark"] .co-maker-confirmation-box .spinner { border-color: #2a3548; border-top-color: #4ade80; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* ============================================================
+       DROP ZONE STYLES
+    ============================================================ */
+    .drop-zone {
+        border: 2px dashed #e5e7eb;
+        border-radius: 12px;
+        padding: 40px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: var(--bg-card);
+    }
+    .drop-zone:hover {
+        border-color: #0d6e6e;
+        background: rgba(13, 110, 110, 0.02);
+    }
+    .drop-zone.dragover {
+        border-color: #0d6e6e !important;
+        background: rgba(13, 110, 110, 0.05) !important;
+    }
+    .drop-zone i { font-size: 3rem; color: #0d6e6e; }
+    [data-theme="dark"] .drop-zone { background: #1a2332; border-color: #2a3548; }
+    [data-theme="dark"] .drop-zone:hover { border-color: #4ade80; background: rgba(74, 222, 128, 0.05); }
+    [data-theme="dark"] .drop-zone.dragover { border-color: #4ade80 !important; background: rgba(74, 222, 128, 0.1) !important; }
+    [data-theme="dark"] .drop-zone i { color: #4ade80; }
+
+    .document-item {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 12px 16px;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.2s;
+    }
+    [data-theme="dark"] .document-item { background: #1e2a3a; border-color: #2a3548; }
+    .document-item:hover { background: var(--table-hover); }
+    .document-item .file-icon { font-size: 1.5rem; color: #0d6e6e; }
+    [data-theme="dark"] .document-item .file-icon { color: #4ade80; }
+    .document-item .file-name { flex: 1; font-weight: 500; font-size: 0.85rem; color: var(--text-primary); }
+    .document-item .file-size { font-size: 0.7rem; color: #6b7280; }
+    [data-theme="dark"] .document-item .file-size { color: #9aaebf; }
+    .document-item .remove-file { color: #ef4444; cursor: pointer; font-size: 1.2rem; transition: all 0.2s; }
+    .document-item .remove-file:hover { transform: scale(1.2); }
+    .document-item .status-badge { font-size: 0.65rem; padding: 2px 10px; border-radius: 20px; }
+    .document-item .status-badge.uploaded { background: #d1fae5; color: #065f46; }
+    .document-item .status-badge.uploading { background: #fef3c7; color: #92400e; }
+    .document-item .status-badge.error { background: #fee2e2; color: #991b1b; }
+
+    .progress {
+        height: 8px;
+        border-radius: 10px;
+        background: #e5e7eb;
+        overflow: hidden;
+    }
+    [data-theme="dark"] .progress { background: #2a3548; }
+    .progress-bar {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.3s ease;
+        background: linear-gradient(135deg, #0d6e6e, #0a5a5a);
+    }
+    [data-theme="dark"] .progress-bar { background: linear-gradient(135deg, #0a5a5a, #4ade80); }
+
     @media (max-width: 768px) {
         .step-indicator { padding: 15px; flex-wrap: wrap; gap: 15px; }
         .loan-grid { grid-template-columns: repeat(2, 1fr); }
         .info-grid { grid-template-columns: 1fr; }
         .auto-fill-banner { flex-direction: column; text-align: center; }
+        .drop-zone { padding: 20px; }
     }
     @media (max-width: 480px) { .loan-grid { grid-template-columns: 1fr; } }
 </style>
@@ -217,6 +306,10 @@
         <div class="form-section">
             <h5><i class="bi bi-people"></i> Select Co-maker</h5>
             <p class="text-muted small">You need to select a valid co-maker for your loan application.</p>
+
+            <!-- Hidden application ID (will be set after submission) -->
+            <input type="hidden" id="applicationId" value="">
+
             <div class="row">
                 <div class="col-md-8">
                     <label class="form-label">Enter Co-maker Member ID</label>
@@ -238,6 +331,38 @@
             <div id="selectedCoMakerInfo" style="display:none;" class="alert alert-success mt-3">
                 <i class="bi bi-check-circle-fill"></i> Co-maker selected: <strong id="selectedCoMakerName"></strong>
                 <button class="btn btn-sm btn-outline-danger float-end" onclick="removeCoMaker()">Change</button>
+            </div>
+
+            <!-- CO-MAKER CONFIRMATION SECTION -->
+            <div id="coMakerConfirmationSection" style="display:none;" class="mt-4">
+                <hr>
+                <h6 class="fw-bold"><i class="bi bi-shield-check"></i> Co-maker Confirmation</h6>
+                <p class="text-muted small">Send a confirmation request to the co-maker. They will need to confirm before you can proceed.</p>
+
+                <button type="button" id="sendConfirmationBtn" class="btn btn-warning" onclick="sendCoMakerConfirmation()">
+                    <i class="bi bi-send me-2"></i>Send Confirmation to Co-Maker
+                </button>
+
+                <div id="coMakerConfirmationStatus" style="display:none;" class="mt-3">
+                    <div class="co-maker-confirmation-box">
+                        <div class="spinner"></div>
+                        <strong>Waiting for co-maker confirmation...</strong>
+                        <p class="text-muted small mt-2">A confirmation request has been sent. Please wait for the co-maker to respond.</p>
+                        <div id="confirmationStatusMessage" class="mt-2"></div>
+                    </div>
+                </div>
+
+                <div id="coMakerConfirmedStatus" style="display:none;" class="alert alert-success mt-3">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <strong>Co-maker confirmed!</strong>
+                    <p class="mb-0">The co-maker has confirmed their agreement. You can now proceed.</p>
+                </div>
+
+                <div id="coMakerRejectedStatus" style="display:none;" class="alert alert-danger mt-3">
+                    <i class="bi bi-x-circle-fill me-2"></i>
+                    <strong>Co-maker rejected!</strong>
+                    <p class="mb-0">The co-maker has declined to be your co-maker. Please select another co-maker.</p>
+                </div>
             </div>
         </div>
         <div class="text-end">
@@ -296,6 +421,42 @@
                 <div class="col-md-6 mb-3"><label class="form-label">Loan Term</label><select id="loanTerm" class="form-select"><option value="6">6 months (180 days)</option><option value="12" selected>12 months (360 days)</option><option value="18">18 months (540 days)</option><option value="24">24 months (720 days)</option></select></div>
                 <div class="col-md-6 mb-3"><label class="form-label">Collateral Offered *</label><input type="text" id="collateral" class="form-control" placeholder="Describe your collateral"></div>
             </div>
+
+            <!-- ============================================================
+            COLLATERAL DOCUMENTS UPLOAD SECTION
+            ============================================================ -->
+            <div id="collateralDocumentsSection" style="display: none;" class="mt-4">
+                <hr>
+                <h5 class="fw-bold"><i class="bi bi-file-earmark-arrow-up me-2" style="color: #0d6e6e;"></i>Collateral Documents</h5>
+                <p class="text-muted small">Please upload supporting documents for your collateral. (PDF, JPG, PNG, DOCX - Max 10MB)</p>
+
+                <!-- Drop Zone -->
+                <div class="drop-zone" id="dropZone">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <p class="mt-2"><strong>Drag & drop your documents here</strong></p>
+                    <p class="text-muted small">or click to browse files</p>
+                    <p class="text-muted small" style="font-size: 0.7rem;">Supported formats: PDF, JPG, PNG, DOCX (Max 10MB)</p>
+                    <input type="file" id="documentUpload" multiple accept=".pdf,.jpg,.jpeg,.png,.docx" style="display: none;">
+                    <button class="btn btn-primary btn-sm mt-2" onclick="document.getElementById('documentUpload').click();">
+                        <i class="bi bi-folder2-open me-1"></i> Browse Files
+                    </button>
+                </div>
+
+                <!-- Upload Progress -->
+                <div id="uploadProgress" style="display: none; margin-top: 15px;">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="uploadProgressBar" style="width: 0%;"></div>
+                    </div>
+                    <p class="text-muted small mt-1" id="uploadStatus">Uploading...</p>
+                </div>
+
+                <!-- Uploaded Documents List -->
+                <div id="uploadedDocuments" style="display: none;" class="mt-3">
+                    <h6 class="fw-bold"><i class="bi bi-file-check me-2" style="color: #10b981;"></i>Uploaded Documents</h6>
+                    <div id="documentsList" class="row g-2"></div>
+                </div>
+            </div>
+
             <div class="loan-summary">
                 <div class="row text-center">
                     <div class="col-md-6"><small class="text-muted">Requested Amount</small><div class="fs-3 fw-bold text-primary" id="summaryAmount">₱0</div></div>
@@ -341,6 +502,7 @@
             <div class="form-check mb-2"><input type="checkbox" id="agreeCheckbox1" class="form-check-input" onclick="checkAllAgreements()"><label class="form-check-label">I certify that all information provided is true and correct.</label></div>
             <div class="form-check mb-2"><input type="checkbox" id="agreeCheckbox2" class="form-check-input" onclick="checkAllAgreements()"><label class="form-check-label">I agree to the terms and conditions of the loan.</label></div>
             <div class="form-check mb-2"><input type="checkbox" id="agreeCheckbox3" class="form-check-input" onclick="checkAllAgreements()"><label class="form-check-label">I understand that false information may result in disqualification.</label></div>
+            <div class="form-check mb-2"><input type="checkbox" id="agreeCheckbox4" class="form-check-input" onclick="checkAllAgreements()"><label class="form-check-label">I confirm that my co-maker has agreed to be a co-maker for this loan.</label></div>
         </div>
         <div class="text-end">
             <button class="btn-prev" onclick="goToStep(4)">← Back</button>
@@ -351,12 +513,25 @@
 
 <script>
     let selectedCoMakerId = null;
+    let selectedCoMakerData = null;
     let isOtpVerified = false;
     let isSignatureSaved = false;
     let selectedProduct = null;
     let canvas, ctx;
     let drawing = false;
+    let isCoMakerConfirmed = false;
+    let coMakerConfirmationId = null;
+    let confirmationCheckInterval = null;
 
+    // ============================================================
+    // DOCUMENT UPLOAD VARIABLES
+    // ============================================================
+    let uploadedFiles = [];
+    let currentApplicationId = null;
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
     function goToStep(step) {
         document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
         document.getElementById(`step${step}`).classList.add('active');
@@ -371,11 +546,24 @@
         if (step === 5) displayReview();
     }
 
+    // ============================================================
+    // LOAN PRODUCT SELECTION
+    // ============================================================
     function updateLoanDetails() {
         if (!selectedProduct) return;
         const amount = parseFloat(document.getElementById('loanAmount').value) || 0;
         document.getElementById('summaryAmount').innerHTML = `₱${amount.toLocaleString()}`;
         document.getElementById('summaryRate').innerHTML = `${selectedProduct.interest}%`;
+        showCollateralUpload();
+    }
+
+    function showCollateralUpload() {
+        const collateralSection = document.getElementById('collateralDocumentsSection');
+        if (selectedProduct && selectedProduct.type === 'COLLATERAL') {
+            collateralSection.style.display = 'block';
+        } else {
+            collateralSection.style.display = 'none';
+        }
     }
 
     function validateAndGoToStep4() {
@@ -389,9 +577,19 @@
         }
         if (!purpose) { alert('Please select loan purpose'); return; }
         if (!collateral) { alert('Please enter collateral information'); return; }
+
+        // Check if COLLATERAL product requires documents
+        if (selectedProduct.type === 'COLLATERAL' && uploadedFiles.length === 0) {
+            alert('Please upload at least one collateral document.');
+            return;
+        }
+
         goToStep(4);
     }
 
+    // ============================================================
+    // CO-MAKER FUNCTIONS
+    // ============================================================
     function searchCoMaker() {
         const memberId = document.getElementById('coMakerId').value.trim();
         if (!memberId) { alert('Please enter co-maker member ID'); return; }
@@ -404,27 +602,398 @@
                     document.getElementById('coMakerName').innerHTML = data.name;
                     document.getElementById('coMakerContact').innerHTML = data.contact;
                     document.getElementById('coMakerAddress').innerHTML = data.address;
-                    window.tempCoMakerData = data;
+                    selectedCoMakerData = data;
                 }
-            });
+            })
+            .catch(() => alert('Error searching co-maker. Please try again.'));
     }
 
     function validateAndSelectCoMaker() {
-        const data = window.tempCoMakerData;
-        if (!data) return;
-        selectedCoMakerId = data.id;
+        if (!selectedCoMakerData) return;
+        selectedCoMakerId = selectedCoMakerData.id;
         document.getElementById('coMakerInfo').style.display = 'none';
         document.getElementById('selectedCoMakerInfo').style.display = 'block';
-        document.getElementById('selectedCoMakerName').innerHTML = data.name;
-        document.getElementById('nextStep2Btn').disabled = false;
+        document.getElementById('selectedCoMakerName').innerHTML = selectedCoMakerData.name;
+        document.getElementById('coMakerConfirmationSection').style.display = 'block';
+        document.getElementById('coMakerConfirmationStatus').style.display = 'none';
+        document.getElementById('coMakerConfirmedStatus').style.display = 'none';
+        document.getElementById('coMakerRejectedStatus').style.display = 'none';
+        isCoMakerConfirmed = false;
+        document.getElementById('nextStep2Btn').disabled = true;
     }
 
     function removeCoMaker() {
         selectedCoMakerId = null;
+        selectedCoMakerData = null;
         document.getElementById('selectedCoMakerInfo').style.display = 'none';
+        document.getElementById('coMakerConfirmationSection').style.display = 'none';
         document.getElementById('nextStep2Btn').disabled = true;
+        isCoMakerConfirmed = false;
+        if (confirmationCheckInterval) {
+            clearInterval(confirmationCheckInterval);
+            confirmationCheckInterval = null;
+        }
     }
 
+    // ============================================================
+    // SEND CO-MAKER CONFIRMATION
+    // ============================================================
+    function sendCoMakerConfirmation() {
+        if (!selectedCoMakerId) {
+            alert('Please select a co-maker first.');
+            return;
+        }
+
+        const btn = document.getElementById('sendConfirmationBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending...';
+
+        const applicationData = {
+            loan_type: selectedProduct ? selectedProduct.type : 'APCP',
+            amount: parseFloat(document.getElementById('loanAmount').value) || 1000,
+            purpose: document.getElementById('loanPurpose').value || 'agriculture',
+            term: parseInt(document.getElementById('loanTerm').value) || 12,
+            co_maker_id: selectedCoMakerId,
+            collateral: document.getElementById('collateral').value || ''
+        };
+
+        fetch('/api/submit-application/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify(applicationData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('applicationId').value = data.application_id;
+                currentApplicationId = data.application_id;
+
+                // Upload pending documents now that we have an application ID
+                uploadPendingDocuments();
+
+                return fetch('/api/send-co-maker-confirmation/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        application_id: data.application_id,
+                        co_maker_id: selectedCoMakerId
+                    })
+                });
+            } else {
+                throw new Error(data.error || 'Failed to create application');
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send me-2"></i>Send Confirmation to Co-Maker';
+
+            if (data.success) {
+                document.getElementById('coMakerConfirmationStatus').style.display = 'block';
+                document.getElementById('confirmationStatusMessage').innerHTML =
+                    '<span class="text-success"><i class="bi bi-check-circle"></i> Confirmation sent! Waiting for co-maker response...</span>';
+
+                startPollingConfirmation(data.confirmation_id);
+            } else {
+                alert(data.error || 'Failed to send confirmation');
+                document.getElementById('coMakerConfirmationStatus').style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send me-2"></i>Send Confirmation to Co-Maker';
+            alert('Error: ' + error.message);
+        });
+    }
+
+    // ============================================================
+    // POLL FOR CO-MAKER CONFIRMATION STATUS
+    // ============================================================
+    function startPollingConfirmation(confirmationId) {
+        coMakerConfirmationId = confirmationId;
+
+        if (confirmationCheckInterval) {
+            clearInterval(confirmationCheckInterval);
+        }
+
+        confirmationCheckInterval = setInterval(() => {
+            fetch(`/api/co-maker/status/${confirmationId}/`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'confirmed') {
+                        clearInterval(confirmationCheckInterval);
+                        confirmationCheckInterval = null;
+                        isCoMakerConfirmed = true;
+                        document.getElementById('coMakerConfirmationStatus').style.display = 'none';
+                        document.getElementById('coMakerConfirmedStatus').style.display = 'block';
+                        document.getElementById('nextStep2Btn').disabled = false;
+                    } else if (data.status === 'rejected') {
+                        clearInterval(confirmationCheckInterval);
+                        confirmationCheckInterval = null;
+                        isCoMakerConfirmed = false;
+                        document.getElementById('coMakerConfirmationStatus').style.display = 'none';
+                        document.getElementById('coMakerRejectedStatus').style.display = 'block';
+                        document.getElementById('nextStep2Btn').disabled = true;
+                    } else if (data.status === 'expired') {
+                        clearInterval(confirmationCheckInterval);
+                        confirmationCheckInterval = null;
+                        document.getElementById('coMakerConfirmationStatus').style.display = 'none';
+                        alert('Confirmation request has expired. Please send a new request.');
+                    }
+                })
+                .catch(() => {});
+        }, 5000);
+    }
+
+    // ============================================================
+    // DOCUMENT UPLOAD FUNCTIONS
+    // ============================================================
+    function setupDropZone() {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('documentUpload');
+
+        if (!dropZone || !fileInput) return;
+
+        dropZone.addEventListener('click', function(e) {
+            if (e.target.tagName !== 'BUTTON' && e.target.closest('button') === null) {
+                fileInput.click();
+            }
+        });
+
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+            this.value = '';
+        });
+    }
+
+    function handleFiles(files) {
+        const validTypes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        const maxSize = 10 * 1024 * 1024;
+
+        for (let file of files) {
+            if (!validTypes.includes(file.type)) {
+                showAlert(`File "${file.name}" is not supported. Please upload PDF, JPG, PNG, or DOCX.`, 'warning');
+                continue;
+            }
+
+            if (file.size > maxSize) {
+                showAlert(`File "${file.name}" is too large. Maximum size is 10MB.`, 'warning');
+                continue;
+            }
+
+            const duplicate = uploadedFiles.some(f => f.name === file.name && f.size === file.size);
+            if (duplicate) {
+                showAlert(`File "${file.name}" has already been uploaded.`, 'warning');
+                continue;
+            }
+
+            uploadedFiles.push({
+                file: file,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                status: 'pending',
+                document_id: null
+            });
+
+            renderUploadedDocuments();
+
+            // If we have an application ID, upload immediately
+            if (currentApplicationId) {
+                uploadSingleFile(uploadedFiles.length - 1);
+            }
+        }
+    }
+
+    function uploadPendingDocuments() {
+        uploadedFiles.forEach((file, index) => {
+            if (file.status === 'pending') {
+                uploadSingleFile(index);
+            }
+        });
+    }
+
+    function uploadSingleFile(index) {
+        const fileData = uploadedFiles[index];
+        if (!fileData || fileData.status === 'uploaded') return;
+
+        const progressBar = document.getElementById('uploadProgressBar');
+        const progressSection = document.getElementById('uploadProgress');
+        const statusText = document.getElementById('uploadStatus');
+
+        progressSection.style.display = 'block';
+        progressBar.style.width = '0%';
+        progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated';
+        statusText.textContent = `Uploading ${fileData.name}...`;
+
+        const formData = new FormData();
+        formData.append('document', fileData.file);
+        formData.append('document_type', 'collateral');
+
+        if (currentApplicationId) {
+            formData.append('application_id', currentApplicationId);
+        }
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload-collateral-document/');
+        xhr.setRequestHeader('X-CSRFToken', getCSRFToken());
+
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const percent = (e.loaded / e.total) * 100;
+                progressBar.style.width = percent + '%';
+                statusText.textContent = `Uploading ${fileData.name}: ${Math.round(percent)}%`;
+            }
+        });
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        fileData.status = 'uploaded';
+                        fileData.document_id = response.document_id;
+                        progressBar.style.width = '100%';
+                        progressBar.className = 'progress-bar bg-success';
+                        statusText.textContent = `✅ ${fileData.name} uploaded successfully!`;
+                        renderUploadedDocuments();
+
+                        setTimeout(() => {
+                            progressSection.style.display = 'none';
+                            progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated';
+                        }, 2000);
+                    } else {
+                        fileData.status = 'error';
+                        statusText.textContent = `❌ Error: ${response.error || 'Upload failed'}`;
+                        progressBar.className = 'progress-bar bg-danger';
+                        renderUploadedDocuments();
+                    }
+                } catch (e) {
+                    fileData.status = 'error';
+                    statusText.textContent = '❌ Error processing upload response';
+                    progressBar.className = 'progress-bar bg-danger';
+                    renderUploadedDocuments();
+                }
+            } else {
+                fileData.status = 'error';
+                statusText.textContent = `❌ Upload failed: ${xhr.status}`;
+                progressBar.className = 'progress-bar bg-danger';
+                renderUploadedDocuments();
+            }
+        };
+
+        xhr.onerror = function() {
+            fileData.status = 'error';
+            statusText.textContent = '❌ Network error uploading file';
+            progressBar.className = 'progress-bar bg-danger';
+            renderUploadedDocuments();
+        };
+
+        xhr.send(formData);
+    }
+
+    function renderUploadedDocuments() {
+        const container = document.getElementById('documentsList');
+        const section = document.getElementById('uploadedDocuments');
+
+        if (uploadedFiles.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        container.innerHTML = '';
+
+        uploadedFiles.forEach((fileData, index) => {
+            const icon = getFileIcon(fileData.type);
+            const size = formatFileSize(fileData.size);
+            const statusClass = fileData.status === 'uploaded' ? 'uploaded' :
+                               fileData.status === 'error' ? 'error' : 'uploading';
+            const statusText = fileData.status === 'uploaded' ? '✓ Uploaded' :
+                              fileData.status === 'error' ? '✗ Failed' : '⏳ Pending';
+
+            const col = document.createElement('div');
+            col.className = 'col-md-4 col-sm-6';
+            col.innerHTML = `
+                <div class="document-item">
+                    <span class="file-icon">${icon}</span>
+                    <div class="file-name" title="${fileData.name}">${fileData.name.length > 20 ? fileData.name.substring(0, 20) + '...' : fileData.name}</div>
+                    <span class="file-size">${size}</span>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                    ${fileData.status !== 'uploaded' ? `
+                        <span class="remove-file" onclick="removeFile(${index})" title="Remove file">
+                            <i class="bi bi-x-circle"></i>
+                        </span>
+                    ` : ''}
+                </div>
+            `;
+            container.appendChild(col);
+        });
+    }
+
+    function getFileIcon(type) {
+        if (type.includes('pdf')) return '<i class="bi bi-file-pdf"></i>';
+        if (type.includes('image')) return '<i class="bi bi-file-image"></i>';
+        if (type.includes('word')) return '<i class="bi bi-file-word"></i>';
+        return '<i class="bi bi-file-earmark"></i>';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function removeFile(index) {
+        uploadedFiles.splice(index, 1);
+        renderUploadedDocuments();
+    }
+
+    function showAlert(message, type = 'info') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        const container = document.getElementById('collateralDocumentsSection');
+        container.insertBefore(alertDiv, container.firstChild);
+        setTimeout(() => alertDiv.remove(), 5000);
+    }
+
+    // ============================================================
+    // SIGNATURE FUNCTIONS
+    // ============================================================
     function initCanvas() {
         canvas = document.getElementById('signatureCanvas');
         if (canvas) {
@@ -433,6 +1002,9 @@
             canvas.addEventListener('mousemove', draw);
             canvas.addEventListener('mouseup', stopDrawing);
             canvas.addEventListener('mouseleave', stopDrawing);
+            canvas.addEventListener('touchstart', startDrawingTouch);
+            canvas.addEventListener('touchmove', drawTouch);
+            canvas.addEventListener('touchend', stopDrawing);
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = '#000';
@@ -445,9 +1017,20 @@
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        let x, y;
-        if (e.touches) { x = (e.touches[0].clientX - rect.left) * scaleX; y = (e.touches[0].clientY - rect.top) * scaleY; }
-        else { x = (e.clientX - rect.left) * scaleX; y = (e.clientY - rect.top) * scaleY; }
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    }
+
+    function startDrawingTouch(e) {
+        e.preventDefault();
+        drawing = true;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.touches[0].clientX - rect.left) * scaleX;
+        const y = (e.touches[0].clientY - rect.top) * scaleY;
         ctx.beginPath();
         ctx.moveTo(x, y);
     }
@@ -458,9 +1041,20 @@
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        let x, y;
-        if (e.touches) { x = (e.touches[0].clientX - rect.left) * scaleX; y = (e.touches[0].clientY - rect.top) * scaleY; }
-        else { x = (e.clientX - rect.left) * scaleX; y = (e.clientY - rect.top) * scaleY; }
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    }
+
+    function drawTouch(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.touches[0].clientX - rect.left) * scaleX;
+        const y = (e.touches[0].clientY - rect.top) * scaleY;
         ctx.lineTo(x, y);
         ctx.stroke();
     }
@@ -500,15 +1094,40 @@
         });
     }
 
+    // ============================================================
+    // OTP FUNCTIONS
+    // ============================================================
     function sendOTP() {
         document.getElementById('otpSection').style.display = 'block';
-        alert('Demo OTP sent: 123456');
-        window.demoOTP = '123456';
+        document.getElementById('otpStatus').innerHTML = '<div class="alert alert-info">⏳ Sending OTP...</div>';
+
+        const contactNumber = "{{ member.contact_number|default:'' }}";
+        fetch('/send-otp/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+            body: JSON.stringify({ phone: contactNumber })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('otpStatus').innerHTML = '<div class="alert alert-success">✓ OTP sent to your mobile number!</div>';
+                window.demoOTP = data.otp || '123456';
+            } else {
+                document.getElementById('otpStatus').innerHTML = '<div class="alert alert-warning">⚠️ ' + data.error + ' Use demo OTP: 123456</div>';
+                window.demoOTP = '123456';
+            }
+        })
+        .catch(() => {
+            document.getElementById('otpStatus').innerHTML = '<div class="alert alert-warning">⚠️ Demo mode: Use OTP 123456</div>';
+            window.demoOTP = '123456';
+        });
     }
 
     function verifyOTP() {
         const otp = document.getElementById('otpCode').value;
-        if (otp === '123456') {
+        const demoOTP = window.demoOTP || '123456';
+
+        if (otp === demoOTP) {
             isOtpVerified = true;
             document.getElementById('otpStatus').innerHTML = '<div class="alert alert-success">✓ OTP verified!</div>';
             checkStep4Complete();
@@ -517,17 +1136,27 @@
         }
     }
 
+    // ============================================================
+    // CHECK COMPLETION
+    // ============================================================
     function checkStep4Complete() {
         const nextBtn = document.getElementById('nextStep4Btn');
         if (nextBtn) { nextBtn.disabled = !(isOtpVerified && isSignatureSaved); }
     }
 
+    // ============================================================
+    // REVIEW & SUBMIT
+    // ============================================================
     function displayReview() {
         const selectedProductName = selectedProduct ? selectedProduct.type : 'Not selected';
         const amount = document.getElementById('loanAmount').value || 0;
         const purpose = document.getElementById('loanPurpose').options[document.getElementById('loanPurpose').selectedIndex]?.text || 'Not selected';
         const term = document.getElementById('loanTerm').value;
         const collateral = document.getElementById('collateral').value || 'Not provided';
+
+        const documentCount = uploadedFiles.length;
+        const documentStatus = documentCount > 0 ? `${documentCount} file(s) uploaded ✓` : 'No documents uploaded';
+
         document.getElementById('reviewContent').innerHTML = `
             <div class="row">
                 <div class="col-md-6"><div class="info-card"><div class="info-card-title">Loan Application Summary</div>
@@ -537,7 +1166,9 @@
                 <div class="info-row"><span class="info-label">Term:</span><span class="info-value">${term} months</span></div></div></div>
                 <div class="col-md-6"><div class="info-card"><div class="info-card-title">Additional Information</div>
                 <div class="info-row"><span class="info-label">Collateral:</span><span class="info-value">${collateral}</span></div>
+                <div class="info-row"><span class="info-label">Documents:</span><span class="info-value">${documentStatus}</span></div>
                 <div class="info-row"><span class="info-label">Co-maker:</span><span class="info-value">${selectedCoMakerId ? 'Selected ✓' : 'None'}</span></div>
+                <div class="info-row"><span class="info-label">Co-maker Confirmed:</span><span class="info-value">${isCoMakerConfirmed ? '✓ Yes' : '✗ No'}</span></div>
                 <div class="info-row"><span class="info-label">Signature:</span><span class="info-value">${isSignatureSaved ? '✓ Saved' : '✗ Not saved'}</span></div>
                 <div class="info-row"><span class="info-label">OTP:</span><span class="info-value">${isOtpVerified ? '✓ Verified' : '✗ Not verified'}</span></div></div></div>
             </div>
@@ -545,23 +1176,48 @@
     }
 
     function checkAllAgreements() {
-        const allChecked = document.getElementById('agreeCheckbox1').checked && document.getElementById('agreeCheckbox2').checked && document.getElementById('agreeCheckbox3').checked;
-        document.getElementById('submitBtn').disabled = !allChecked;
+        const allChecked = document.getElementById('agreeCheckbox1').checked &&
+                          document.getElementById('agreeCheckbox2').checked &&
+                          document.getElementById('agreeCheckbox3').checked &&
+                          document.getElementById('agreeCheckbox4').checked;
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = !(allChecked && isCoMakerConfirmed);
+
+        if (allChecked && !isCoMakerConfirmed) {
+            submitBtn.innerHTML = '<i class="bi bi-clock"></i> Waiting for co-maker confirmation...';
+        } else if (allChecked && isCoMakerConfirmed) {
+            submitBtn.innerHTML = '<i class="bi bi-send"></i> Submit Application';
+            submitBtn.disabled = false;
+        }
     }
 
+    // ============================================================
+    // SUBMIT APPLICATION
+    // ============================================================
     function submitApplication() {
+        if (!isCoMakerConfirmed) {
+            alert('Please wait for co-maker confirmation before submitting.');
+            return;
+        }
+
         if (!confirm('Are you sure you want to submit your loan application?')) return;
 
-        // Disable submit button to prevent double submission
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Submitting...';
+
+        const documentIds = uploadedFiles.map(f => f.document_id).filter(id => id);
 
         const applicationData = {
             loan_type: selectedProduct.type,
             amount: parseFloat(document.getElementById('loanAmount').value),
             purpose: document.getElementById('loanPurpose').value,
-            term: parseInt(document.getElementById('loanTerm').value)
+            term: parseInt(document.getElementById('loanTerm').value),
+            co_maker_id: selectedCoMakerId,
+            collateral: document.getElementById('collateral').value,
+            signature: document.getElementById('signatureData').value,
+            document_ids: documentIds
         };
 
         fetch('/api/submit-application/', {
@@ -575,7 +1231,7 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Application submitted successfully!');
+                alert('✅ Application submitted successfully!');
                 window.location.href = '/my-applications/';
             } else {
                 alert('Error: ' + data.error);
@@ -591,6 +1247,9 @@
         });
     }
 
+    // ============================================================
+    // UTILITY FUNCTIONS
+    // ============================================================
     function getCSRFToken() {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -606,8 +1265,13 @@
         return cookieValue;
     }
 
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
         initCanvas();
+        setupDropZone();
+
         document.querySelectorAll('.loan-product-card').forEach(card => {
             card.addEventListener('click', function() {
                 document.querySelectorAll('.loan-product-card').forEach(c => c.classList.remove('selected'));
@@ -623,7 +1287,12 @@
                 const loanAmount = document.getElementById('loanAmount');
                 if (loanAmount) { loanAmount.min = selectedProduct.min; loanAmount.max = selectedProduct.max; }
                 updateLoanDetails();
+                showCollateralUpload();
             });
+        });
+
+        document.querySelectorAll('.form-check-input').forEach(cb => {
+            cb.addEventListener('change', checkAllAgreements);
         });
     });
 </script>
