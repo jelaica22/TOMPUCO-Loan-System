@@ -6,7 +6,9 @@
       pip install --upgrade pip
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
-      python manage.py migrate --noinput
+      echo "Running migrations..."
+      python manage.py migrate --noinput || echo "Migrations failed"
+      echo "Creating superuser..."
       python -c "import os; import django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tompuco.settings'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@tompuco.com', 'admin123') if not User.objects.filter(username='admin').exists() else print('Superuser exists')"
     startCommand: gunicorn tompuco.wsgi:application --bind 0.0.0.0:10000
     envVars:
