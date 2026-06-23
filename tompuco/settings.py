@@ -6,21 +6,38 @@ from pathlib import Path
 import os
 import dj_database_url
 import socket
+import sys
 
 # ============================================
-# FORCE IPv4 FOR DATABASE CONNECTIONS
+# FORCE IPv4 FOR ALL CONNECTIONS
 # ============================================
 # This fixes the "Network is unreachable" error with Supabase
-try:
-    old_getaddrinfo = socket.getaddrinfo
-    def new_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
-        # Force IPv4 for database connections
-        if 'supabase.co' in host or 'db.' in host:
-            return old_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
-        return old_getaddrinfo(host, port, family, type, proto, flags)
-    socket.getaddrinfo = new_getaddrinfo
-except Exception:
-    pass
+def force_ipv4():
+    """Force socket connections to use IPv4 only"""
+    try:
+        # Get the original getaddrinfo
+        original_getaddrinfo = socket.getaddrinfo
+        
+        def ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+            # Force IPv4 for database connections
+            if 'supabase.co' in str(host) or 'db.' in str(host):
+                # Only return IPv4 addresses
+                try:
+                    result = original_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+                    if result:
+                        return result
+                except:
+                    pass
+            # For other connections, try default
+            return original_getaddrinfo(host, port, family, type, proto, flags)
+        
+        socket.getaddrinfo = ipv4_getaddrinfo
+        print("✅ IPv4 forced for socket connections")
+    except Exception as e:
+        print(f"⚠️  Could not force IPv4: {e}")
+
+# Apply IPv4 fix before any database connections
+force_ipv4()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -132,15 +149,26 @@ CHANNEL_LAYERS = {
 # DATABASE CONFIGURATION
 # ============================================
 
+def get_db_url():
+    """Get database URL with proper IPv4 handling"""
+    db_url = os.environ.get('DATABASE_URL', '')
+    if db_url:
+        # Force IPv4 in the connection string
+        if 'supabase.co' in db_url:
+            # Replace with IPv4-specific settings
+            if 'connect_timeout' not in db_url:
+                db_url += '&connect_timeout=10'
+            if 'keepalives' not in db_url:
+                db_url += '&keepalives=1&keepalives_idle=30&keepalives_interval=10&keepalives_count=3'
+    return db_url
+
 if os.environ.get('DATABASE_URL'):
-    db_url = os.environ.get('DATABASE_URL')
-    # Always require SSL for production
-    ssl_required = True
+    db_url = get_db_url()
     DATABASES = {
         'default': dj_database_url.config(
             default=db_url,
             conn_max_age=600,
-            ssl_require=ssl_required
+            ssl_require=True
         )
     }
 elif os.environ.get('PYTHONANYWHERE_DOMAIN'):
@@ -165,16 +193,6 @@ else:
             'HOST': 'localhost',
             'PORT': '5432',
         }
-    }
-
-# Add connection options for Supabase
-if 'supabase' in str(DATABASES.get('default', {}).get('HOST', '')):
-    DATABASES['default']['OPTIONS'] = {
-        'connect_timeout': 10,
-        'keepalives': 1,
-        'keepalives_idle': 30,
-        'keepalives_interval': 10,
-        'keepalives_count': 3,
     }
 
 # Password validation
