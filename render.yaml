@@ -2,7 +2,10 @@
   - type: web
     name: tompuco-loan-system
     runtime: python
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput && python -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tompuco.settings'); django.setup(); from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@tompuco.com', 'admin123') if not User.objects.filter(username='admin').exists() else print('Superuser exists')"
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements-render.txt
+      python manage.py collectstatic --noinput
     startCommand: daphne -b 0.0.0.0 -p $PORT tompuco.asgi:application
     envVars:
       - key: PYTHON_VERSION
@@ -13,3 +16,5 @@
         generateValue: true
       - key: DEBUG
         value: "False"
+      - key: DATABASE_URL
+        value: postgresql://postgres:Jelaica_db123@db.tliadsitmldanbwgfkqj.supabase.co:5432/postgres?sslmode=require
