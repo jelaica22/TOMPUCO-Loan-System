@@ -4,9 +4,10 @@
     runtime: python
     buildCommand: |
       pip install --upgrade pip
-      pip install -r requirements-render.txt
+      pip install -r requirements.txt
       python manage.py collectstatic --noinput
-    startCommand: bash startup.sh
+      python manage.py migrate --noinput || echo "Migrations will run on startup"
+    startCommand: gunicorn tompuco.wsgi:application --bind 0.0.0.0:10000
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.0
@@ -17,4 +18,4 @@
       - key: DEBUG
         value: "False"
       - key: DATABASE_URL
-        value: postgresql://postgres:Jelaica_db123@db.tliadsitmldanbwgfkqj.supabase.co:5432/postgres?sslmode=require
+        value: postgresql://postgres:Jelaica_db123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require
