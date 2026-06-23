@@ -5,6 +5,22 @@ Django settings for tompuco project.
 from pathlib import Path
 import os
 import dj_database_url
+import socket
+
+# ============================================
+# FORCE IPv4 FOR DATABASE CONNECTIONS
+# ============================================
+# This fixes the "Network is unreachable" error with Supabase
+try:
+    old_getaddrinfo = socket.getaddrinfo
+    def new_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+        # Force IPv4 for database connections
+        if 'supabase.co' in host or 'db.' in host:
+            return old_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+        return old_getaddrinfo(host, port, family, type, proto, flags)
+    socket.getaddrinfo = new_getaddrinfo
+except Exception:
+    pass
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-your-secret-key-here-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'  # Default to False for production safety
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # ALLOWED_HOSTS - Production ready
 ALLOWED_HOSTS = [
@@ -22,7 +38,6 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
 ]
 
-# Add localhost for development only
 if DEBUG:
     ALLOWED_HOSTS.extend(['0.0.0.0', '*'])
 
@@ -39,9 +54,8 @@ if DEBUG:
     ])
 
 # ============================================
-# reCAPTCHA Configuration - Production Ready
+# reCAPTCHA Configuration
 # ============================================
-# Read from environment variables (set on Render)
 RECAPTCHA_SITE_KEY = os.environ.get('RECAPTCHA_SITE_KEY', '6LelneksAAAAAJ84pRMje7M5YSDRpm2xXPuiJuat')
 RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '6LelneksAAAAAKP6CjXA_y-fuAFwfzw61hx9VSHJ')
 RECAPTCHA_PUBLIC_KEY = RECAPTCHA_SITE_KEY
@@ -115,21 +129,20 @@ CHANNEL_LAYERS = {
 }
 
 # ============================================
-# DATABASE - LOCAL POSTGRESQL
+# DATABASE CONFIGURATION
 # ============================================
 
-# Check if DATABASE_URL is set (for production on Render)
 if os.environ.get('DATABASE_URL'):
-    # Check if we're connecting to localhost (disable SSL)
     db_url = os.environ.get('DATABASE_URL')
-    ssl_required = 'localhost' not in db_url and '127.0.0.1' not in db_url
+    # Always require SSL for production
+    ssl_required = True
     DATABASES = {
         'default': dj_database_url.config(
+            default=db_url,
             conn_max_age=600,
             ssl_require=ssl_required
         )
     }
-# Check if on PythonAnywhere
 elif os.environ.get('PYTHONANYWHERE_DOMAIN'):
     DATABASES = {
         'default': {
@@ -141,17 +154,27 @@ elif os.environ.get('PYTHONANYWHERE_DOMAIN'):
             'PORT': '3306',
         }
     }
-# Local development - PostgreSQL
 else:
+    # Local development - PostgreSQL
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': 'tompuco_db',
             'USER': 'tompuco_db_user',
-            'PASSWORD': 'user_123',  # Your password
+            'PASSWORD': 'user_123',
             'HOST': 'localhost',
             'PORT': '5432',
         }
+    }
+
+# Add connection options for Supabase
+if 'supabase' in str(DATABASES.get('default', {}).get('HOST', '')):
+    DATABASES['default']['OPTIONS'] = {
+        'connect_timeout': 10,
+        'keepalives': 1,
+        'keepalives_idle': 30,
+        'keepalives_interval': 10,
+        'keepalives_count': 3,
     }
 
 # Password validation
@@ -193,8 +216,8 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 # Staff settings
 STAFF_SESSION_TIMEOUT = 1800
-PENALTY_START_DAYS = 361  # Penalty starts at DAY 361 (after 360 days grace period)
-PENALTY_RATE = 0.02  # 2% per month penalty
+PENALTY_START_DAYS = 361
+PENALTY_RATE = 0.02
 
 # Email backend (for development)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -207,23 +230,14 @@ UNVERIFIED_MAX_ACTIVE_LOANS = 0
 # SECURITY SETTINGS FOR PRODUCTION
 # ============================================
 if not DEBUG:
-    # HTTPS settings
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-    # Cookie security
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-
-    # Additional security headers
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-
-    # HSTS (HTTP Strict Transport Security)
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-
-    # CSRF and Session
     CSRF_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SAMESITE = 'Lax'
